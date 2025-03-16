@@ -27,7 +27,7 @@ Wave Function Collapse 알고리즘을 사용하여 던전 및 건물을 생성
 
 Wave Function Collapse 2D 구현 완료
 
---WFC2D Link--
+https://github.com/devouring123/WFC2D
 
 Wave Function Collapse 3D 구현 중
 - WFC3D 입력 분석(구현 완료)
