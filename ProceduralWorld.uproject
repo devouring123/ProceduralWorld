@@ -48,10 +48,6 @@
 		{
 			"Name": "GameplayAbilities",
 			"Enabled": true
-		},
-		{
-			"Name": "Cargo",
-			"Enabled": true
 		}
 	]
 }

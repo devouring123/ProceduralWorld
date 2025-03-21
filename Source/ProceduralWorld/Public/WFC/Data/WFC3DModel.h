@@ -13,6 +13,28 @@ class UMaterialInterface;
 /**
  * 하나의 타일 정보
  */
+UENUM(BlueprintType)
+enum class EFace : uint8
+{
+	Up UMETA(DisplayName = "Up"),
+	Back UMETA(DisplayName = "Back"),
+	Right UMETA(DisplayName = "Right"),
+	Left UMETA(DisplayName = "Left"),
+	Front UMETA(DisplayName = "Front"),
+	Down UMETA(DisplayName = "Down"),
+	None UMETA(Hidden),
+};
+
+FORCEINLINE int32 ToIndex(EFace State)
+{
+	return static_cast<int32>(State);
+}
+
+FORCEINLINE int32 ToOppositeIndex(EFace State)
+{
+	return 5 - static_cast<int32>(State);
+}
+
 USTRUCT(BlueprintType)
 struct FTile
 {
@@ -134,7 +156,7 @@ struct FBaseTileInfoDataTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	FString Up = "";
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	FString Back = "";
 
@@ -146,7 +168,7 @@ struct FBaseTileInfoDataTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	FString Front = "";
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	FString Down = "";
 };
@@ -162,7 +184,7 @@ struct FFacePair
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "WFC3D|Data")
-	int32 Direction = -1;
+	EFace Direction = EFace::None;
 
 	UPROPERTY(VisibleAnywhere, Category = "WFC3D|Data")
 	FString Name;
@@ -172,16 +194,16 @@ public:
 	{
 	}
 
-	FFacePair(int32 InOrder, const FString& InName) : Direction(InOrder), Name(InName)
+	FFacePair(EFace InOrder, const FString& InName) : Direction(InOrder), Name(InName)
 	{
 	}
 
-	TPair<int32, FString> GetPair() const
+	TPair<EFace, FString> GetPair() const
 	{
-		return TPair<int32, FString>(Direction, Name);
+		return TPair<EFace, FString>(Direction, Name);
 	}
 
-	int32 GetDirection() const
+	EFace GetDirection() const
 	{
 		return Direction;
 	}
@@ -300,7 +322,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TArray<FFacePair> FaceInfos;
 
-	
+
 	// TODO: FaceInfo에서는 Direction과 관계없이 모든 방향이 들어있다. 이걸 각 방향에 대한 정보로 나눠서 저장해야함
 	// FacePair 대신에 FaceArray를 만들고, FaceArray를 6개 가진 FaceInfo가 있음
 	// FaceInfo에서 각 FaceArray에는 각 방향에 대해서 FaceString이 들어가있음
@@ -308,8 +330,8 @@ public:
 	// 이걸 근데 어떻게 TileToFace로 바꾸지?
 	// TileToFace는 각 타일에 대해서 TArray<TBitArray<>>로 저장해야하고 각 TBitArray<>에는 각 방향에 대한 면 인덱스가 들어가야함
 	// Ex) TileToFace[0] = {0000000010000, 00001000000, 00000100000, 00000100000, 00001000000, 0000000000010000}
-	
-	
+
+
 	// 면 인덱스 -> 타일 맵 ((면 위치(UBRLFD순서)) -> Bitset)
 	// 해당 면이 셀에 위치할 때 해당 면과 맞닿을 수 있는 모든 조각에 대한 인덱스에 대한 비트셋
 	// Ex) 0 -> FaceToTileBitMapKeys에서 인덱스가 0번인 면에 대해서 반대편에 맞는 면을 가진 조각을 TileInfos에서 찾아서 그 인덱스를 비트셋에 추가
@@ -376,7 +398,8 @@ private:
 		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKeys Size: %d"), FaceInfos.Num());
 		for (int32 i = 0; i < FaceInfos.Num(); i++)
 		{
-			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%d, %s)"), i, FaceInfos[i].GetPair().Key, *FaceInfos[i].GetPair().Value);
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%d, %s)"), i, FaceInfos[i].GetPair().Key,
+			       *FaceInfos[i].GetPair().Value);
 		}
 	}
 
@@ -423,12 +446,14 @@ private:
 			}
 		}
 	}
-	
-	const int32 RotationMap[4][4] = {
-		{1, 4, 3, 2},
-		{2, 1, 4, 3},
-		{4, 3, 2, 1},
-		{3, 2, 1, 4}
+
+	const EFace RotationMap[6][4] = {
+		{EFace::None, EFace::None, EFace::None, EFace::None},
+		{EFace::Back, EFace::Left, EFace::Front, EFace::Right},
+		{EFace::Right, EFace::Back, EFace::Left, EFace::Front},
+		{EFace::Left, EFace::Front, EFace::Right, EFace::Back},
+		{EFace::Front, EFace::Right, EFace::Back, EFace::Left},
+		{EFace::None, EFace::None, EFace::None, EFace::None},
 	};
 
 public:

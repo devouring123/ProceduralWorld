@@ -92,7 +92,7 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 		TArray<int32> FaceIndices = GetAllIndexFromBitset(WFC3DModel->TileToFaceBitArrayMap[Index]);
 		for (int32 FaceIndex : FaceIndices)
 		{
-			MergedFaceOptionsBitset[WFC3DModel->FaceInfos[FaceIndex].GetDirection()][FaceIndex] = true;
+			MergedFaceOptionsBitset[ToIndex(WFC3DModel->FaceInfos[FaceIndex].GetDirection())][FaceIndex] = true;
 		}
 	}
 

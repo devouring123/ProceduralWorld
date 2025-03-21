@@ -159,7 +159,7 @@ bool UWFC3DModel::SetFaceToTileBitMapKeys()
 	{
 		for (int32 Direction = 0; Direction < 6; Direction++)
 		{
-			FaceInfos.AddUnique({Direction, TileInfo.Faces[Direction]});
+			FaceInfos.AddUnique({static_cast<EFace>(Direction), TileInfo.Faces[Direction]});
 		}
 	}
 	return true;
@@ -195,15 +195,16 @@ bool UWFC3DModel::SetTileToFaceBitStringMap()
 	TileToFaceBitStringMap.Empty();
 	int32 TileSetSize = TileInfos.Num();
 	int32 FaceToTileBitMapKeysSize = FaceInfos.Num();
-
+	
 	for (int32 i = 0; i < TileSetSize; i++)
 	{
 		TBitArray<> NewBitArray;
 		NewBitArray.Init(false, FaceToTileBitMapKeysSize);
-		
+
+		// TODO: EFace의 모든 방향 확인
 		for (int32 Direction = 0; Direction < 6; Direction++)
 		{
-			NewBitArray[FaceInfos.Find({Direction, TileInfos[i].Faces[Direction]})] = true;
+			NewBitArray[FaceInfos.Find({static_cast<EFace>(Direction), TileInfos[i].Faces[Direction]})] = true;
 		}
 
 		TileToFaceBitStringMap.Add(i, MoveTemp(NewBitArray));
@@ -368,19 +369,20 @@ bool UWFC3DModel::PrintData()
 bool UWFC3DModel::HasMatchingFace(const FFacePair& FacePair, const TArray<FString>& Faces)
 {
 	// Compare UD Face
-	TPair<int, FString> Face = FacePair.GetPair();
-	if (Face.Key < 2 && Faces[1 - Face.Key] == Face.Value)
+	TPair<EFace, FString> Face = FacePair.GetPair();
+	if ((Face.Key == EFace::Up || Face.Key == EFace::Down) && Faces[ToOppositeIndex(Face.Key)] == Face.Value)
 	{
 		return true;
 	}
 	// Compare BRLF Face
-	if (Face.Key >= 2)
+	if (Face.Key >= EFace::Back && Face.Key <= EFace::Left)
 	{
 		// Face1 == "3s", Face2 == "3s" return True
 		// Face1 == "2f", Face2 == "3s" return false
 		// Face1 == "3s", Face2 == "3" return false
 
-		if (Faces[Face.Key % 4 + 2] == Face.Value && Faces[Face.Key % 4 + 2].Find("s") && Face.Value.Find("s"))
+		// TODO: UBRLFD 순서대로 잘 맞게 해줘야 제대로 작동함 
+		if (Faces[ToOppositeIndex(Face.Key)] == Face.Value && Faces[ToOppositeIndex(Face.Key)].Find("s") && Face.Value.Find("s"))
 		{
 			return true;
 		}
@@ -390,7 +392,7 @@ bool UWFC3DModel::HasMatchingFace(const FFacePair& FacePair, const TArray<FStrin
 		// Face1 == "2f", Face2 == "2f" return false
 		// Face1 == "2", Face2 == "2" return false
 
-		if (Faces[Face.Key % 4 + 2] == Face.Value + "f" || Faces[Face.Key % 4 + 2] + "f" == Face.Value)
+		if (Faces[ToOppositeIndex(Face.Key)] == Face.Value + "f" || Faces[ToOppositeIndex(Face.Key)] + "f" == Face.Value)
 		{
 			return true;
 		}
@@ -428,13 +430,13 @@ FBaseTileInfo UWFC3DModel::RotateTileClockwise(const FBaseTileInfo& BaseTileInfo
 
 	// UD Rotation
 
-	NewTileInfo.Faces[0] = RotateUDFace(BaseTileInfo.Faces[0], RotationStep);
-	NewTileInfo.Faces[5] = RotateUDFace(BaseTileInfo.Faces[5], RotationStep);
+	NewTileInfo.Faces[ToIndex(EFace::Up)] = RotateUDFace(BaseTileInfo.Faces[ToIndex(EFace::Up)], RotationStep);
+	NewTileInfo.Faces[ToIndex(EFace::Down)] = RotateUDFace(BaseTileInfo.Faces[ToIndex(EFace::Down)], RotationStep);
 	
 	// BRLF Rotation
 	for (int32 i = 1; i < 5; i++)
 	{
-		NewTileInfo.Faces[i] = BaseTileInfo.Faces[RotationMap[i - 1][RotationStep]];
+		NewTileInfo.Faces[i] = BaseTileInfo.Faces[ToIndex(RotationMap[i][RotationStep])];
 	}
 
 	return NewTileInfo;
