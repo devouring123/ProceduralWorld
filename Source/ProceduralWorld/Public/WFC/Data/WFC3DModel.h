@@ -25,12 +25,12 @@ enum class EFace : uint8
 	None UMETA(Hidden),
 };
 
-FORCEINLINE int32 ToIndex(EFace State)
+FORCEINLINE int32 ToIndex(const EFace& State)
 {
 	return static_cast<int32>(State);
 }
 
-FORCEINLINE int32 ToOppositeIndex(EFace State)
+FORCEINLINE int32 ToOppositeIndex(const EFace& State)
 {
 	return 5 - static_cast<int32>(State);
 }
@@ -137,7 +137,7 @@ struct FBaseTileInfo
 
 	bool operator!=(const FBaseTileInfo& Other) const
 	{
-		return TileWeight != Other.TileWeight || TileVariations != Other.TileVariations || Faces != Other.Faces;
+		return !(*this == Other);
 	}
 };
 
@@ -267,7 +267,7 @@ public:
 	static FString ToString(const TBitArray<>& BitArray)
 	{
 		FString BitString;
-		for (int32 i = 0; i < BitArray.Num(); i++)
+		for (int32 i = 0; i < BitArray.Num(); ++i)
 		{
 			BitString += BitArray[i] ? TEXT("1") : TEXT("0");
 		}
@@ -278,12 +278,32 @@ public:
 	{
 		TBitArray<> BitArray;
 		BitArray.Init(false, BitString.Len());
-		for (int32 i = 0; i < BitString.Len(); i++)
+		for (int32 i = 0; i < BitString.Len(); ++i)
 		{
 			BitArray[i] = BitString[i] == '1';
 		}
 		return BitArray;
 	}
+};
+
+/**
+ * 각 타일의 면 정보
+ */
+USTRUCT(BlueprintType)
+struct FTileFaceIndices
+{
+	GENERATED_BODY()
+
+	FTileFaceIndices() = default;
+
+	FTileFaceIndices(TArray<int32>&& InFaceIndices) : FaceIndices(InFaceIndices)
+	{
+	}
+
+	// Faces Size is Fixed to 6
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data",
+		DisplayName = "FaceIndices (Up, Back, Right, Left, Front, Down)")
+	TArray<int32> FaceIndices = {0, 0, 0, 0, 0, 0};
 };
 
 /*
@@ -323,14 +343,13 @@ public:
 	TArray<FFacePair> FaceInfos;
 
 
-	// TODO: FaceInfo에서는 Direction과 관계없이 모든 방향이 들어있다. 이걸 각 방향에 대한 정보로 나눠서 저장해야함
 	// FacePair 대신에 FaceArray를 만들고, FaceArray를 6개 가진 FaceInfo가 있음
 	// FaceInfo에서 각 FaceArray에는 각 방향에 대해서 FaceString이 들어가있음
 	// Ex) FaceArray[0] = Up 방향에 가능한 모든 면 이름 {'1a', '1b', '1c', '1d', '2a', '2b', '2c', '2d', ...}
 	// 이걸 근데 어떻게 TileToFace로 바꾸지?
 	// TileToFace는 각 타일에 대해서 TArray<TBitArray<>>로 저장해야하고 각 TBitArray<>에는 각 방향에 대한 면 인덱스가 들어가야함
-	// Ex) TileToFace[0] = {0000000010000, 00001000000, 00000100000, 00000100000, 00001000000, 0000000000010000}
-
+	// Ex) TileToFace[0] = {000000001000000, 00001000000, 00001000000, 00001000000, 00001000000, 000000000010000}
+	// TSet을 사용해서 전부 합치는 연산을 하기
 
 	// 면 인덱스 -> 타일 맵 ((면 위치(UBRLFD순서)) -> Bitset)
 	// 해당 면이 셀에 위치할 때 해당 면과 맞닿을 수 있는 모든 조각에 대한 인덱스에 대한 비트셋
@@ -346,11 +365,8 @@ public:
 	// 해당 조각이 셀에 위치할 때 해당 조각이 가지는 모든 면에 대한 인덱스에 대한 비트셋
 	// Ex) 0 -> 0번 조각이 가지는 모든 면(6개)에 대한 인덱스를 비트셋에 추가
 	// TBitArray의 크기는 FaceInfos의 사이즈와 같다.
-	TMap<int32, TBitArray<>> TileToFaceBitArrayMap;
-
-	// TileToFaceBitArrayMap를 데이터 에셋에 저장하기 위한 자료구조
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TMap<int32, FTileBitString> TileToFaceBitStringMap;
+	UPROPERTY(EditAnywhere, Blueprintable, Category = "WFC3D|Data")
+	TMap<int32, FTileFaceIndices> TileToFaceMap;
 
 private:
 	// 베이스 타일 정보 설정
@@ -376,10 +392,7 @@ private:
 	bool LoadFaceToTileBitMap();
 
 	// 타일 비트맵 설정
-	bool SetTileToFaceBitStringMap();
-
-	// 타일 비트맵 로드
-	bool LoadTileToFaceBitMap();
+	bool SetTileToFaceMap();
 
 public:
 	// 데이터 생성
@@ -396,7 +409,7 @@ private:
 	void PrintFaceToTileBitMapKeys()
 	{
 		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKeys Size: %d"), FaceInfos.Num());
-		for (int32 i = 0; i < FaceInfos.Num(); i++)
+		for (int32 i = 0; i < FaceInfos.Num(); ++i)
 		{
 			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%d, %s)"), i, FaceInfos[i].GetPair().Key,
 			       *FaceInfos[i].GetPair().Value);
@@ -410,16 +423,6 @@ private:
 		{
 			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Key: %d"), Elem.Key);
 			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Value: %s"), *FTileBitString::ToString(Elem.Value));
-		}
-	}
-
-	void PrintTileToFaceBitMap()
-	{
-		UE_LOG(LogTemp, Display, TEXT("TileToFaceBitMap Size: %d"), TileToFaceBitArrayMap.Num());
-		for (auto& Elem : TileToFaceBitArrayMap)
-		{
-			UE_LOG(LogTemp, Display, TEXT("TileToFaceBitMap Key: %d"), Elem.Key);
-			UE_LOG(LogTemp, Display, TEXT("TileToFaceBitMap Value: %s"), *FTileBitString::ToString(Elem.Value));
 		}
 	}
 
@@ -447,20 +450,13 @@ private:
 		}
 	}
 
-	const EFace RotationMap[6][4] = {
-		{EFace::None, EFace::None, EFace::None, EFace::None},
-		{EFace::Back, EFace::Left, EFace::Front, EFace::Right},
-		{EFace::Right, EFace::Back, EFace::Left, EFace::Front},
-		{EFace::Left, EFace::Front, EFace::Right, EFace::Back},
-		{EFace::Front, EFace::Right, EFace::Back, EFace::Left},
-		{EFace::None, EFace::None, EFace::None, EFace::None},
-	};
-
 public:
-	bool HasMatchingFace(const FFacePair& Face, const TArray<FString>& Faces);
-	FString RotateUDFace(const FString& InputString, const int32& RotationSteps);
-	FBaseTileInfo RotateTileClockwise(const FBaseTileInfo& BaseTileInfo, const int32& RotationStep);
+	static bool HasMatchingFace(const FFacePair& Face, const TArray<FString>& Faces);
+	static FString RotateUDFace(const FString& InputString, const int32& RotationSteps);
+	static FBaseTileInfo RotateTileClockwise(const FBaseTileInfo& BaseTileInfo, const int32& RotationStep);
 
+private:
+	static const EFace RotationMap[6][4];
 
 	// WFC3DActor에 필요함
 	// TArray<int32> GetAllIndices() const

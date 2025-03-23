@@ -39,7 +39,7 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 		return false;
 	}
 
-	for (int32 Direction = 0; Direction < 6; Direction++)
+	for (int32 Direction = 0; Direction < 6; ++Direction)
 	{
 		// 전파 받은 면이 아니면 넘기기
 		if (!PropagatedCell.PropagatedFaces[Direction])
@@ -79,26 +79,27 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 
 	// 남은 타일 옵션에 대해서 각 면에 대한 비트셋을 OR 연산해서 MergedFaceOptionsBitset에 넣음
 	TArray<TBitArray<>> MergedFaceOptionsBitset = {TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>()};
-	for (int32 Direction = 0; Direction < 6; Direction++)
+	for (int32 Direction = 0; Direction < 6; ++Direction)
 	{
 		MergedFaceOptionsBitset[Direction].Init(false, WFC3DModel->FaceInfos.Num());
 	}
 
+	// 남은 타일의 인덱스의 비트맵을 모두 합치기?
 	// 남은 타일의 인덱스를 모두 가져옴
 	TArray<int32> RemainingTileIndices = GetAllIndexFromBitset(PropagatedCell.RemainingTileOptionsBitset);
 	for (int32 Index : RemainingTileIndices)
 	{
 		// 남은 타일에 대해서 각 면을 가져와서 해당 비트셋 true로 변경
-		TArray<int32> FaceIndices = GetAllIndexFromBitset(WFC3DModel->TileToFaceBitArrayMap[Index]);
-		for (int32 FaceIndex : FaceIndices)
+		FTileFaceIndices FaceIndices = WFC3DModel->TileToFaceMap[Index];
+		for (int32 Direction = 0; Direction < 6; ++Direction)
 		{
-			MergedFaceOptionsBitset[ToIndex(WFC3DModel->FaceInfos[FaceIndex].GetDirection())][FaceIndex] = true;
+			MergedFaceOptionsBitset[Direction][FaceIndices.FaceIndices[Direction]] = true;
 		}
 	}
 
 	// MergedFaceOptionsBitset을 PropagatedCell에 넣음
 	FCell3D CellToPropagate;
-	for (int32 Direction = 0; Direction < 6; Direction++)
+	for (int32 Direction = 0; Direction < 6; ++Direction)
 	{
 		// 만약 전파 받기 전과 전파 받은후가 같다면 더 이상 전파할 필요가 없음
 		if (MergedFaceOptionsBitset[Direction] == PropagatedCell.MergedFaceOptionsBitset[Direction])
@@ -140,7 +141,7 @@ bool FGrid::CollapseGrid()
 		}
 
 		TArray<int32> CellsWithLowestEntropy;
-		for(int32 i = 0; i < Grid.Num(); i++)
+		for(int32 i = 0; i < Grid.Num(); ++i)
 		{
 			if(Grid[i].Entropy == LowestEntropy && !Grid[i].IsCollapsed)
 			{
@@ -161,7 +162,7 @@ bool FGrid::CollapseGrid()
 			return false;
 		}
 		
-		for(int32 Direction = 0; Direction < 6; Direction++)
+		for(int32 Direction = 0; Direction < 6; ++Direction)
         {
             FIntVector NextLocation = CollapseLocation + PropagateDirection[Direction];
             if(CheckLocation(NextLocation))

@@ -23,6 +23,17 @@ void FTileVariantInfo::CalculateTotalWeight()
 	}
 }
 
+
+const EFace UWFC3DModel::RotationMap[6][4] = {
+	{EFace::None, EFace::None, EFace::None, EFace::None},
+	{EFace::Back, EFace::Left, EFace::Front, EFace::Right},
+	{EFace::Right, EFace::Back, EFace::Left, EFace::Front},
+	{EFace::Left, EFace::Front, EFace::Right, EFace::Back},
+	{EFace::Front, EFace::Right, EFace::Back, EFace::Left},
+	{EFace::None, EFace::None, EFace::None, EFace::None},
+};
+
+
 UWFC3DModel::UWFC3DModel()
 {
 }
@@ -139,9 +150,9 @@ bool UWFC3DModel::SetTileInfos()
 	for (const auto& BaseTileInfo : BaseTileInfos)
 	{
 		TileInfos.AddUnique(BaseTileInfo.Value);
-		for (int32 i = 1; i < 4; i++)
+		for (int32 RotationStep = 1; RotationStep < 4; ++RotationStep)
 		{
-			TileInfos.AddUnique(RotateTileClockwise(BaseTileInfo.Value, i));
+			TileInfos.AddUnique(RotateTileClockwise(BaseTileInfo.Value, RotationStep));
 		}
 	}
 	return true;
@@ -157,7 +168,7 @@ bool UWFC3DModel::SetFaceToTileBitMapKeys()
 	}
 	for (const auto& TileInfo : TileInfos)
 	{
-		for (int32 Direction = 0; Direction < 6; Direction++)
+		for (int32 Direction = 0; Direction < 6; ++Direction)
 		{
 			FaceInfos.AddUnique({static_cast<EFace>(Direction), TileInfo.Faces[Direction]});
 		}
@@ -171,13 +182,13 @@ bool UWFC3DModel::SetFaceToTileBitStringMap()
 	int32 TileSetSize = TileInfos.Num();
 	int32 FaceToTileBitMapKeysSize = FaceInfos.Num();
 
-	for(int32 i = 0; i < FaceToTileBitMapKeysSize; i++)
+	for(int32 i = 0; i < FaceToTileBitMapKeysSize; ++i)
 	{
 		FFacePair Face = FaceInfos[i];
 		TBitArray<> NewBitArray;
 		NewBitArray.Init(false, TileSetSize);
 
-		for (int32 j = 0; j < TileSetSize; j++)
+		for (int32 j = 0; j < TileSetSize; ++j)
 		{
 			if (HasMatchingFace(Face, TileInfos[j].Faces))
 			{
@@ -190,24 +201,22 @@ bool UWFC3DModel::SetFaceToTileBitStringMap()
 	return true;
 }
 
-bool UWFC3DModel::SetTileToFaceBitStringMap()
+bool UWFC3DModel::SetTileToFaceMap()
 {
-	TileToFaceBitStringMap.Empty();
+	TileToFaceMap.Empty();
 	int32 TileSetSize = TileInfos.Num();
-	int32 FaceToTileBitMapKeysSize = FaceInfos.Num();
-	
-	for (int32 i = 0; i < TileSetSize; i++)
-	{
-		TBitArray<> NewBitArray;
-		NewBitArray.Init(false, FaceToTileBitMapKeysSize);
 
+	// TileToFaceMap에 각 타일이 가지는 모든 면에 대한 인덱스 추가
+	for (int32 i = 0; i < TileSetSize; ++i)
+	{
+		TArray<int32> FaceIndices;
 		// TODO: EFace의 모든 방향 확인
-		for (int32 Direction = 0; Direction < 6; Direction++)
+		for (int32 Direction = 0; Direction < 6; ++Direction)
 		{
-			NewBitArray[FaceInfos.Find({static_cast<EFace>(Direction), TileInfos[i].Faces[Direction]})] = true;
+			FaceIndices.Add(FaceInfos.Find({static_cast<EFace>(Direction), TileInfos[i].Faces[Direction]}));
 		}
 
-		TileToFaceBitStringMap.Add(i, MoveTemp(NewBitArray));
+		TileToFaceMap.Add(i, MoveTemp(FaceIndices));
 	}
 	return true;
 }
@@ -223,21 +232,6 @@ bool UWFC3DModel::LoadFaceToTileBitMap()
 	for (const auto& Tuple : FaceToTileBitStringMap)
 	{
 		FaceToTileBitArrayMap.Add(Tuple.Key, Tuple.Value.GetBitArray());
-	}
-	return true;
-}
-
-bool UWFC3DModel::LoadTileToFaceBitMap()
-{
-	if (TileToFaceBitStringMap.Num() == 0)
-	{
-		UE_LOG(LogTemp, Error, TEXT("TileToFaceBitStringMap is Empty"));
-		return false;
-	}
-
-	for (const auto& Tuple : TileToFaceBitStringMap)
-	{
-		TileToFaceBitArrayMap.Add(Tuple.Key, Tuple.Value.GetBitArray());
 	}
 	return true;
 }
@@ -288,7 +282,7 @@ bool UWFC3DModel::CreateData()
 		return false;
 	}
 
-	if (!SetTileToFaceBitStringMap())
+	if (!SetTileToFaceMap())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to SetTileToFaceBitStringMap"));
 		return false;
@@ -317,12 +311,7 @@ bool UWFC3DModel::LoadData()
 		UE_LOG(LogTemp, Error, TEXT("Failed to LoadFaceToTileBitMap in LoadData"));
 		return false;
 	}
-
-	if (!LoadTileToFaceBitMap())
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to LoadTileToFaceBitMap in LoadData"));
-		return false;
-	}
+	
 	return true;
 }
 
@@ -347,20 +336,6 @@ bool UWFC3DModel::PrintData()
             UE_LOG(LogTemp, Error, TEXT("Failed to LoadFaceToTileBitMap in PrintData"));
             return false;
         }
-	}
-	
-	if (!TileToFaceBitArrayMap.IsEmpty())
-	{
-		PrintTileToFaceBitMap();
-	}
-	else 
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to PrintTileToFaceBitMap in PrintData"));
-		if (!LoadTileToFaceBitMap())
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to LoadTileToFaceBitMap in PrintData"));
-			return false;
-		}
 	}
 
 	return true;
@@ -434,7 +409,7 @@ FBaseTileInfo UWFC3DModel::RotateTileClockwise(const FBaseTileInfo& BaseTileInfo
 	NewTileInfo.Faces[ToIndex(EFace::Down)] = RotateUDFace(BaseTileInfo.Faces[ToIndex(EFace::Down)], RotationStep);
 	
 	// BRLF Rotation
-	for (int32 i = 1; i < 5; i++)
+	for (int32 i = 1; i < 5; ++i)
 	{
 		NewTileInfo.Faces[i] = BaseTileInfo.Faces[ToIndex(RotationMap[i][RotationStep])];
 	}
