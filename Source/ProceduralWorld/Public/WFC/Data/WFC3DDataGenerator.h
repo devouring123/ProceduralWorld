@@ -17,18 +17,17 @@ public:
 	AWFC3DDataGenerator();
 
 	virtual void OnConstruction(const FTransform& Transform) override;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	UWFC3DModel* WFC3DModel;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	bool bCreateModelData = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	bool bPrintModelData = false;
-	
-private:
 
+private:
 	bool CreateModelData() const;
 	bool PrintModelData() const;
 };

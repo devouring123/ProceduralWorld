@@ -3,10 +3,148 @@
 
 #include "WFC/WFC3DActor.h"
 
+void FCell3D::Init(int32 TileInfoNum, int32 FaceInfoNum, const int32& Index, const FIntVector& Dimension)
+{
+	IsCollapsed = false;
+	IsPropagated = false;
+	UE_LOG(LogTemp, Display, TEXT("Index: %d"), Index);
+	Location = IndexToLocation(Index, Dimension);
+	CollapsedTileInfo = nullptr;
+	Entropy = TileInfoNum;
+	PropagatedFaces = {false, false, false, false, false, false};
+	RemainingTileOptionsBitset.Init(true, TileInfoNum);
+	for (int32 Direction = 0; Direction < 6; ++Direction)
+	{
+		MergedFaceOptionsBitset[Direction].Init(true, FaceInfoNum);
+	}
+}
+
+FIntVector&& FCell3D::IndexToLocation(const int32& Index, const FIntVector& Dimension)
+{
+	// index -> 3차원 위치로 변환
+	return {Index % Dimension.X, Index / Dimension.X % Dimension.Y, Index / Dimension.X / Dimension.Y};
+}
+
+FGrid::FGrid(const int32& X, const int32& Y, const int32& Z)
+{
+	Dimension = FIntVector(X, Y, Z);
+	Grid.Init(FCell3D(), X * Y * Z);
+	RandomStream.Initialize(RandomSeed);
+}
+
+FGrid::FGrid(const FIntVector& Dimension): Dimension(Dimension)
+{
+	Grid.Init(FCell3D(), Dimension.X * Dimension.Y * Dimension.Z);
+	RandomStream.Initialize(RandomSeed);
+}
+
+FGrid& FGrid::operator=(const FGrid& Other)
+{
+	Grid = Other.Grid;
+	Dimension = Other.Dimension;
+	WFC3DModel = Other.WFC3DModel;
+
+	return *this;
+}
+
+void FGrid::Init(UWFC3DModel* InWFCModel, const FIntVector& InDimension)
+{
+	WFC3DModel = InWFCModel;
+	Dimension = InDimension;
+
+	if (!IsValid(WFC3DModel))
+	{
+		UE_LOG(LogTemp, Display, TEXT("WFC3DModel is not Valid"));
+		return;
+	}
+	Grid.Init(FCell3D(), Dimension.X * Dimension.Y * Dimension.Z);
+
+	for (int32 Index = 0; Index < Dimension.X * Dimension.Y * Dimension.Z; ++Index)
+	{
+		Grid[Index].Init(WFC3DModel->TileInfos.Num(), WFC3DModel->FaceInfos.Num(), Index, Dimension);
+	}
+	RemainingCells = Dimension.X * Dimension.Y * Dimension.Z;
+}
+
+
+bool FGrid::GetCell(const FIntVector& Location, FCell3D& OutCell)
+{
+	if (!CheckLocation(Location))
+	{
+		return false;
+	}
+	OutCell = Grid[Location.X + Location.Y * Dimension.X + Location.Z * Dimension.X * Dimension.Y];
+	return true;
+}
+
+
+bool FGrid::CollapseGrid()
+{
+	UE_LOG(LogTemp, Display, TEXT("CollapseGrid"));
+	UE_LOG(LogTemp, Display, TEXT("RemainingCells: %d"), RemainingCells);
+	while (RemainingCells > 0)
+	{
+		int32 LowestEntropy = INT32_MAX;
+		for (const auto& Cell : Grid)
+		{
+			if (Cell.Entropy < LowestEntropy && !Cell.IsCollapsed)
+			{
+				LowestEntropy = Cell.Entropy;
+			}
+		}
+
+		TArray<int32> CellsWithLowestEntropy;
+		for (int32 i = 0; i < Grid.Num(); ++i)
+		{
+			if (Grid[i].Entropy == LowestEntropy && !Grid[i].IsCollapsed)
+			{
+				CellsWithLowestEntropy.Add(i);
+			}
+		}
+
+		int32 SelectedGridIndex = CellsWithLowestEntropy[Rand0(CellsWithLowestEntropy.Num())];
+		FIntVector CollapseLocation = Grid[SelectedGridIndex].Location;
+
+		TArray<int32> TileInfoIndex = GetAllIndexFromBitset(Grid[SelectedGridIndex].RemainingTileOptionsBitset);
+		int32 SelectedTileInfoIndex = TileInfoIndex[Rand0(TileInfoIndex.Num())];
+		FBaseTileInfo* TileInfo = &WFC3DModel->TileInfos[SelectedTileInfoIndex];
+
+		if (!CollapseCell(CollapseLocation, TileInfo))
+		{
+			UE_LOG(LogTemp, Display, TEXT("Failed to CollapseCell"));
+			return false;
+		}
+
+		for (int32 Direction = 0; Direction < 6; ++Direction)
+		{
+			FIntVector NextLocation = CollapseLocation + PropagateDirection[Direction];
+			FCell3D CellToPropagate;
+			if (GetCell(NextLocation, CellToPropagate) && !CellToPropagate.IsCollapsed)
+			{
+				PropagationQueue.Enqueue(NextLocation);
+				CellToPropagate.IsPropagated = true;
+			}
+		}
+
+		PropagateGrid();
+
+		for (auto& Cell : Grid)
+		{
+			if (!Cell.IsCollapsed)
+			{
+				Cell.IsPropagated = false;
+			}
+		}
+	}
+	return true;
+}
+
 bool FGrid::CollapseCell(const FIntVector& Location, FBaseTileInfo* TileInfo)
 {
 	FCell3D CollapsedCell;
 
+	UE_LOG(LogTemp, Display, TEXT("CollapseCell Location : %d, %d, %d"),
+	       Location.X, Location.Y, Location.Z);
 	if (!GetCell(Location, CollapsedCell))
 	{
 		UE_LOG(LogTemp, Display, TEXT("Failed to GetCell in CollapseCell"));
@@ -21,17 +159,29 @@ bool FGrid::CollapseCell(const FIntVector& Location, FBaseTileInfo* TileInfo)
 	CollapsedCell.IsPropagated = true;
 
 	RemainingCells--;
-	
+
+	return true;
+}
+
+bool FGrid::PropagateGrid()
+{
+	while (!PropagationQueue.IsEmpty())
+	{
+		FIntVector Location;
+		PropagationQueue.Dequeue(Location);
+		if (!PropagateCell(Location))
+		{
+			UE_LOG(LogTemp, Display, TEXT("Failed to PropagateCell"));
+			return false;
+		}
+	}
 	return true;
 }
 
 bool FGrid::PropagateCell(const FIntVector& Location)
 {
-	if (!CheckLocation(Location))
-	{
-		UE_LOG(LogTemp, Display, TEXT("Not In Grid in PropagateCell"));
-		return false;
-	}
+	UE_LOG(LogTemp, Display, TEXT("PropagateCell Location : %d, %d, %d"),
+	       Location.X, Location.Y, Location.Z);
 
 	FCell3D PropagatedCell;
 	if (!GetCell(Location, PropagatedCell))
@@ -57,7 +207,8 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 		MergedTileOptionsForDirection.Init(false, WFC3DModel->TileInfos.Num());
 
 		// PropagatedCellInDirection.MergedFaceOptionsBitset[5 - Direction]의 모든 비트에서 각 비트에 해당하는 TileBitset을 가져와서 OR 연산
-		TArray<int32> MergedFaceIndices = GetAllIndexFromBitset(PropagatedCellInDirection.MergedFaceOptionsBitset[5 - Direction]);
+		TArray<int32> MergedFaceIndices = GetAllIndexFromBitset(
+			PropagatedCellInDirection.MergedFaceOptionsBitset[5 - Direction]);
 		for (int32 Index : MergedFaceIndices)
 		{
 			MergedTileOptionsForDirection.CombineWithBitwiseOR(WFC3DModel->FaceToTileBitArrayMap[Index], EBitwiseOperatorFlags::MaintainSize);
@@ -78,7 +229,9 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 	}
 
 	// 남은 타일 옵션에 대해서 각 면에 대한 비트셋을 OR 연산해서 MergedFaceOptionsBitset에 넣음
-	TArray<TBitArray<>> MergedFaceOptionsBitset = {TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>()};
+	TArray<TBitArray<>> MergedFaceOptionsBitset = {
+		TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>()
+	};
 	for (int32 Direction = 0; Direction < 6; ++Direction)
 	{
 		MergedFaceOptionsBitset[Direction].Init(false, WFC3DModel->FaceInfos.Num());
@@ -127,71 +280,6 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 	return true;
 }
 
-bool FGrid::CollapseGrid()
-{
-	while (RemainingCells > 0)
-	{
-		int32 LowestEntropy = INT32_MAX;
-		for(const auto& Cell : Grid)
-		{
-			if(Cell.Entropy < LowestEntropy && !Cell.IsCollapsed)
-			{
-				LowestEntropy = Cell.Entropy;
-			}
-		}
-
-		TArray<int32> CellsWithLowestEntropy;
-		for(int32 i = 0; i < Grid.Num(); ++i)
-		{
-			if(Grid[i].Entropy == LowestEntropy && !Grid[i].IsCollapsed)
-			{
-				CellsWithLowestEntropy.Add(i);
-			}
-		}
-
-		int32 SelectedGridIndex = CellsWithLowestEntropy[Rand0(CellsWithLowestEntropy.Num())];
-		FIntVector CollapseLocation = Grid[SelectedGridIndex].Location;
-
-		TArray<int32> TileInfoIndex = GetAllIndexFromBitset(Grid[SelectedGridIndex].RemainingTileOptionsBitset);
-		int32 SelectedTileInfoIndex = TileInfoIndex[Rand0(TileInfoIndex.Num())];
-		FBaseTileInfo* TileInfo = &WFC3DModel->TileInfos[SelectedTileInfoIndex];
-
-		if(!CollapseCell(CollapseLocation, TileInfo))
-		{
-			UE_LOG(LogTemp, Display, TEXT("Failed to CollapseCell"));
-			return false;
-		}
-		
-		for(int32 Direction = 0; Direction < 6; ++Direction)
-        {
-            FIntVector NextLocation = CollapseLocation + PropagateDirection[Direction];
-            if(CheckLocation(NextLocation))
-            {
-                PropagationQueue.Enqueue(NextLocation);
-            }
-        }
-		
-		PropagateGrid();
-	}
-	return true;
-}
-
-
-bool FGrid::PropagateGrid()
-{
-	while (PropagationQueue.IsEmpty() == false)
-    {
-        FIntVector Location;
-        PropagationQueue.Dequeue(Location);
-        if (!PropagateCell(Location))
-        {
-            UE_LOG(LogTemp, Display, TEXT("Failed to PropagateCell"));
-            return false;
-        }
-    }
-	return true;
-}
-
 bool FGrid::CreateRandomSeed()
 {
 	RandomSeed = RandomStream.RandRange(0, INT32_MAX - 1);
@@ -206,6 +294,11 @@ bool FGrid::SetRandomSeed(int32 Seed)
 	RandomStream.Initialize(RandomSeed);
 	UE_LOG(LogTemp, Display, TEXT("RandomSeed = %d"), Seed);
 	return true;
+}
+
+bool FGrid::CheckLocation(FIntVector Location) const
+{
+	return !(Location.X < 0 || Location.X >= Dimension.X || Location.Y < 0 || Location.Y >= Dimension.Y || Location.Z < 0 || Location.Z >= Dimension.Z);
 }
 
 TArray<int32> FGrid::GetAllIndexFromBitset(const TBitArray<>& Bitset)
@@ -224,28 +317,53 @@ TArray<int32> FGrid::GetAllIndexFromBitset(const TBitArray<>& Bitset)
 	return Result;
 }
 
+const TArray<FIntVector> FGrid::PropagateDirection = {
+	{0, 0, 1},
+	{0, 1, 0},
+	{1, 0, 0},
+	{-1, 0, 0},
+	{0, -1, 0},
+	{0, 0, -1},
+};
 
-bool FGrid::CheckLocation(FIntVector Location) const
-{
-	if (Location.X < 0 || Location.X >= Dimension.X || Location.Y < 0 || Location.Y >= Dimension.Y || Location.Z < 0 || Location.Z >= Dimension.Z)
-	{
-		UE_LOG(LogTemp, Display, TEXT("Out of Range in Grid: X: %d, Y: %d, Z: %d"), Location.X, Location.Y, Location.Z);
-		return false;
-	}
-	return true;
-}
-
+// TODO: Actor에서 실제로 Propagate 하기
 AWFC3DActor::AWFC3DActor()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	Grid = FGrid(0, 0, 0);
+}
+
+void AWFC3DActor::Init()
+{
+	Grid.Init(WFC3DModel, Dimension);
 }
 
 void AWFC3DActor::Collapse()
 {
+	Grid.CollapseGrid();
+}
+
+void AWFC3DActor::OnConstruction(const FTransform& Transform)
+{
+	if (bInitGrid)
+	{
+		Init();
+		UE_LOG(LogTemp, Display, TEXT("Init Success"));
+		bInitGrid = false;
+	}
+
+	if (bCollapseGrid)
+	{
+		bool bResult = Grid.CollapseGrid();
+		UE_LOG(LogTemp, Display, TEXT("Collapse Grid : %hs"), bResult ? "true" : "false");
+		bCollapseGrid = false;
+	}
 }
 
 void AWFC3DActor::BeginPlay()
 {
 	Super::BeginPlay();
+
+	Grid = FGrid(Dimension);
+	Init();
+	Collapse();
 }

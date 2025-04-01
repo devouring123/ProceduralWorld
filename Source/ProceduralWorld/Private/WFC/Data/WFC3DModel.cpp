@@ -117,23 +117,23 @@ bool UWFC3DModel::SetTileVariantInfos()
 
 bool UWFC3DModel::SetBaseTileVariantInfoSet()
 {
-	if(BaseTileInfos.IsEmpty())
+	if (BaseTileInfos.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("BaseTileInfos is Empty"));
 		return false;
 	}
-	if(TileVariantInfos.IsEmpty())
-    {
-        UE_LOG(LogTemp, Error, TEXT("TileVariantInfos is Empty"));
-        return false;
-    }
+	if (TileVariantInfos.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileVariantInfos is Empty"));
+		return false;
+	}
 	for (auto& BaseTileInfo : BaseTileInfos)
 	{
-		if(TileVariantInfos.Find(BaseTileInfo.Key) == nullptr)
-        {
-            UE_LOG(LogTemp, Error, TEXT("TileVariantInfos does not have BaseTileInfo by Key: %s"), *BaseTileInfo.Key.ToString());
-            // return false;
-        }
+		if (TileVariantInfos.Find(BaseTileInfo.Key) == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("TileVariantInfos does not have BaseTileInfo by Key: %s"), *BaseTileInfo.Key.ToString());
+			// return false;
+		}
 		BaseTileInfo.Value.TileVariations = TileVariantInfos.Find(BaseTileInfo.Key);
 	}
 	return true;
@@ -142,7 +142,7 @@ bool UWFC3DModel::SetBaseTileVariantInfoSet()
 bool UWFC3DModel::SetTileInfos()
 {
 	TileInfos.Empty();
-	if(BaseTileInfos.IsEmpty())
+	if (BaseTileInfos.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("BaseTileInfos is Empty"));
 		return false;
@@ -161,7 +161,7 @@ bool UWFC3DModel::SetTileInfos()
 bool UWFC3DModel::SetFaceToTileBitMapKeys()
 {
 	FaceInfos.Empty();
-	if(TileInfos.IsEmpty())
+	if (TileInfos.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("TileInfos is Empty"));
 		return false;
@@ -182,7 +182,7 @@ bool UWFC3DModel::SetFaceToTileBitStringMap()
 	int32 TileSetSize = TileInfos.Num();
 	int32 FaceToTileBitMapKeysSize = FaceInfos.Num();
 
-	for(int32 i = 0; i < FaceToTileBitMapKeysSize; ++i)
+	for (int32 i = 0; i < FaceToTileBitMapKeysSize; ++i)
 	{
 		FFacePair Face = FaceInfos[i];
 		TBitArray<> NewBitArray;
@@ -210,7 +210,6 @@ bool UWFC3DModel::SetTileToFaceMap()
 	for (int32 i = 0; i < TileSetSize; ++i)
 	{
 		TArray<int32> FaceIndices;
-		// TODO: EFace의 모든 방향 확인
 		for (int32 Direction = 0; Direction < 6; ++Direction)
 		{
 			FaceIndices.Add(FaceInfos.Find({static_cast<EFace>(Direction), TileInfos[i].Faces[Direction]}));
@@ -252,12 +251,12 @@ bool UWFC3DModel::CreateData()
 		return false;
 	}
 
-	if(!SetBaseTileVariantInfoSet())
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to SetBaseTileVariantInfoSet"));
-        return false;
-    }
-	
+	if (!SetBaseTileVariantInfoSet())
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to SetBaseTileVariantInfoSet"));
+		return false;
+	}
+
 	if (!SetTileInfos())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to SetTileInfos"));
@@ -289,18 +288,18 @@ bool UWFC3DModel::CreateData()
 	}
 	// Load Data
 	if (!LoadData())
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to LoadData"));
-        return false;
-    }
-	
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to LoadData"));
+		return false;
+	}
+
 	// Print Model Data
 	if (!PrintData())
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to PrintData"));
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -311,17 +310,17 @@ bool UWFC3DModel::LoadData()
 		UE_LOG(LogTemp, Error, TEXT("Failed to LoadFaceToTileBitMap in LoadData"));
 		return false;
 	}
-	
+
 	return true;
 }
 
 bool UWFC3DModel::PrintData()
 {
-	if(!TileVariantInfos.IsEmpty())
+	if (!TileVariantInfos.IsEmpty())
 	{
 		PrintTileVariationInfo();
 	}
-	
+
 	PrintFaceToTileBitMapKeys();
 
 	if (!FaceToTileBitArrayMap.IsEmpty())
@@ -332,10 +331,10 @@ bool UWFC3DModel::PrintData()
 	{
 		UE_LOG(LogTemp, Display, TEXT("Failed to PrintFaceToTileBitMap in PrintData"));
 		if (!LoadFaceToTileBitMap())
-        {
-            UE_LOG(LogTemp, Error, TEXT("Failed to LoadFaceToTileBitMap in PrintData"));
-            return false;
-        }
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to LoadFaceToTileBitMap in PrintData"));
+			return false;
+		}
 	}
 
 	return true;
@@ -356,7 +355,6 @@ bool UWFC3DModel::HasMatchingFace(const FFacePair& FacePair, const TArray<FStrin
 		// Face1 == "2f", Face2 == "3s" return false
 		// Face1 == "3s", Face2 == "3" return false
 
-		// TODO: UBRLFD 순서대로 잘 맞게 해줘야 제대로 작동함 
 		if (Faces[ToOppositeIndex(Face.Key)] == Face.Value && Faces[ToOppositeIndex(Face.Key)].Find("s") && Face.Value.Find("s"))
 		{
 			return true;
@@ -407,7 +405,7 @@ FBaseTileInfo UWFC3DModel::RotateTileClockwise(const FBaseTileInfo& BaseTileInfo
 
 	NewTileInfo.Faces[ToIndex(EFace::Up)] = RotateUDFace(BaseTileInfo.Faces[ToIndex(EFace::Up)], RotationStep);
 	NewTileInfo.Faces[ToIndex(EFace::Down)] = RotateUDFace(BaseTileInfo.Faces[ToIndex(EFace::Down)], RotationStep);
-	
+
 	// BRLF Rotation
 	for (int32 i = 1; i < 5; ++i)
 	{
