@@ -5,13 +5,13 @@
 
 void FCell3D::Init(int32 TileInfoNum, int32 FaceInfoNum, const int32& Index, const FIntVector& Dimension)
 {
-	IsCollapsed = false;
-	IsPropagated = false;
+	bIsCollapsed = false;
+	bIsPropagated = false;
 	UE_LOG(LogTemp, Display, TEXT("Index: %d"), Index);
 	Location = IndexToLocation(Index, Dimension);
 	CollapsedTileInfo = nullptr;
 	Entropy = TileInfoNum;
-	PropagatedFaces = {false, false, false, false, false, false};
+	PropagatedFaces = 0;
 	RemainingTileOptionsBitset.Init(true, TileInfoNum);
 	for (int32 Direction = 0; Direction < 6; ++Direction)
 	{
@@ -23,6 +23,16 @@ FIntVector&& FCell3D::IndexToLocation(const int32& Index, const FIntVector& Dime
 {
 	// index -> 3차원 위치로 변환
 	return {Index % Dimension.X, Index / Dimension.X % Dimension.Y, Index / Dimension.X / Dimension.Y};
+}
+
+bool FCell3D::GetPropagatedFaces(const EFace& Direction) const
+{
+	return PropagatedFaces & 1 << static_cast<uint8>(Direction);
+}
+
+void FCell3D::SetPropagatedFaces(const EFace& Direction)
+{
+	PropagatedFaces |= 1 << static_cast<uint8>(Direction);
 }
 
 FGrid::FGrid(const int32& X, const int32& Y, const int32& Z)
@@ -64,16 +74,35 @@ void FGrid::Init(UWFC3DModel* InWFCModel, const FIntVector& InDimension)
 		Grid[Index].Init(WFC3DModel->TileInfos.Num(), WFC3DModel->FaceInfos.Num(), Index, Dimension);
 	}
 	RemainingCells = Dimension.X * Dimension.Y * Dimension.Z;
+
+	// Init OutEmptyCell
+	OutEmptyCell.bIsCollapsed = true;
+	OutEmptyCell.bIsPropagated = true;
+	OutEmptyCell.Entropy = 1;
+	OutEmptyCell.Location = {-1, -1 ,-1};
+	OutEmptyCell.CollapsedTileInfo = &WFC3DModel->TileInfos[1];
 }
 
 
-bool FGrid::GetCell(const FIntVector& Location, FCell3D& OutCell)
+bool FGrid::GetCell(const FIntVector& Location, FCell3D*& OutCell)
 {
 	if (!CheckLocation(Location))
 	{
+		OutCell = nullptr;
 		return false;
 	}
-	OutCell = Grid[Location.X + Location.Y * Dimension.X + Location.Z * Dimension.X * Dimension.Y];
+	OutCell = &Grid[Location.X + Location.Y * Dimension.X + Location.Z * Dimension.X * Dimension.Y];
+	return true;
+}
+
+bool FGrid::GetCell(const FIntVector& Location, const FCell3D*& OutCell) const
+{
+	if (!CheckLocation(Location))
+	{
+		OutCell = nullptr;
+		return false;
+	}
+	OutCell = &Grid[Location.X + Location.Y * Dimension.X + Location.Z * Dimension.X * Dimension.Y];
 	return true;
 }
 
@@ -82,12 +111,19 @@ bool FGrid::CollapseGrid()
 {
 	UE_LOG(LogTemp, Display, TEXT("CollapseGrid"));
 	UE_LOG(LogTemp, Display, TEXT("RemainingCells: %d"), RemainingCells);
+
+	if (!IsValid(WFC3DModel))
+	{
+		UE_LOG(LogTemp, Display, TEXT("WFC3DModel is not Valid"));
+		return false;
+	}
+
 	while (RemainingCells > 0)
 	{
 		int32 LowestEntropy = INT32_MAX;
 		for (const auto& Cell : Grid)
 		{
-			if (Cell.Entropy < LowestEntropy && !Cell.IsCollapsed)
+			if (Cell.Entropy < LowestEntropy && !Cell.bIsCollapsed)
 			{
 				LowestEntropy = Cell.Entropy;
 			}
@@ -96,7 +132,7 @@ bool FGrid::CollapseGrid()
 		TArray<int32> CellsWithLowestEntropy;
 		for (int32 i = 0; i < Grid.Num(); ++i)
 		{
-			if (Grid[i].Entropy == LowestEntropy && !Grid[i].IsCollapsed)
+			if (Grid[i].Entropy == LowestEntropy && !Grid[i].bIsCollapsed)
 			{
 				CellsWithLowestEntropy.Add(i);
 			}
@@ -118,11 +154,11 @@ bool FGrid::CollapseGrid()
 		for (int32 Direction = 0; Direction < 6; ++Direction)
 		{
 			FIntVector NextLocation = CollapseLocation + PropagateDirection[Direction];
-			FCell3D CellToPropagate;
-			if (GetCell(NextLocation, CellToPropagate) && !CellToPropagate.IsCollapsed)
+			FCell3D* CellToPropagate;
+			if (GetCell(NextLocation, CellToPropagate) && !CellToPropagate->bIsCollapsed)
 			{
 				PropagationQueue.Enqueue(NextLocation);
-				CellToPropagate.IsPropagated = true;
+				CellToPropagate->bIsPropagated = true;
 			}
 		}
 
@@ -130,18 +166,19 @@ bool FGrid::CollapseGrid()
 
 		for (auto& Cell : Grid)
 		{
-			if (!Cell.IsCollapsed)
+			if (!Cell.bIsCollapsed)
 			{
-				Cell.IsPropagated = false;
+				Cell.bIsPropagated = false;
 			}
 		}
 	}
+
 	return true;
 }
 
 bool FGrid::CollapseCell(const FIntVector& Location, FBaseTileInfo* TileInfo)
 {
-	FCell3D CollapsedCell;
+	FCell3D* CollapsedCell;
 
 	UE_LOG(LogTemp, Display, TEXT("CollapseCell Location : %d, %d, %d"),
 	       Location.X, Location.Y, Location.Z);
@@ -151,12 +188,19 @@ bool FGrid::CollapseCell(const FIntVector& Location, FBaseTileInfo* TileInfo)
 		return false;
 	}
 
-	CollapsedCell.CollapsedTileInfo = TileInfo;
-	CollapsedCell.Entropy = 1;
-	CollapsedCell.RemainingTileOptionsBitset.Empty();
+	CollapsedCell->CollapsedTileInfo = TileInfo;
+	CollapsedCell->Entropy = 1;
+	CollapsedCell->RemainingTileOptionsBitset.Empty();
 
-	CollapsedCell.IsCollapsed = true;
-	CollapsedCell.IsPropagated = true;
+	CollapsedCell->bIsCollapsed = true;
+	CollapsedCell->bIsPropagated = true;
+
+	FCell3D* TestCell;
+	if (GetCell(Location, TestCell))
+	{
+		UE_LOG(LogTemp, Display, TEXT("CollapseCell TestCell IsCollapsed %hs"), TestCell->bIsCollapsed ? "true" : "false");
+		UE_LOG(LogTemp, Display, TEXT("CollapseCell CollapseCell IsCollapsed %hs"), CollapsedCell->bIsCollapsed ? "true" : "false");
+	}
 
 	RemainingCells--;
 
@@ -183,24 +227,31 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 	UE_LOG(LogTemp, Display, TEXT("PropagateCell Location : %d, %d, %d"),
 	       Location.X, Location.Y, Location.Z);
 
-	FCell3D PropagatedCell;
+	FCell3D* PropagatedCell;
 	if (!GetCell(Location, PropagatedCell))
 	{
 		return false;
 	}
 
+	// 전파 받은 면 취합
 	for (int32 Direction = 0; Direction < 6; ++Direction)
 	{
 		// 전파 받은 면이 아니면 넘기기
-		if (!PropagatedCell.PropagatedFaces[Direction])
+		// TODO: 없는 부분은 전파 항상 받았다고 가정 해야 하고, 값은 OutEmpty(-2, -2s, -2s, -2s, -2s, -2)로 고정 해야 함
+		const FCell3D* PropagatedCellInDirection;
+		FIntVector DirectedLocation = Location + PropagateDirection[Direction];
+		// 있는데 전파 안받았으면 컨티뉴
+		if (CheckLocation(DirectedLocation) && !PropagatedCell->GetPropagatedFaces(static_cast<EFace>(Direction)))
 		{
 			continue;
 		}
 
 		// 전파 받은 방향의 면이 있다면 해당 방향으로 전파 받은 면의 타일 옵션을 가져옴
-		FCell3D PropagatedCellInDirection;
-		FIntVector FacedLocation = Location + PropagateDirection[Direction];
-		GetCell(FacedLocation, PropagatedCellInDirection);
+		if (!GetCell(DirectedLocation, PropagatedCellInDirection))
+		{
+			// 없으면 PropagatedCellInDirection에 OutEmptyCell 대입
+			PropagatedCellInDirection = &FGrid::OutEmptyCell;
+		}
 
 		// 전파 받은 방향에서 해당 방향으로 전파받은 모든 타일 옵션을 가져와서 OR 연산
 		TBitArray<> MergedTileOptionsForDirection;
@@ -208,23 +259,23 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 
 		// PropagatedCellInDirection.MergedFaceOptionsBitset[5 - Direction]의 모든 비트에서 각 비트에 해당하는 TileBitset을 가져와서 OR 연산
 		TArray<int32> MergedFaceIndices = GetAllIndexFromBitset(
-			PropagatedCellInDirection.MergedFaceOptionsBitset[5 - Direction]);
+			PropagatedCellInDirection->MergedFaceOptionsBitset[5 - Direction]);
 		for (int32 Index : MergedFaceIndices)
 		{
 			MergedTileOptionsForDirection.CombineWithBitwiseOR(WFC3DModel->FaceToTileBitArrayMap[Index], EBitwiseOperatorFlags::MaintainSize);
 		}
 
 		// 나온 결과를 RemainingTileOptionsBitset과 And 연산
-		PropagatedCell.RemainingTileOptionsBitset.CombineWithBitwiseAND(MergedTileOptionsForDirection, EBitwiseOperatorFlags::MaintainSize);
+		PropagatedCell->RemainingTileOptionsBitset.CombineWithBitwiseAND(MergedTileOptionsForDirection, EBitwiseOperatorFlags::MaintainSize);
 	}
 	// 모든 방향에 대한 전파가 끝나면 남은 타일 셋을 확인해서 엔트로피 갱신
-	PropagatedCell.Entropy = PropagatedCell.RemainingTileOptionsBitset.CountSetBits();
+	PropagatedCell->Entropy = PropagatedCell->RemainingTileOptionsBitset.CountSetBits();
 
 	// RemainingTileOptionBitset이 1이면 붕괴
-	if (PropagatedCell.Entropy == 1)
+	if (PropagatedCell->Entropy == 1)
 	{
 		// 붕괴
-		FBaseTileInfo* TileInfo = &WFC3DModel->TileInfos[PropagatedCell.RemainingTileOptionsBitset.Find(true)];
+		FBaseTileInfo* TileInfo = &WFC3DModel->TileInfos[PropagatedCell->RemainingTileOptionsBitset.Find(true)];
 		CollapseCell(Location, TileInfo);
 	}
 
@@ -239,7 +290,7 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 
 	// 남은 타일의 인덱스의 비트맵을 모두 합치기?
 	// 남은 타일의 인덱스를 모두 가져옴
-	TArray<int32> RemainingTileIndices = GetAllIndexFromBitset(PropagatedCell.RemainingTileOptionsBitset);
+	TArray<int32> RemainingTileIndices = GetAllIndexFromBitset(PropagatedCell->RemainingTileOptionsBitset);
 	for (int32 Index : RemainingTileIndices)
 	{
 		// 남은 타일에 대해서 각 면을 가져와서 해당 비트셋 true로 변경
@@ -251,32 +302,32 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 	}
 
 	// MergedFaceOptionsBitset을 PropagatedCell에 넣음
-	FCell3D CellToPropagate;
+	FCell3D* CellToPropagate;
 	for (int32 Direction = 0; Direction < 6; ++Direction)
 	{
 		// 만약 전파 받기 전과 전파 받은후가 같다면 더 이상 전파할 필요가 없음
-		if (MergedFaceOptionsBitset[Direction] == PropagatedCell.MergedFaceOptionsBitset[Direction])
+		if (MergedFaceOptionsBitset[Direction] == PropagatedCell->MergedFaceOptionsBitset[Direction])
 		{
 			continue;
 		}
 
-		PropagatedCell.MergedFaceOptionsBitset[Direction] = MergedFaceOptionsBitset[Direction];
+		PropagatedCell->MergedFaceOptionsBitset[Direction] = MergedFaceOptionsBitset[Direction];
 		FIntVector NextLocation = Location + PropagateDirection[Direction];
 
 		// 위치 에러 or 이미 붕괴 or 이미 전파됨
-		if (!GetCell(NextLocation, CellToPropagate) || CellToPropagate.IsCollapsed || CellToPropagate.IsPropagated)
+		if (!GetCell(NextLocation, CellToPropagate) || CellToPropagate->bIsCollapsed || CellToPropagate->bIsPropagated)
 		{
 			continue;
 		}
 
 		// Propagate to Next Cell
 		// 전파 받은 반대 방향에서 해당 방향으로 전파
-		CellToPropagate.PropagatedFaces[5 - Direction] = true;
+		CellToPropagate->SetPropagatedFaces(static_cast<EFace>(Direction));
 		PropagationQueue.Enqueue(NextLocation);
 	}
 
 	// 전파 완료
-	PropagatedCell.IsPropagated = true;
+	PropagatedCell->bIsPropagated = true;
 	return true;
 }
 
@@ -319,14 +370,13 @@ TArray<int32> FGrid::GetAllIndexFromBitset(const TBitArray<>& Bitset)
 
 const TArray<FIntVector> FGrid::PropagateDirection = {
 	{0, 0, 1},
-	{0, 1, 0},
-	{1, 0, 0},
-	{-1, 0, 0},
 	{0, -1, 0},
+	{-1, 0, 0},
+	{1, 0, 0},
+	{0, 1, 0},
 	{0, 0, -1},
 };
 
-// TODO: Actor에서 실제로 Propagate 하기
 AWFC3DActor::AWFC3DActor()
 {
 	PrimaryActorTick.bCanEverTick = false;

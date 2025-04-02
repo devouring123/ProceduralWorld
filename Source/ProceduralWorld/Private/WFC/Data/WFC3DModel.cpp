@@ -23,17 +23,6 @@ void FTileVariantInfo::CalculateTotalWeight()
 	}
 }
 
-
-const EFace UWFC3DModel::RotationMap[6][4] = {
-	{EFace::None, EFace::None, EFace::None, EFace::None},
-	{EFace::Back, EFace::Left, EFace::Front, EFace::Right},
-	{EFace::Right, EFace::Back, EFace::Left, EFace::Front},
-	{EFace::Left, EFace::Front, EFace::Right, EFace::Back},
-	{EFace::Front, EFace::Right, EFace::Back, EFace::Left},
-	{EFace::None, EFace::None, EFace::None, EFace::None},
-};
-
-
 UWFC3DModel::UWFC3DModel()
 {
 }
@@ -150,7 +139,7 @@ bool UWFC3DModel::SetTileInfos()
 	for (const auto& BaseTileInfo : BaseTileInfos)
 	{
 		TileInfos.AddUnique(BaseTileInfo.Value);
-		for (int32 RotationStep = 1; RotationStep < 4; ++RotationStep)
+		for (uint8 RotationStep = 1; RotationStep < 4; ++RotationStep)
 		{
 			TileInfos.AddUnique(RotateTileClockwise(BaseTileInfo.Value, RotationStep));
 		}
@@ -168,7 +157,7 @@ bool UWFC3DModel::SetFaceToTileBitMapKeys()
 	}
 	for (const auto& TileInfo : TileInfos)
 	{
-		for (int32 Direction = 0; Direction < 6; ++Direction)
+		for (uint8 Direction = 0; Direction < 6; ++Direction)
 		{
 			FaceInfos.AddUnique({static_cast<EFace>(Direction), TileInfo.Faces[Direction]});
 		}
@@ -182,13 +171,13 @@ bool UWFC3DModel::SetFaceToTileBitStringMap()
 	int32 TileSetSize = TileInfos.Num();
 	int32 FaceToTileBitMapKeysSize = FaceInfos.Num();
 
-	for (int32 i = 0; i < FaceToTileBitMapKeysSize; ++i)
+	for (uint8 i = 0; i < FaceToTileBitMapKeysSize; ++i)
 	{
 		FFacePair Face = FaceInfos[i];
 		TBitArray<> NewBitArray;
 		NewBitArray.Init(false, TileSetSize);
 
-		for (int32 j = 0; j < TileSetSize; ++j)
+		for (uint8 j = 0; j < TileSetSize; ++j)
 		{
 			if (HasMatchingFace(Face, TileInfos[j].Faces))
 			{
@@ -207,10 +196,10 @@ bool UWFC3DModel::SetTileToFaceMap()
 	int32 TileSetSize = TileInfos.Num();
 
 	// TileToFaceMap에 각 타일이 가지는 모든 면에 대한 인덱스 추가
-	for (int32 i = 0; i < TileSetSize; ++i)
+	for (uint8 i = 0; i < TileSetSize; ++i)
 	{
 		TArray<int32> FaceIndices;
-		for (int32 Direction = 0; Direction < 6; ++Direction)
+		for (uint8 Direction = 0; Direction < 6; ++Direction)
 		{
 			FaceIndices.Add(FaceInfos.Find({static_cast<EFace>(Direction), TileInfos[i].Faces[Direction]}));
 		}
@@ -344,7 +333,7 @@ bool UWFC3DModel::HasMatchingFace(const FFacePair& FacePair, const TArray<FStrin
 {
 	// Compare UD Face
 	TPair<EFace, FString> Face = FacePair.GetPair();
-	if ((Face.Key == EFace::Up || Face.Key == EFace::Down) && Faces[ToOppositeIndex(Face.Key)] == Face.Value)
+	if ((Face.Key == EFace::Up || Face.Key == EFace::Down) && Faces[FFaceUtils::FFaceUtils::ToOppositeIndex(Face.Key)] == Face.Value)
 	{
 		return true;
 	}
@@ -355,7 +344,7 @@ bool UWFC3DModel::HasMatchingFace(const FFacePair& FacePair, const TArray<FStrin
 		// Face1 == "2f", Face2 == "3s" return false
 		// Face1 == "3s", Face2 == "3" return false
 
-		if (Faces[ToOppositeIndex(Face.Key)] == Face.Value && Faces[ToOppositeIndex(Face.Key)].Find("s") && Face.Value.Find("s"))
+		if (Faces[FFaceUtils::ToOppositeIndex(Face.Key)] == Face.Value && Faces[FFaceUtils::ToOppositeIndex(Face.Key)].Find("s") && Face.Value.Find("s"))
 		{
 			return true;
 		}
@@ -365,7 +354,7 @@ bool UWFC3DModel::HasMatchingFace(const FFacePair& FacePair, const TArray<FStrin
 		// Face1 == "2f", Face2 == "2f" return false
 		// Face1 == "2", Face2 == "2" return false
 
-		if (Faces[ToOppositeIndex(Face.Key)] == Face.Value + "f" || Faces[ToOppositeIndex(Face.Key)] + "f" == Face.Value)
+		if (Faces[FFaceUtils::ToOppositeIndex(Face.Key)] == Face.Value + "f" || Faces[FFaceUtils::ToOppositeIndex(Face.Key)] + "f" == Face.Value)
 		{
 			return true;
 		}
@@ -403,13 +392,13 @@ FBaseTileInfo UWFC3DModel::RotateTileClockwise(const FBaseTileInfo& BaseTileInfo
 
 	// UD Rotation
 
-	NewTileInfo.Faces[ToIndex(EFace::Up)] = RotateUDFace(BaseTileInfo.Faces[ToIndex(EFace::Up)], RotationStep);
-	NewTileInfo.Faces[ToIndex(EFace::Down)] = RotateUDFace(BaseTileInfo.Faces[ToIndex(EFace::Down)], RotationStep);
+	NewTileInfo.Faces[FFaceUtils::ToIndex(EFace::Up)] = RotateUDFace(BaseTileInfo.Faces[FFaceUtils::ToIndex(EFace::Up)], RotationStep);
+	NewTileInfo.Faces[FFaceUtils::ToIndex(EFace::Down)] = RotateUDFace(BaseTileInfo.Faces[FFaceUtils::ToIndex(EFace::Down)], RotationStep);
 
 	// BRLF Rotation
-	for (int32 i = 1; i < 5; ++i)
+	for (uint8 i = 1; i < 5; ++i)
 	{
-		NewTileInfo.Faces[i] = BaseTileInfo.Faces[ToIndex(RotationMap[i][RotationStep])];
+		NewTileInfo.Faces[i] = BaseTileInfo.Faces[FFaceUtils::ToIndex(FFaceUtils::Rotate(static_cast<EFace>(i), RotationStep))];
 	}
 
 	return NewTileInfo;

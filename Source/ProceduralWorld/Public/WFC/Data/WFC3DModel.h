@@ -10,30 +10,85 @@
 class UStaticMesh;
 class UMaterialInterface;
 
-/**
- * 하나의 타일 정보
- */
 UENUM(BlueprintType)
 enum class EFace : uint8
 {
-	Up UMETA(DisplayName = "Up"),
-	Back UMETA(DisplayName = "Back"),
-	Right UMETA(DisplayName = "Right"),
-	Left UMETA(DisplayName = "Left"),
-	Front UMETA(DisplayName = "Front"),
-	Down UMETA(DisplayName = "Down"),
-	None UMETA(Hidden),
+	Up = 0 UMETA(DisplayName = "Up"),
+	Back = 1 UMETA(DisplayName = "Back"),
+	Right = 2 UMETA(DisplayName = "Right"),
+	Left = 3 UMETA(DisplayName = "Left"),
+	Front = 4 UMETA(DisplayName = "Front"),
+	Down = 5 UMETA(DisplayName = "Down"),
+	None = 6 UMETA(Hidden),
 };
 
-FORCEINLINE int32 ToIndex(const EFace& State)
+/**
+ * FaceUtils
+ */
+class FFaceUtils
 {
-	return static_cast<int32>(State);
-}
+public:
+	static constexpr EFace AllDirections[6] = {
+		EFace::Up,
+		EFace::Back,
+		EFace::Right,
+		EFace::Left,
+		EFace::Front,
+		EFace::Down
+	};
 
-FORCEINLINE int32 ToOppositeIndex(const EFace& State)
-{
-	return 5 - static_cast<int32>(State);
-}
+	static FORCEINLINE EFace GetOpposite(EFace Face)
+	{
+		const uint8 Index = static_cast<uint8>(Face);
+		return Index < 6 ? static_cast<EFace>(5 - Index) : EFace::None;
+	}
+
+	static FORCEINLINE uint8 ToIndex(const EFace& State)
+	{
+		return static_cast<uint8>(State);
+	}
+
+	static FORCEINLINE uint8 ToOppositeIndex(const EFace& State)
+	{
+		return 5 - static_cast<uint8>(State);
+	}
+
+	static FORCEINLINE FIntVector GetDirectionVector(EFace Face)
+	{
+		const uint8 Index = static_cast<uint8>(Face);
+		return Index < 6 ? DirectionVectors[Index] : FIntVector(0, 0, 0);
+	}
+
+	static FORCEINLINE EFace Rotate(const EFace& Face, const uint8& Step)
+	{
+		const uint8 Index = static_cast<uint8>(Face);
+		return RotationMap[Index][Step];
+	}
+
+private:
+	static constexpr FIntVector DirectionVectors[6] = {
+		FIntVector(0, 0, 1), // Up
+		FIntVector(0, -1, 0), // Back
+		FIntVector(-1, 0, 0), // Right
+		FIntVector(1, 0, 0), // Left
+		FIntVector(0, 1, 0), // Front
+		FIntVector(0, 0, -1) // Down
+	};
+
+	static constexpr EFace RotationMap[6][4] = {
+		{EFace::None, EFace::None, EFace::None, EFace::None},
+		{EFace::Back, EFace::Left, EFace::Front, EFace::Right},
+		{EFace::Right, EFace::Back, EFace::Left, EFace::Front},
+		{EFace::Left, EFace::Front, EFace::Right, EFace::Back},
+		{EFace::Front, EFace::Right, EFace::Back, EFace::Left},
+		{EFace::None, EFace::None, EFace::None, EFace::None},
+	};
+};
+
+
+/**
+ * 하나의 타일 정보
+ */
 
 USTRUCT(BlueprintType)
 struct FTile
@@ -267,7 +322,7 @@ public:
 	static FString ToString(const TBitArray<>& BitArray)
 	{
 		FString BitString;
-		for (int32 i = 0; i < BitArray.Num(); ++i)
+		for (uint8 i = 0; i < BitArray.Num(); ++i)
 		{
 			BitString += BitArray[i] ? TEXT("1") : TEXT("0");
 		}
@@ -278,7 +333,7 @@ public:
 	{
 		TBitArray<> BitArray;
 		BitArray.Init(false, BitString.Len());
-		for (int32 i = 0; i < BitString.Len(); ++i)
+		for (uint8 i = 0; i < BitString.Len(); ++i)
 		{
 			BitArray[i] = BitString[i] == '1';
 		}
@@ -409,7 +464,7 @@ private:
 	void PrintFaceToTileBitMapKeys()
 	{
 		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKeys Size: %d"), FaceInfos.Num());
-		for (int32 i = 0; i < FaceInfos.Num(); ++i)
+		for (uint8 i = 0; i < FaceInfos.Num(); ++i)
 		{
 			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%d, %s)"), i, FaceInfos[i].GetPair().Key,
 			       *FaceInfos[i].GetPair().Value);
@@ -454,29 +509,4 @@ public:
 	static bool HasMatchingFace(const FFacePair& Face, const TArray<FString>& Faces);
 	static FString RotateUDFace(const FString& InputString, const int32& RotationSteps);
 	static FBaseTileInfo RotateTileClockwise(const FBaseTileInfo& BaseTileInfo, const int32& RotationStep);
-
-private:
-	static const EFace RotationMap[6][4];
-
-	// WFC3DActor에 필요함
-	// TArray<int32> GetAllIndices() const
-	// {
-	// 	TArray<int32> Result;
-	// 	int32 Index = 0;
-	// 	do
-	// 	{
-	// 		Index = BitArray.FindFrom(true, Index);
-	// 		if (Index != INDEX_NONE)
-	// 		{
-	// 			Result.Add(Index++);
-	// 		}
-	// 	}
-	// 	while (Index != INDEX_NONE);
-	// 	return Result;
-	// }
-
-	// FTileBitString operator&(const FTileBitString& Rhs) const
-	// {
-	// 	return FTileBitString(TBitArray<>::BitwiseAND(BitArray, Rhs.BitArray, EBitwiseOperatorFlags::MaxSize));
-	// }
 };

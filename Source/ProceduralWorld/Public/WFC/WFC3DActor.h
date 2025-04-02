@@ -18,7 +18,6 @@
  * TArray<TBitArray<>> MergedFaceOptionsBitset 각 타일 옵션의 6개의 면에 대한 병합 비트셋 배열
  */
 
-
 USTRUCT(BlueprintType)
 struct FCell3D
 {
@@ -29,10 +28,10 @@ struct FCell3D
 	void Init(int32 TileInfoNum, int32 FaceInfoNum, const int32& Index, const FIntVector& Dimension);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	bool IsCollapsed = false;
+	bool bIsCollapsed = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	bool IsPropagated = false;
+	bool bIsPropagated = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	FIntVector Location;
@@ -49,15 +48,17 @@ struct FCell3D
 	// 이것에 대해서는 모두 OR 연산
 	// 다른 면에서도 동일한 작업을 하면 타일비트셋이 전파 받은 면의 개수만큼 있는데 이것들을 And연산
 	// 그렇게 해서 나온 결과를 RemainingTileOptionsBitset에 넣음
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	TArray<bool> PropagatedFaces = {false, false, false, false, false, false};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D", EditFixedSize)
+	uint8 PropagatedFaces = 0;
 
-	TBitArray<> RemainingTileOptionsBitset;
+	TBitArray<> RemainingTileOptionsBitset = TBitArray<>();
 
 	// RemainingTileOptionBitset에서 받아온 모든 타일 옵션에 대해서 각 면에 대한 비트셋을 OR 연산해서 해당 변수에 넣음
 	TArray<TBitArray<>> MergedFaceOptionsBitset = {TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>(), TBitArray<>()};
 
 	static FORCEINLINE FIntVector&& IndexToLocation(const int32& Index, const FIntVector& Dimension);
+	bool GetPropagatedFaces(const EFace& Direction) const;
+	void SetPropagatedFaces(const EFace& Direction);
 };
 
 /*
@@ -74,7 +75,7 @@ struct FCell3D
  *  	1. 어떤 한 셀이 붕괴
  *   		1. 가중치 랜덤을 사용해서 붕괴, 누적합 사용
  * 		2. 총 조각 수 n에 따라서 O(n)의 시간 복잡도를 가짐, 가능한 모든 조각을 모으는 행위 O(n)
- *  			조각의 가중치를 모두 합해서 누적 확률로 만드는 행위 O(n), 누적 확률에 기반해서 조각을 뽑는 행위 O(logn)
+ *  			조각의 가중치를 모두 합해서 누적 확률로 만드는 행위 O(n), 누적 확률에 기반해서 조각을 뽑는 행위 O(logN)
  *   	2. 붕괴 후 해당 셀과 인접한 셀로 전파
  *   		1. 각 전파는 자기 셀의 UBRLFD로 전파 큐에 삽입, 만약 이미 붕괴한 셀이면 삽입 하지 않음
  *   	3. 전파 받은 셀에서 가능한 각 면의 경우의 수를 재계산 후 만약 각 면에 대한 비트셋에 변화가 있다면 큐에 넣기, 최대 모든 셀의 개수만큼 반복
@@ -141,7 +142,9 @@ public:
 
 	void Init(UWFC3DModel* InWFCModel, const FIntVector& InDimension);
 
-	bool GetCell(const FIntVector& Location, FCell3D& OutCell);
+	bool GetCell(const FIntVector& Location, FCell3D*& OutCell);
+	
+	bool GetCell(const FIntVector& Location, const FCell3D*& OutCell) const;
 
 	/**
 	 * CollapseGrid
@@ -183,8 +186,9 @@ private:
 	// 비트셋에서 1인 모든 인덱스를 가져오는 함수
 	static TArray<int32> GetAllIndexFromBitset(const TBitArray<>& Bitset);
 
-	// UBR LFD
+	// UBRLFD
 	static const TArray<FIntVector> PropagateDirection;
+	static FCell3D OutEmptyCell;
 };
 
 
@@ -218,13 +222,13 @@ public:
 	FGrid Grid;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	bool InitializeInstancedMeshes = false;
+	bool bInitializeInstancedMeshes = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	bool CreateInstancedStaticMesh = false;
+	bool bCreateInstancedStaticMesh = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	bool CreateRandomSeed = false;
+	bool bCreateRandomSeed = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	int32 RandomSeed = 0;
