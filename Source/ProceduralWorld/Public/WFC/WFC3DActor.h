@@ -161,7 +161,7 @@ public:
 
 private:
 	// 셀이 붕괴 될 경우 불리는 함수, 붕괴되면 데이터만 갱신
-	bool CollapseCell(const FIntVector& Location, FBaseTileInfo* TileInfo);
+	bool CollapseCell(const FIntVector& Location, const int32& SelectedTileInfoIndex);
 
 	// 그리드 전파
 	bool PropagateGrid();

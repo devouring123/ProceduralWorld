@@ -66,14 +66,7 @@ public:
 	}
 
 private:
-	static constexpr FIntVector DirectionVectors[6] = {
-		FIntVector(0, 0, 1), // Up
-		FIntVector(0, -1, 0), // Back
-		FIntVector(-1, 0, 0), // Right
-		FIntVector(1, 0, 0), // Left
-		FIntVector(0, 1, 0), // Front
-		FIntVector(0, 0, -1) // Down
-	};
+	static const FIntVector DirectionVectors[6];
 
 	static constexpr EFace RotationMap[6][4] = {
 		{EFace::None, EFace::None, EFace::None, EFace::None},
@@ -249,7 +242,7 @@ public:
 	{
 	}
 
-	FFacePair(EFace InOrder, const FString& InName) : Direction(InOrder), Name(InName)
+	FFacePair(EFace InDirection, const FString& InName) : Direction(InDirection), Name(InName)
 	{
 	}
 
@@ -397,7 +390,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TArray<FFacePair> FaceInfos;
 
-
+	
 	// FacePair 대신에 FaceArray를 만들고, FaceArray를 6개 가진 FaceInfo가 있음
 	// FaceInfo에서 각 FaceArray에는 각 방향에 대해서 FaceString이 들어가있음
 	// Ex) FaceArray[0] = Up 방향에 가능한 모든 면 이름 {'1a', '1b', '1c', '1d', '2a', '2b', '2c', '2d', ...}

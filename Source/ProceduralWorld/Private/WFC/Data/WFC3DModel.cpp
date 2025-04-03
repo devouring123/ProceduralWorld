@@ -3,6 +3,14 @@
 
 #include "WFC/Data/WFC3DModel.h"
 
+const FIntVector FFaceUtils::DirectionVectors[6] = {
+	FIntVector(0, 0, 1), // Up
+	FIntVector(0, -1, 0), // Back
+	FIntVector(-1, 0, 0), // Right
+	FIntVector(1, 0, 0), // Left
+	FIntVector(0, 1, 0), // Front
+	FIntVector(0, 0, -1) // Down
+};
 
 void FTileByBiome::CalculateTotalWeight()
 {
@@ -338,7 +346,7 @@ bool UWFC3DModel::HasMatchingFace(const FFacePair& FacePair, const TArray<FStrin
 		return true;
 	}
 	// Compare BRLF Face
-	if (Face.Key >= EFace::Back && Face.Key <= EFace::Left)
+	if (Face.Key >= EFace::Back && Face.Key <= EFace::Front)
 	{
 		// Face1 == "3s", Face2 == "3s" return True
 		// Face1 == "2f", Face2 == "3s" return false
