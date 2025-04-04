@@ -3,7 +3,7 @@
 
 #include "WFC/WFC3DActor.h"
 
-FCell3D FGrid::OutEmptyCell = FCell3D(); 
+FCell3D FGrid::OutEmptyCell = FCell3D();
 
 void FCell3D::Init(int32 TileInfoNum, int32 FaceInfoNum, const int32& Index, const FIntVector& Dimension)
 {
@@ -81,7 +81,7 @@ void FGrid::Init(UWFC3DModel* InWFCModel, const FIntVector& InDimension)
 	OutEmptyCell.bIsCollapsed = true;
 	OutEmptyCell.bIsPropagated = true;
 	OutEmptyCell.Entropy = 1;
-	OutEmptyCell.Location = {-1, -1 ,-1};
+	OutEmptyCell.Location = {-1, -1, -1};
 	OutEmptyCell.CollapsedTileInfo = &WFC3DModel->TileInfos[1];
 	// TODO: 아직 테스트 안해봄
 	for (uint8 Direction = 0; Direction < 6; ++Direction)
@@ -137,6 +137,19 @@ bool FGrid::CollapseGrid()
 			}
 		}
 
+		if (LowestEntropy == 0)
+		{
+			TArray<int32> CellsWithLowestEntropy;
+			for (int32 i = 0; i < Grid.Num(); ++i)
+			{
+				if (Grid[i].Entropy == LowestEntropy && !Grid[i].bIsCollapsed)
+				{
+					UE_LOG(LogTemp, Display, TEXT("Collapse Grid Failed With Lowest Entropy = 0, Index %d"), i);
+				}
+			}
+			return false;
+		}
+
 		TArray<int32> CellsWithLowestEntropy;
 		for (int32 i = 0; i < Grid.Num(); ++i)
 		{
@@ -151,7 +164,7 @@ bool FGrid::CollapseGrid()
 
 		TArray<int32> TileInfoIndex = GetAllIndexFromBitset(Grid[SelectedGridIndex].RemainingTileOptionsBitset);
 		int32 SelectedTileInfoIndex = TileInfoIndex[Rand0(TileInfoIndex.Num())];
-		
+
 
 		if (!CollapseCell(CollapseLocation, SelectedTileInfoIndex))
 		{
@@ -207,10 +220,10 @@ bool FGrid::CollapseCell(const FIntVector& Location, const int32& SelectedTileIn
 		CollapsedCell->MergedFaceOptionsBitset[Direction].Init(false, WFC3DModel->FaceInfos.Num());
 		CollapsedCell->MergedFaceOptionsBitset[Direction][WFC3DModel->TileToFaceMap[SelectedTileInfoIndex].FaceIndices[Direction]] = true;
 	}
-	
+
 	CollapsedCell->bIsCollapsed = true;
 	CollapsedCell->bIsPropagated = true;
-	
+
 	RemainingCells--;
 
 	return true;
@@ -263,7 +276,7 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 
 		// 전파 받은 방향에서 해당 방향으로 전파받은 모든 타일 옵션을 가져와서 OR 연산
 		TBitArray<> MergedTileOptionsForDirection = TBitArray<>(false, WFC3DModel->TileInfos.Num());
-		
+
 		// PropagatedCellInDirection.MergedFaceOptionsBitset[5 - Direction]의 모든 비트에서 각 비트에 해당하는 TileBitset을 가져와서 OR 연산
 		TArray<int32> MergedFaceIndices = GetAllIndexFromBitset(PropagatedCellInDirection->MergedFaceOptionsBitset[5 - Direction]);
 		for (int32 Index : MergedFaceIndices)
@@ -390,6 +403,7 @@ AWFC3DActor::AWFC3DActor()
 
 void AWFC3DActor::Init()
 {
+	WFC3DModel->LoadData();
 	Grid.Init(WFC3DModel, Dimension);
 }
 
@@ -406,12 +420,21 @@ void AWFC3DActor::OnConstruction(const FTransform& Transform)
 		UE_LOG(LogTemp, Display, TEXT("Init Success"));
 		bInitGrid = false;
 	}
-
 	if (bCollapseGrid)
 	{
 		bool bResult = Grid.CollapseGrid();
 		UE_LOG(LogTemp, Display, TEXT("Collapse Grid : %hs"), bResult ? "true" : "false");
 		bCollapseGrid = false;
+	}
+	if (bInitializeInstancedMeshes)
+	{
+		bool bResult = true;
+		bInitializeInstancedMeshes = false;
+	}
+	if (bCreateInstancedStaticMesh)
+	{
+		bool bResult = true;
+		bCreateInstancedStaticMesh = false;
 	}
 }
 
