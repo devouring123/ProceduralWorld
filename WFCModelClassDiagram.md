@@ -1,14 +1,32 @@
 ```mermaid
 classDiagram
-%% 모델 관련 클래스 구조
-class IWFC3DModelData {
-<<interface>>
-+virtual bool Initialize() = 0
-+virtual const TArray~FTileInfo~& GetTileInfos() const = 0
-+virtual const TArray~FFaceInfo~& GetFaceInfos() const = 0
-+virtual TBitArray GetCompatibleTiles(int32 FaceIndex) const = 0
-+virtual FTileFaceIndices GetTileFaces(int32 TileIndex) const = 0
-}
+    %% 모델 관련 클래스 구조
+    class IWFC3DModelData {
+    <<interface>>
+    +virtual bool Initialize() = 0
+    +virtual const TArray~FTileInfo~& GetTileInfos() const = 0
+    +virtual const TArray~FFaceInfo~& GetFaceInfos() const = 0
+    +virtual TBitArray GetCompatibleTiles(int32 FaceIndex) const = 0
+    +virtual FTileFaceIndices GetTileFaces(int32 TileIndex) const = 0
+    }
+
+    %% 새로운 데이터 구조체들
+    class FTileInfo {
+        +int32 TileID
+        +TArray~FString~ Faces
+        +float Weight
+    }
+
+    class FFaceInfo {
+        +EFace Direction
+        +FString Name
+    }
+
+    class FTileVisualInfo {
+        +UStaticMesh* Mesh
+        +TArray~UMaterialInterface*~ Materials
+        +FTileVariantInfo* VariantInfo
+    }
 
     class UWFC3DModelDataAsset {
         +UPROPERTY() TObjectPtr~UDataTable~ BaseTileDataTable
@@ -62,23 +80,7 @@ class IWFC3DModelData {
         +IWFC3DModelData* GetModelData()
     }
     
-    %% 새로운 데이터 구조체들
-    class FTileInfo {
-        +int32 TileID
-        +TArray~FString~ Faces
-        +float Weight
-    }
-    
-    class FFaceInfo {
-        +EFace Direction
-        +FString Name
-    }
-    
-    class FTileVisualInfo {
-        +UStaticMesh* Mesh
-        +TArray~UMaterialInterface*~ Materials
-        +FTileVariantInfo* VariantInfo
-    }
+
     
     
     
