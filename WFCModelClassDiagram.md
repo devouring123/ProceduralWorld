@@ -11,12 +11,12 @@ class IWFC3DModelData {
 }
 
     class UWFC3DModelDataAsset {
-        +UPROPERTY() TObjectPtr<UDataTable> BaseTileDataTable
-        +UPROPERTY() TObjectPtr<UDataTable> TileVariantDataTable
-        +UPROPERTY() TArray<FBaseTileInfo> TileInfos
-        +UPROPERTY() TArray<FFacePair> FaceInfos
-        +UPROPERTY() TMap<int32, FTileFaceIndices> TileToFaceMap
-        +UPROPERTY() TMap<int32, FTileBitString> FaceToTileBitStringMap
+        +UPROPERTY() TObjectPtr~UDataTable~ BaseTileDataTable
+        +UPROPERTY() TObjectPtr~UDataTable~ TileVariantDataTable
+        +UPROPERTY() TArray ~FBaseTileInfo~ TileInfos
+        +UPROPERTY() TArray~FFacePair~ FaceInfos
+        +UPROPERTY() TMap ~int32, FTileFaceIndices~ TileToFaceMap
+        +UPROPERTY() TMap~int32, FTileBitString~ FaceToTileBitStringMap
         
         +bool CreateData()
         +bool LoadData()
@@ -27,8 +27,8 @@ class IWFC3DModelData {
         -const IWFC3DModelData* ModelData
         -TArray~FTileInfo~ TileInfos
         -TArray~FFaceInfo~ FaceInfos
-        -TMap<int32, TBitArray> FaceToTileBitArrayMap
-        -TMap<int32, FTileFaceIndices> TileToFaceMap
+        -TMap~int32, TBitArray~ FaceToTileBitArrayMap
+        -TMap~int32, FTileFaceIndices~ TileToFaceMap
         -TArray~float~ TileWeights
         
         +void Initialize(const IWFC3DModelData* InModelData)
@@ -42,7 +42,7 @@ class IWFC3DModelData {
     
     class FWFC3DVizData {
         -const IWFC3DModelData* ModelData
-        -TMap<int32, FTileVisualInfo> TileVisualMap
+        -TMap ~int32, FTileVisualInfo~ TileVisualMap
         
         +void Initialize(const IWFC3DModelData* InModelData)
         +UStaticMesh* GetTileMesh(int32 TileIndex) const
@@ -79,6 +79,8 @@ class IWFC3DModelData {
         +TArray~UMaterialInterface*~ Materials
         +FTileVariantInfo* VariantInfo
     }
+    
+    
     
     %% 관계 정의
     IWFC3DModelData <|.. UWFC3DModelDataAsset : implements
