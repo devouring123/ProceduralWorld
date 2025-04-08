@@ -50,7 +50,7 @@ bool UWFC3DModel::SetBaseTileInfos()
 	// RowMap 순회
 	for (const TPair<FName, uint8*>& Row : RowMap)
 	{
-		if (const FBaseTileInfoDataTable* RowData = reinterpret_cast<const FBaseTileInfoDataTable*>(Row.Value))
+		if (const FTileInfoTable* RowData = reinterpret_cast<const FTileInfoTable*>(Row.Value))
 		{
 			FBaseTileInfo NewBaseTileInfo;
 			NewBaseTileInfo.Faces = {
@@ -88,7 +88,7 @@ bool UWFC3DModel::SetTileVariantInfos()
 	// RowMap 순회
 	for (const TPair<FName, uint8*>& Row : RowMap)
 	{
-		if (const FTileVariantInfoDataTable* RowData = reinterpret_cast<const FTileVariantInfoDataTable*>(Row.Value))
+		if (const FTileVariantInfoTable* RowData = reinterpret_cast<const FTileVariantInfoTable*>(Row.Value))
 		{
 			// 타일 변형 정보 찾고, 타일 변형 정보가 없으면 생성
 			// 바이옴도 찾고 바이옴이 없으면 생성

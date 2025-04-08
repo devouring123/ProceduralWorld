@@ -10,73 +10,73 @@
 class UStaticMesh;
 class UMaterialInterface;
 
-UENUM(BlueprintType)
-enum class EFace : uint8
-{
-	Up = 0 UMETA(DisplayName = "Up"),
-	Back = 1 UMETA(DisplayName = "Back"),
-	Right = 2 UMETA(DisplayName = "Right"),
-	Left = 3 UMETA(DisplayName = "Left"),
-	Front = 4 UMETA(DisplayName = "Front"),
-	Down = 5 UMETA(DisplayName = "Down"),
-	None = 6 UMETA(Hidden),
-};
+// UENUM(BlueprintType)
+// enum class EFace : uint8
+// {
+// 	Up = 0 UMETA(DisplayName = "Up"),
+// 	Back = 1 UMETA(DisplayName = "Back"),
+// 	Right = 2 UMETA(DisplayName = "Right"),
+// 	Left = 3 UMETA(DisplayName = "Left"),
+// 	Front = 4 UMETA(DisplayName = "Front"),
+// 	Down = 5 UMETA(DisplayName = "Down"),
+// 	None = 6 UMETA(Hidden),
+// };
 
-/**
- * FaceUtils
- */
-class FFaceUtils
-{
-public:
-	static constexpr EFace AllDirections[6] = {
-		EFace::Up,
-		EFace::Back,
-		EFace::Right,
-		EFace::Left,
-		EFace::Front,
-		EFace::Down
-	};
-
-	static FORCEINLINE EFace GetOpposite(EFace Face)
-	{
-		const uint8 Index = static_cast<uint8>(Face);
-		return Index < 6 ? static_cast<EFace>(5 - Index) : EFace::None;
-	}
-
-	static FORCEINLINE uint8 ToIndex(const EFace& State)
-	{
-		return static_cast<uint8>(State);
-	}
-
-	static FORCEINLINE uint8 ToOppositeIndex(const EFace& State)
-	{
-		return 5 - static_cast<uint8>(State);
-	}
-
-	static FORCEINLINE FIntVector GetDirectionVector(EFace Face)
-	{
-		const uint8 Index = static_cast<uint8>(Face);
-		return Index < 6 ? DirectionVectors[Index] : FIntVector(0, 0, 0);
-	}
-
-	static FORCEINLINE EFace Rotate(const EFace& Face, const uint8& Step)
-	{
-		const uint8 Index = static_cast<uint8>(Face);
-		return RotationMap[Index][Step];
-	}
-
-private:
-	static const FIntVector DirectionVectors[6];
-
-	static constexpr EFace RotationMap[6][4] = {
-		{EFace::None, EFace::None, EFace::None, EFace::None},
-		{EFace::Back, EFace::Left, EFace::Front, EFace::Right},
-		{EFace::Right, EFace::Back, EFace::Left, EFace::Front},
-		{EFace::Left, EFace::Front, EFace::Right, EFace::Back},
-		{EFace::Front, EFace::Right, EFace::Back, EFace::Left},
-		{EFace::None, EFace::None, EFace::None, EFace::None},
-	};
-};
+// /**
+//  * FaceUtils
+//  */
+// class FFaceUtils
+// {
+// public:
+// 	static constexpr EFace AllDirections[6] = {
+// 		EFace::Up,
+// 		EFace::Back,
+// 		EFace::Right,
+// 		EFace::Left,
+// 		EFace::Front,
+// 		EFace::Down
+// 	};
+//
+// 	static FORCEINLINE EFace GetOpposite(EFace Face)
+// 	{
+// 		const uint8 Index = static_cast<uint8>(Face);
+// 		return Index < 6 ? static_cast<EFace>(5 - Index) : EFace::None;
+// 	}
+//
+// 	static FORCEINLINE uint8 ToIndex(const EFace& State)
+// 	{
+// 		return static_cast<uint8>(State);
+// 	}
+//
+// 	static FORCEINLINE uint8 ToOppositeIndex(const EFace& State)
+// 	{
+// 		return 5 - static_cast<uint8>(State);
+// 	}
+//
+// 	static FORCEINLINE FIntVector GetDirectionVector(EFace Face)
+// 	{
+// 		const uint8 Index = static_cast<uint8>(Face);
+// 		return Index < 6 ? DirectionVectors[Index] : FIntVector(0, 0, 0);
+// 	}
+//
+// 	static FORCEINLINE EFace Rotate(const EFace& Face, const uint8& Step)
+// 	{
+// 		const uint8 Index = static_cast<uint8>(Face);
+// 		return RotationMap[Index][Step];
+// 	}
+//
+// private:
+// 	static const FIntVector DirectionVectors[6];
+//
+// 	static constexpr EFace RotationMap[6][4] = {
+// 		{EFace::None, EFace::None, EFace::None, EFace::None},
+// 		{EFace::Back, EFace::Left, EFace::Front, EFace::Right},
+// 		{EFace::Right, EFace::Back, EFace::Left, EFace::Front},
+// 		{EFace::Left, EFace::Front, EFace::Right, EFace::Back},
+// 		{EFace::Front, EFace::Right, EFace::Back, EFace::Left},
+// 		{EFace::None, EFace::None, EFace::None, EFace::None},
+// 	};
+// };
 
 
 /**
@@ -135,7 +135,7 @@ struct FTileVariantInfo
  */
 
 USTRUCT()
-struct FTileVariantInfoDataTable : public FTableRowBase
+struct FTileVariantInfoTable : public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -195,7 +195,7 @@ struct FBaseTileInfo
  */
 
 USTRUCT()
-struct FBaseTileInfoDataTable : public FTableRowBase
+struct FTileInfoTable : public FTableRowBase
 {
 	GENERATED_BODY()
 
@@ -221,61 +221,61 @@ struct FBaseTileInfoDataTable : public FTableRowBase
 	FString Down = "";
 };
 
-/*
- * FacePair 저장용 자료구조
- */
-
-USTRUCT(BlueprintType)
-struct FFacePair
-{
-	GENERATED_BODY()
-
-private:
-	UPROPERTY(VisibleAnywhere, Category = "WFC3D|Data")
-	EFace Direction = EFace::None;
-
-	UPROPERTY(VisibleAnywhere, Category = "WFC3D|Data")
-	FString Name;
-
-public:
-	FFacePair()
-	{
-	}
-
-	FFacePair(EFace InDirection, const FString& InName) : Direction(InDirection), Name(InName)
-	{
-	}
-
-	TPair<EFace, FString> GetPair() const
-	{
-		return TPair<EFace, FString>(Direction, Name);
-	}
-
-	EFace GetDirection() const
-	{
-		return Direction;
-	}
-
-	FString GetName() const
-	{
-		return Name;
-	}
-
-	bool operator==(const FFacePair& Other) const
-	{
-		return Direction == Other.Direction && Name == Other.Name;
-	}
-
-	bool operator!=(const FFacePair& Other) const
-	{
-		return !(*this == Other);
-	}
-
-	friend uint32 GetTypeHash(const FFacePair& FacePair)
-	{
-		return HashCombine(GetTypeHash(FacePair.Direction), GetTypeHash(FacePair.Name));
-	}
-};
+// /*
+//  * FacePair 저장용 자료구조
+//  */
+//
+// USTRUCT(BlueprintType)
+// struct FFacePair
+// {
+// 	GENERATED_BODY()
+//
+// private:
+// 	UPROPERTY(VisibleAnywhere, Category = "WFC3D|Data")
+// 	EFace Direction = EFace::None;
+//
+// 	UPROPERTY(VisibleAnywhere, Category = "WFC3D|Data")
+// 	FString Name;
+//
+// public:
+// 	FFacePair()
+// 	{
+// 	}
+//
+// 	FFacePair(EFace InDirection, const FString& InName) : Direction(InDirection), Name(InName)
+// 	{
+// 	}
+//
+// 	TPair<EFace, FString> GetPair() const
+// 	{
+// 		return TPair<EFace, FString>(Direction, Name);
+// 	}
+//
+// 	EFace GetDirection() const
+// 	{
+// 		return Direction;
+// 	}
+//
+// 	FString GetName() const
+// 	{
+// 		return Name;
+// 	}
+//
+// 	bool operator==(const FFacePair& Other) const
+// 	{
+// 		return Direction == Other.Direction && Name == Other.Name;
+// 	}
+//
+// 	bool operator!=(const FFacePair& Other) const
+// 	{
+// 		return !(*this == Other);
+// 	}
+//
+// 	friend uint32 GetTypeHash(const FFacePair& FacePair)
+// 	{
+// 		return HashCombine(GetTypeHash(FacePair.Direction), GetTypeHash(FacePair.Name));
+// 	}
+// };
 
 /*
  * BitArray 저장용 자료구조
@@ -388,7 +388,7 @@ public:
 
 	// 모든 면 정보: 면 위치(UBRLFD순서), 면 이름
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<FFacePair> FaceInfos;
+	TArray<FFaceInfo> FaceInfos;
 
 	
 	// FacePair 대신에 FaceArray를 만들고, FaceArray를 6개 가진 FaceInfo가 있음
@@ -459,8 +459,8 @@ private:
 		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKeys Size: %d"), FaceInfos.Num());
 		for (uint8 i = 0; i < FaceInfos.Num(); ++i)
 		{
-			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%d, %s)"), i, FaceInfos[i].GetPair().Key,
-			       *FaceInfos[i].GetPair().Value);
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%d, %s)"), i, FaceInfos[i].Key,
+			       *FaceInfos[i].Value);
 		}
 	}
 
@@ -499,7 +499,7 @@ private:
 	}
 
 public:
-	static bool HasMatchingFace(const FFacePair& Face, const TArray<FString>& Faces);
+	static bool HasMatchingFace(const FFaceInfo& Face, const TArray<FString>& Faces);
 	static FString RotateUDFace(const FString& InputString, const int32& RotationSteps);
 	static FBaseTileInfo RotateTileClockwise(const FBaseTileInfo& BaseTileInfo, const int32& RotationStep);
 };

@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
 #include "WFC3DTypes.h"
-#include "WFC3DModelData.generated.h"
+#include "WFC3DAlgorithmInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
-class UWFC3DModelData : public UInterface
+class UWFC3DAlgorithmInterface : public UInterface
 {
 	GENERATED_BODY()
 };
@@ -17,7 +17,7 @@ class UWFC3DModelData : public UInterface
 /**
  * 
  */
-class PROCEDURALWORLD_API IWFC3DModelData
+class PROCEDURALWORLD_API IWFC3DAlgorithmInterface
 {
 	GENERATED_BODY()
 
