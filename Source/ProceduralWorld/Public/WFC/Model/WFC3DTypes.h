@@ -52,6 +52,7 @@ public:
 		: TileID(InTileID), Faces(InFaces)
 	{
 	}
+
 	
 	/** 타일의 고유 식별자 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
@@ -157,22 +158,22 @@ public:
 };
 
 /**
- * 비트 배열을 문자열 형태로 저장하는 구조체
+ * TBitArray를 문자열 형태로 저장하는 구조체
  * WFC 알고리즘의 상태 저장 및 직렬화에 사용됩니다.
  */
 USTRUCT(BlueprintType)
-struct PROCEDURALWORLD_API FTileBitString
+struct PROCEDURALWORLD_API FBitString
 {
 	GENERATED_BODY()
 
 public:
 	
-	FTileBitString() = default;
+	FBitString() = default;
 
 	/**
 	 * @param InBitArray - 변환할 비트 배열
 	 */
-	FTileBitString(const TBitArray<>& InBitArray)
+	FBitString(const TBitArray<>& InBitArray)
 	{
 		BitString = ToString(InBitArray);
 	}

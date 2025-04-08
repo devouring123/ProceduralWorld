@@ -42,13 +42,13 @@ FTileInfo FWFC3DFaceUtils::RotateTileClockwise(const FTileInfo& TileInfo, const 
 	FTileInfo NewTileInfo(TileInfo);
 
 	// UD(Up/Down) 회전
-	NewTileInfo.Faces[ToIndex(EFace::Up)] = RotateUDFace(TileInfo.Faces[ToIndex(EFace::Up)], RotationStep);
-	NewTileInfo.Faces[ToIndex(EFace::Down)] = RotateUDFace(TileInfo.Faces[ToIndex(EFace::Down)], RotationStep);
+	NewTileInfo.Faces[GetIndex(EFace::Up)] = RotateUDFace(TileInfo.Faces[GetIndex(EFace::Up)], RotationStep);
+	NewTileInfo.Faces[GetIndex(EFace::Down)] = RotateUDFace(TileInfo.Faces[GetIndex(EFace::Down)], RotationStep);
 
 	// BRLF(Back/Right/Left/Front) 회전
 	for (uint8 i = 1; i < 5; ++i)
     {
-        NewTileInfo.Faces[i] = TileInfo.Faces[ToIndex(Rotate(static_cast<EFace>(i), RotationStep))];
+        NewTileInfo.Faces[i] = TileInfo.Faces[GetIndex(Rotate(static_cast<EFace>(i), RotationStep))];
     }
 
 	return NewTileInfo;
@@ -57,7 +57,7 @@ FTileInfo FWFC3DFaceUtils::RotateTileClockwise(const FTileInfo& TileInfo, const 
 bool FWFC3DFaceUtils::HasMatchingFace(const FFaceInfo& FaceInfo, const TArray<FString>& Faces)
 {
 	// Face 쌍과 인덱스 추출
-	const uint8 OppositeIndex = ToOppositeIndex(FaceInfo.Direction);
+	const uint8 OppositeIndex = GetOppositeIndex(FaceInfo.Direction);
 
 	// UD(Up/Down) Face 매칭 확인
 	if (FaceInfo.Direction == EFace::Up || FaceInfo.Direction == EFace::Down)

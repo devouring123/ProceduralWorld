@@ -282,7 +282,7 @@ struct FTileInfoTable : public FTableRowBase
  */
 
 USTRUCT(BlueprintType)
-struct FTileBitString
+struct FBitString
 {
 	GENERATED_BODY()
 
@@ -291,11 +291,11 @@ private:
 	FString BitString;
 
 public:
-	FTileBitString()
+	FBitString()
 	{
 	}
 
-	FTileBitString(const TBitArray<>& InBitArray)
+	FBitString(const TBitArray<>& InBitArray)
 	{
 		BitString = ToString(InBitArray);
 	}
@@ -407,7 +407,7 @@ public:
 
 	// FaceToTileBitArrayMap를 데이터 에셋에 저장하기 위한 자료구조
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TMap<int32, FTileBitString> FaceToTileBitStringMap;
+	TMap<int32, FBitString> FaceToTileBitStringMap;
 
 	// 타일 인덱스 -> 면 맵 (TileInfosIndex -> Bitset)
 	// 해당 조각이 셀에 위치할 때 해당 조각이 가지는 모든 면에 대한 인덱스에 대한 비트셋
@@ -470,7 +470,7 @@ private:
 		for (auto& Elem : FaceToTileBitArrayMap)
 		{
 			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Key: %d"), Elem.Key);
-			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Value: %s"), *FTileBitString::ToString(Elem.Value));
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Value: %s"), *FBitString::ToString(Elem.Value));
 		}
 	}
 

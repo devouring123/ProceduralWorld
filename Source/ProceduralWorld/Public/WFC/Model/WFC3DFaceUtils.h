@@ -26,14 +26,14 @@ public:
 	 * @param Face - 변환할 Face
 	 * @return Face의 인덱스
 	 */
-	static FORCEINLINE uint8 ToIndex(const EFace& Face);
+	static FORCEINLINE uint8 GetIndex(const EFace& Face);
 
 	/**
 	 * Face의 반대 방향 인덱스를 반환합니다.
 	 * @param Face - 반대 방향 인덱스를 찾을 Face
 	 * @return 반대 방향 Face의 인덱스
 	 */
-	static FORCEINLINE uint8 ToOppositeIndex(const EFace& Face);
+	static FORCEINLINE uint8 GetOppositeIndex(const EFace& Face);
 
 	/**
 	 * 지정된 Face 방향의 방향 벡터를 반환합니다.
@@ -110,12 +110,12 @@ FORCEINLINE EFace FWFC3DFaceUtils::GetOpposite(const EFace& Face)
 	return Index < 6 ? static_cast<EFace>(5 - Index) : EFace::None;
 }
 
-FORCEINLINE uint8 FWFC3DFaceUtils::ToIndex(const EFace& Face)
+FORCEINLINE uint8 FWFC3DFaceUtils::GetIndex(const EFace& Face)
 {
 	return static_cast<uint8>(Face);
 }
 
-FORCEINLINE uint8 FWFC3DFaceUtils::ToOppositeIndex(const EFace& Face)
+FORCEINLINE uint8 FWFC3DFaceUtils::GetOppositeIndex(const EFace& Face)
 {
 	return 5 - static_cast<uint8>(Face);
 }

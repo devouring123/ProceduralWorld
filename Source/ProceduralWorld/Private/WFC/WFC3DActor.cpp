@@ -346,7 +346,7 @@ bool FGrid::PropagateCell(const FIntVector& Location)
 
 	// 전파 완료
 	PropagatedCell->bIsPropagated = true;
-	UE_LOG(LogTemp, Display, TEXT("RemainingTileOptionsBitset: %s"), *FTileBitString::ToString(PropagatedCell->RemainingTileOptionsBitset));
+	UE_LOG(LogTemp, Display, TEXT("RemainingTileOptionsBitset: %s"), *FBitString::ToString(PropagatedCell->RemainingTileOptionsBitset));
 	return true;
 }
 

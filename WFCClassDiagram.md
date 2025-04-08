@@ -332,5 +332,5 @@ classDiagram
     AWFC3DCombinedActor -- FWFC3DGenerationTask : spawns
 
     FWFC3DGenerationTask -- FWFC3DAlgorithm : executes
-    FWFC3DGenerationTask --> FWFC3DResult : produces~~~~~~~~~~~~
+    FWFC3DGenerationTask --> FWFC3DResult : produces
 ```
