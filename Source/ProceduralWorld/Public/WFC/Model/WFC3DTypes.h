@@ -45,26 +45,25 @@ public:
 	FTileInfo() = default;
 
 	/**
-	 * @param InTileID - 타일의 고유 식별자
+	 * @param InBaseTileID - 기본 타일 ID
 	 * @param InFaces - 각 면 정보
 	 */
-	FTileInfo(const int32& InTileID, const TArray<FString>& InFaces)
-		: TileID(InTileID), Faces(InFaces)
+	FTileInfo(const int32& InBaseTileID, const TArray<int32>& InFaces)
+		: BaseTileID(InBaseTileID), Faces(InFaces)
 	{
 	}
-
 	
-	/** 타일의 고유 식별자 */
+	/** 기본 타일 ID */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	int32 TileID = 0;
+	int32 BaseTileID = 0;
 
 	/** 
 	 * 각 면의 연결 정보
-	 * 순서대로 Up, Back, Right, Left, Front, Down 면의 타입을 나타냅니다.
+	 * 순서대로 Up, Back, Right, Left, Front, Down 면의 인덱스를 나타냅니다.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data",
 		DisplayName = "Faces (Up, Back, Right, Left, Front, Down)")
-	TArray<FString> Faces = {"", "", "", "", "", ""};
+	TArray<int32> Faces = {-1, -1, -1, -1, -1, -1};
 
 	/** 이 타일이 선택될 가중치 값 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
@@ -72,7 +71,7 @@ public:
 
 	bool operator==(const FTileInfo& Other) const
 	{
-		return TileID == Other.TileID
+		return BaseTileID == Other.BaseTileID
 			&& Faces == Other.Faces;
 	}
 

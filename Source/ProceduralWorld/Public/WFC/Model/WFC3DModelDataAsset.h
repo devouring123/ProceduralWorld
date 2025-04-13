@@ -63,6 +63,6 @@ private:
 	TArray<TBitArray<>> FaceToTileBitArrays;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TMap<int32, FTileVariantInfo> Variants;
+	TArray<FTileVariantInfo> Variants;
 
 };
