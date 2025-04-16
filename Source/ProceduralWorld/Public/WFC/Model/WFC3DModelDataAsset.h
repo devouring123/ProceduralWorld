@@ -33,9 +33,9 @@ public:
 
 	/** Visualization Interface */
 	virtual bool InitializeVisualizationData() override;
-	virtual const UStaticMesh* GetTileMesh(const int32& TileIndex) const override;
-	virtual const TArray<UMaterialInterface*>& GetTileMaterials(const int32& TileIndex) const override;
+	virtual const TArray<FTileRotationInfo>& GetTileRotationInfo() const override;
 	virtual const FTileVariantInfo& GetTileVariant(const int32& TileIndex) const override;
+	virtual const FTileVisualInfo& GetRandomTileVisualInfo(const int32& BaseTileIndex, const FString& BiomeName) const override;
 	/** End Visualization Interface */
 
 private:
@@ -52,14 +52,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TArray<FFaceInfo> FaceInfos;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<FTileFaceIndices> TileFaces;
-
 	/** 명명을 조금 더 자세히 할 것 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TArray<FBitString> FaceToTileBitStringArrays;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	
 	TArray<TBitArray<>> FaceToTileBitArrays;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")

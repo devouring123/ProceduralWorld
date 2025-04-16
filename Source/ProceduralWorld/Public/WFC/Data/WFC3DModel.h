@@ -84,7 +84,7 @@ class UMaterialInterface;
  */
 
 USTRUCT(BlueprintType)
-struct FTile
+struct FTileVisualInfo
 {
 	GENERATED_BODY()
 
@@ -107,7 +107,7 @@ struct FTileByBiome
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<FTile> Tiles;
+	TArray<FTileVisualInfo> Tiles;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	float TotalWeight = 0.0f;

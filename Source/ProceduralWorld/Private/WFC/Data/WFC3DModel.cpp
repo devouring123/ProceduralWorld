@@ -16,7 +16,7 @@ void FTileByBiome::CalculateTotalWeight()
 {
 	// Calculate the total weight of all variants
 	TotalWeight = 0.0f;
-	for (const FTile& Tile : Tiles)
+	for (const FTileVisualInfo& Tile : Tiles)
 	{
 		TotalWeight += Tile.Weight;
 	}
@@ -95,7 +95,7 @@ bool UWFC3DModel::SetTileVariantInfos()
 			FTileVariantInfo& TileVariantInfo = TileVariantInfos.FindOrAdd(RowData->TileName);
 			FTileByBiome& BiomeInfo = TileVariantInfo.Biomes.FindOrAdd(RowData->BiomeName);
 			// 타일 생성
-			FTile NewTile;
+			FTileVisualInfo NewTile;
 			NewTile.StaticMesh = RowData->TileMesh;
 			NewTile.Materials = RowData->Materials;
 			NewTile.Weight = RowData->Weight;

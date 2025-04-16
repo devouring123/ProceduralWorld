@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "WFC3DTypes.h"
-#include "WFC/Data/WFC3DModel.h"
 
 /**
  * WFC3D 모델에서 Face와 관련된 유틸리티 함수들을 제공하는 클래스

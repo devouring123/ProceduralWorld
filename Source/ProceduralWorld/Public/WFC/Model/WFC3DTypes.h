@@ -33,6 +33,30 @@ enum class EFace : uint8
 
 /**
  * 타일의 기본 정보를 저장하는 구조체
+ * WFC3D의 기본 타일을 정의하는 데 사용됨
+ */
+
+USTRUCT(BlueprintType)
+struct PROCEDURALWORLD_API FBaseTileInfo
+{
+	GENERATED_BODY()
+
+public:
+	FBaseTileInfo() = default;
+
+	/**
+     * @param InFaces - 각 면의 타입 정보
+     */
+	FBaseTileInfo(const TArray<FString>& InFaces) : Faces(InFaces)
+	{
+	}
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data")
+	TArray<FString> Faces = {"", "", "", "", "", ""}; // 각 면의 면 정보
+};
+
+/**
+ * 타일의 정보를 저장하는 구조체
  * WFC 알고리즘 계산에 사용됩니다.
  */
 USTRUCT(BlueprintType)
@@ -41,7 +65,6 @@ struct PROCEDURALWORLD_API FTileInfo
 	GENERATED_BODY()
 
 public:
-	
 	FTileInfo() = default;
 
 	/**
@@ -52,7 +75,7 @@ public:
 		: BaseTileID(InBaseTileID), Faces(InFaces)
 	{
 	}
-	
+
 	/** 기본 타일 ID */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	int32 BaseTileID = 0;
@@ -91,7 +114,6 @@ struct PROCEDURALWORLD_API FFaceInfo
 	GENERATED_BODY()
 
 public:
-	
 	FFaceInfo() = default;
 
 	/**
@@ -128,35 +150,6 @@ public:
 };
 
 /**
- * 타일의 각 면에 대한 인덱스 정보를 저장하는 구조체
- * TileToFaceMap의 Value로 사용되며, WFC 알고리즘 계산에 사용됩니다.
- */
-USTRUCT(BlueprintType)
-struct PROCEDURALWORLD_API FTileFaceIndices
-{
-	GENERATED_BODY()
-
-public:
-	
-	FTileFaceIndices() = default;
-
-	/**
-	 * @param InFaceIndices - 이동될 면 인덱스 배열
-	 */
-	FTileFaceIndices(TArray<int32>&& InFaceIndices) : FaceIndices(InFaceIndices)
-	{
-	}
-
-	/** 
-	 * 각 면의 인덱스 배열 
-	 * 고정 크기 6으로, 순서대로 Up, Back, Right, Left, Front, Down 면의 인덱스입니다.
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data",
-		DisplayName = "FaceIndices (Up, Back, Right, Left, Front, Down)")
-	TArray<int32> FaceIndices = {0, 0, 0, 0, 0, 0};
-};
-
-/**
  * TBitArray를 문자열 형태로 저장하는 구조체
  * WFC 알고리즘의 상태 저장 및 직렬화에 사용됩니다.
  */
@@ -166,7 +159,6 @@ struct PROCEDURALWORLD_API FBitString
 	GENERATED_BODY()
 
 public:
-	
 	FBitString() = default;
 
 	/**
@@ -233,28 +225,32 @@ private:
 };
 
 /**
- * 타일의 시각적 정보를 저장하는 구조체
- * 생성된 WFC 결과를 시각화하는 데 사용됩니다.
+ * 타일 회전 정보를 저장하는 구조체
+ * 시각화에 사용됩니다.
  */
 USTRUCT(BlueprintType)
-struct PROCEDURALWORLD_API FTileVisualInfo
+struct FTileRotationInfo
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-public:
-	
-	FTileVisualInfo() = default;
+	FTileRotationInfo() = default;
 
-	/** 타일의 스태틱 메시 */
+    /**
+     * @param InBaseTileID - 기본 타일 ID
+     * @param InRotationStep - 회전 스텝 (0-3)
+     */
+    FTileRotationInfo(const int32& InBaseTileID, const int32& InRotationStep)
+        : BaseTileID(InBaseTileID), RotationStep(InRotationStep)
+    {
+    }
+
+    /** 기본 타일 ID */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	UStaticMesh* Mesh = nullptr;
+	int32 BaseTileID = 0;
 
-	/** 타일에 적용할 재질 배열 */
+    /** 회전 스텝(0-3) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<UMaterialInterface*> Materials;
-
-	/** 변형 정보 참조 - 내부 데이터 연결용 */
-	FBaseTileInfo* VariantInfo = nullptr;
+	int32 RotationStep = 0;
 };
 
 /**
@@ -262,13 +258,12 @@ public:
  * 시각화에 사용됩니다.
  */
 USTRUCT(BlueprintType)
-struct PROCEDURALWORLD_API FTile
+struct PROCEDURALWORLD_API FTileVisualInfo
 {
 	GENERATED_BODY()
 
 public:
-	
-	FTile() = default;
+	FTileVisualInfo() = default;
 
 	/** 타일의 스태틱 메시 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
@@ -294,12 +289,11 @@ struct PROCEDURALWORLD_API FTileByBiome
 	GENERATED_BODY()
 
 public:
-	
 	FTileByBiome() = default;
 
 	/** 바이옴에 속한 타일 변형 배열 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<FTile> Tiles;
+	TArray<FTileVisualInfo> Tiles;
 
 	/** 모든 타일 변형의 총 가중치 합계 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
@@ -323,7 +317,6 @@ struct PROCEDURALWORLD_API FTileVariantInfo
 	GENERATED_BODY()
 
 public:
-	
 	FTileVariantInfo() = default;
 
 	/** 바이옴 이름을 키로 사용하는 바이옴별 타일 정보 맵 */
@@ -347,7 +340,6 @@ struct PROCEDURALWORLD_API FTileVariantRegistry
 	GENERATED_BODY()
 
 public:
-	
 	FTileVariantRegistry() = default;
 
 	/** 타일 ID를 키로 사용하는 타일 변형 정보 맵 */
@@ -366,7 +358,6 @@ struct PROCEDURALWORLD_API FTileInfoTable : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	
 	FTileInfoTable() = default;
 
 	/** 타일의 선택 가중치 */
@@ -408,7 +399,6 @@ struct PROCEDURALWORLD_API FTileVariantInfoTable : public FTableRowBase
 	GENERATED_BODY()
 
 public:
-	
 	FTileVariantInfoTable() = default;
 
 	/** 타일의 이름 */

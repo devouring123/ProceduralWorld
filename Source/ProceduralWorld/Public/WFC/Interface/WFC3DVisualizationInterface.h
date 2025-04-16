@@ -27,16 +27,14 @@ class PROCEDURALWORLD_API IWFC3DVisualizationInterface
 public:
 	/** 모델 데이터 초기화 */
 	virtual bool InitializeVisualizationData() = 0;
-	
-	/** 타일의 스태틱 메시 가져오기*/
-	virtual const UStaticMesh* GetTileMesh(const int32& TileIndex) const = 0;
 
-	/** 타일의 재질 배열 가져오기 */
-	virtual const TArray<UMaterialInterface*>& GetTileMaterials(const int32& TileIndex) const = 0;
+	/** 모든 타일 회전 정보 가져오기 */
+	virtual const TArray<FTileRotationInfo>& GetTileRotationInfo() const = 0;
 
 	/** 타일 변형 정보 가져오기 */
-	virtual const FTileVariantInfo& GetTileVariant(const int32& TileIndex) const = 0;
+	virtual const FTileVariantInfo& GetTileVariant(const int32& BaseTileIndex) const = 0;
 
-	/** 모든 타일 ID 가져오기 */
-	// virtual const TArray<int32>& GetTileIDs() const = 0;
+	/** 랜덤 타일 가져오기 */
+	virtual const FTileVisualInfo& GetRandomTileVisualInfo(const int32& BaseTileIndex, const FString& BiomeName) const = 0;
+	
 };
