@@ -330,25 +330,6 @@ public:
 };
 
 /**
- * 타일 변형 레지스트리 구조체
- * 모든 타일 ID와 해당 변형 정보를 맵핑합니다.
- * 데이터 에셋에 저장되며 시각화에 사용됩니다.
- */
-USTRUCT(BlueprintType)
-struct PROCEDURALWORLD_API FTileVariantRegistry
-{
-	GENERATED_BODY()
-
-public:
-	FTileVariantRegistry() = default;
-
-	/** 타일 ID를 키로 사용하는 타일 변형 정보 맵 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data",
-		DisplayName = "TileID -> TileVariantInfo")
-	TMap<int32, FTileVariantInfo> Variants;
-};
-
-/**
  * 타일 정보 테이블 구조체
  * CSV 파일에서 타일 정보를 읽어오기 위한 DataTable 구조체입니다.
  */

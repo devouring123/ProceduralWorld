@@ -2,6 +2,7 @@
 
 
 #include "WFC/Data/WFC3DModel.h"
+#include "WFC/Model/WFC3DTypes.h"
 
 const FIntVector FFaceUtils::DirectionVectors[6] = {
 	FIntVector(0, 0, 1), // Up

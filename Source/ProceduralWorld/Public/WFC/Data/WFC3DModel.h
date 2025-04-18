@@ -83,77 +83,77 @@ class UMaterialInterface;
  * 하나의 타일 정보
  */
 
-USTRUCT(BlueprintType)
-struct FTileVisualInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	UStaticMesh* StaticMesh = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<UMaterialInterface*> Materials = TArray<UMaterialInterface*>();
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	float Weight = 1.0f;
-};
-
-/*
- * 바이옴 별 타일 정보
- */
-USTRUCT(BlueprintType)
-struct FTileByBiome
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<FTileVisualInfo> Tiles;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	float TotalWeight = 0.0f;
-
-	void CalculateTotalWeight();
-};
-
-/**
- * 한 종류의 타일에 대한 타일 바리에이션 정보
- */
-
-USTRUCT(BlueprintType)
-struct FTileVariantInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TMap<FName, FTileByBiome> Biomes;
-
-	void CalculateTotalWeight();
-};
-
-/*
- * 한 종류의 타일에 대한 타일 바리에이션 정보 테이블
- */
-
-USTRUCT()
-struct FTileVariantInfoTable : public FTableRowBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	FName TileName = "";
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	FName BiomeName = "";
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	UStaticMesh* TileMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<UMaterialInterface*> Materials;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	float Weight = 1.0f;
-};
+// USTRUCT(BlueprintType)
+// struct FTileVisualInfo
+// {
+// 	GENERATED_BODY()
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	UStaticMesh* StaticMesh = nullptr;
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	TArray<UMaterialInterface*> Materials = TArray<UMaterialInterface*>();
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	float Weight = 1.0f;
+// };
+//
+// /*
+//  * 바이옴 별 타일 정보
+//  */
+// USTRUCT(BlueprintType)
+// struct FTileByBiome
+// {
+// 	GENERATED_BODY()
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	TArray<FTileVisualInfo> Tiles;
+//
+// 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	float TotalWeight = 0.0f;
+//
+// 	void CalculateTotalWeight();
+// };
+//
+// /**
+//  * 한 종류의 타일에 대한 타일 바리에이션 정보
+//  */
+//
+// USTRUCT(BlueprintType)
+// struct FTileVariantInfo
+// {
+// 	GENERATED_BODY()
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	TMap<FName, FTileByBiome> Biomes;
+//
+// 	void CalculateTotalWeight();
+// };
+//
+// /*
+//  * 한 종류의 타일에 대한 타일 바리에이션 정보 테이블
+//  */
+//
+// USTRUCT()
+// struct FTileVariantInfoTable : public FTableRowBase
+// {
+// 	GENERATED_BODY()
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	FName TileName = "";
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	FName BiomeName = "";
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	UStaticMesh* TileMesh;
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	TArray<UMaterialInterface*> Materials;
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	float Weight = 1.0f;
+// };
 
 
 /**
@@ -163,63 +163,63 @@ struct FTileVariantInfoTable : public FTableRowBase
  *  - 각 면에 대한 면 이름 (UBRLFD 순서대로)
  */
 
-USTRUCT(BlueprintType)
-struct FBaseTileInfo
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	float TileWeight = 1.0f;
-
-	FTileVariantInfo* TileVariations;
-
-	// Faces Size is Fixed to 6
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data",
-		DisplayName = "Faces (Up, Back, Right, Left, Front, Down)")
-	TArray<FString> Faces = {"", "", "", "", "", ""};
-
-	bool operator==(const FBaseTileInfo& Other) const
-	{
-		return TileWeight == Other.TileWeight && TileVariations == Other.TileVariations && Faces == Other.Faces;
-	}
-
-	bool operator!=(const FBaseTileInfo& Other) const
-	{
-		return !(*this == Other);
-	}
-};
-
-/*
- * 기본 타일 정보 데이터 테이블
- * 타일 정보를 작성하기 쉽게 CSV 파일로 읽어오기 위한 테이블
- */
-
-USTRUCT()
-struct FTileInfoTable : public FTableRowBase
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	float TileWeight = 1.0f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	FString Up = "";
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	FString Back = "";
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	FString Right = "";
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	FString Left = "";
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	FString Front = "";
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	FString Down = "";
-};
+// USTRUCT(BlueprintType)
+// struct FBaseTileInfo
+// {
+// 	GENERATED_BODY()
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	float TileWeight = 1.0f;
+//
+// 	FTileVariantInfo* TileVariations;
+//
+// 	// Faces Size is Fixed to 6
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data",
+// 		DisplayName = "Faces (Up, Back, Right, Left, Front, Down)")
+// 	TArray<FString> Faces = {"", "", "", "", "", ""};
+//
+// 	bool operator==(const FBaseTileInfo& Other) const
+// 	{
+// 		return TileWeight == Other.TileWeight && TileVariations == Other.TileVariations && Faces == Other.Faces;
+// 	}
+//
+// 	bool operator!=(const FBaseTileInfo& Other) const
+// 	{
+// 		return !(*this == Other);
+// 	}
+// };
+//
+// /*
+//  * 기본 타일 정보 데이터 테이블
+//  * 타일 정보를 작성하기 쉽게 CSV 파일로 읽어오기 위한 테이블
+//  */
+//
+// USTRUCT()
+// struct FTileInfoTable : public FTableRowBase
+// {
+// 	GENERATED_BODY()
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	float TileWeight = 1.0f;
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	FString Up = "";
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	FString Back = "";
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	FString Right = "";
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	FString Left = "";
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	FString Front = "";
+//
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+// 	FString Down = "";
+// };
 
 // /*
 //  * FacePair 저장용 자료구조
@@ -281,78 +281,78 @@ struct FTileInfoTable : public FTableRowBase
  * BitArray 저장용 자료구조
  */
 
-USTRUCT(BlueprintType)
-struct FBitString
-{
-	GENERATED_BODY()
+// USTRUCT(BlueprintType)
+// struct FBitString
+// {
+// 	GENERATED_BODY()
+//
+// private:
+// 	UPROPERTY(VisibleAnywhere, Category = "WFC3D|Data")
+// 	FString BitString;
+//
+// public:
+// 	FBitString()
+// 	{
+// 	}
+//
+// 	FBitString(const TBitArray<>& InBitArray)
+// 	{
+// 		BitString = ToString(InBitArray);
+// 	}
+//
+// 	// 비트셋 가져오기
+// 	TBitArray<> GetBitArray() const
+// 	{
+// 		return ToBitArray(BitString);
+// 	}
+//
+// 	// 비트 수 가져오기
+// 	int32 Num() const
+// 	{
+// 		return BitString.Len();
+// 	}
+//
+// 	static FString ToString(const TBitArray<>& BitArray)
+// 	{
+// 		FString BitString;
+// 		for (uint8 i = 0; i < BitArray.Num(); ++i)
+// 		{
+// 			BitString += BitArray[i] ? TEXT("1") : TEXT("0");
+// 		}
+// 		return BitString;
+// 	}
+//
+// 	static TBitArray<> ToBitArray(const FString& BitString)
+// 	{
+// 		TBitArray<> BitArray;
+// 		BitArray.Init(false, BitString.Len());
+// 		for (uint8 i = 0; i < BitString.Len(); ++i)
+// 		{
+// 			BitArray[i] = BitString[i] == '1';
+// 		}
+// 		return BitArray;
+// 	}
+// };
 
-private:
-	UPROPERTY(VisibleAnywhere, Category = "WFC3D|Data")
-	FString BitString;
-
-public:
-	FBitString()
-	{
-	}
-
-	FBitString(const TBitArray<>& InBitArray)
-	{
-		BitString = ToString(InBitArray);
-	}
-
-	// 비트셋 가져오기
-	TBitArray<> GetBitArray() const
-	{
-		return ToBitArray(BitString);
-	}
-
-	// 비트 수 가져오기
-	int32 Num() const
-	{
-		return BitString.Len();
-	}
-
-	static FString ToString(const TBitArray<>& BitArray)
-	{
-		FString BitString;
-		for (uint8 i = 0; i < BitArray.Num(); ++i)
-		{
-			BitString += BitArray[i] ? TEXT("1") : TEXT("0");
-		}
-		return BitString;
-	}
-
-	static TBitArray<> ToBitArray(const FString& BitString)
-	{
-		TBitArray<> BitArray;
-		BitArray.Init(false, BitString.Len());
-		for (uint8 i = 0; i < BitString.Len(); ++i)
-		{
-			BitArray[i] = BitString[i] == '1';
-		}
-		return BitArray;
-	}
-};
-
-/**
- * 각 타일의 면 정보
- */
-USTRUCT(BlueprintType)
-struct FTileFaceIndices
-{
-	GENERATED_BODY()
-
-	FTileFaceIndices() = default;
-
-	FTileFaceIndices(TArray<int32>&& InFaceIndices) : FaceIndices(InFaceIndices)
-	{
-	}
-
-	// Faces Size is Fixed to 6
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data",
-		DisplayName = "FaceIndices (Up, Back, Right, Left, Front, Down)")
-	TArray<int32> FaceIndices = {0, 0, 0, 0, 0, 0};
-};
+// /**
+//  * 각 타일의 면 정보
+//  */
+// USTRUCT(BlueprintType)
+// struct FTileFaceIndices
+// {
+// 	GENERATED_BODY()
+//
+// 	FTileFaceIndices() = default;
+//
+// 	FTileFaceIndices(TArray<int32>&& InFaceIndices) : FaceIndices(InFaceIndices)
+// 	{
+// 	}
+//
+// 	// Faces Size is Fixed to 6
+// 	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data",
+// 		DisplayName = "FaceIndices (Up, Back, Right, Left, Front, Down)")
+// 	TArray<int32> FaceIndices = {0, 0, 0, 0, 0, 0};
+// };
 
 /*
  * WFC 3D 모델 데이터 에셋
