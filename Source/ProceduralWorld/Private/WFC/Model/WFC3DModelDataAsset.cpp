@@ -3,6 +3,8 @@
 
 #include "WFC/Model/WFC3DModelDataAsset.h"
 
+#include "WFC/Model/WFC3DFaceUtils.h"
+
 bool UWFC3DModelDataAsset::InitializeData()
 {
 	bool bSuccess = true;
@@ -124,7 +126,7 @@ bool UWFC3DModelDataAsset::InitializeBaseTileInfo()
 
 	BaseTileNameToIndex.Empty();
 	BaseTileInfos.Empty();
-	
+
 	const TMap<FName, uint8*>& RowMap = BaseTileDataTable->GetRowMap();
 
 	// RowMap 순회
@@ -132,7 +134,7 @@ bool UWFC3DModelDataAsset::InitializeBaseTileInfo()
 	{
 		if (const FTileInfoTable* RowData = reinterpret_cast<const FTileInfoTable*>(Row.Value))
 		{
-			BaseTileNameToIndex.Add(Row.Key.ToString(), BaseTileInfos.Num());			
+			BaseTileNameToIndex.Add(Row.Key.ToString(), BaseTileInfos.Num());
 			BaseTileInfos.Emplace(
 				RowData->Up,
 				RowData->Back,
@@ -153,12 +155,73 @@ bool UWFC3DModelDataAsset::InitializeBaseTileInfo()
 	return true;
 }
 
-bool UWFC3DModelDataAsset::InitializeFaceInfo()
-{
-}
-
 bool UWFC3DModelDataAsset::InitializeTileInfo()
 {
+	if (BaseTileInfos.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("BaseTileInfos is Empty"));
+		return false;
+	}
+
+	TileInfos.Empty();
+
+	for (int32 Index = 0; Index < BaseTileInfos.Num(); ++Index)
+	{
+		FTileInfo NewTileInfo;
+		NewTileInfo.BaseTileID = Index;
+		for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
+		{
+			NewTileInfo.Faces[FWFC3DFaceUtils::GetIndex(Direction)] =
+				FaceInfoToIndex.FindChecked({static_cast<EFace>(Direction), BaseTileInfos[Index].Faces[FWFC3DFaceUtils::GetIndex(Direction)]});
+		}
+		NewTileInfo.Weight = BaseTileInfos[Index].Weight;
+		TileInfos.AddUnique(NewTileInfo);
+		for (uint8 RotationStep = 1; RotationStep < 4; ++RotationStep)
+		{
+			TileInfos.AddUnique(FWFC3DFaceUtils::RotateTileClockwise(NewTileInfo, RotationStep));
+		}
+	}
+
+	return true;
+}
+
+bool UWFC3DModelDataAsset::InitializeFaceInfo()
+{
+	if (BaseTileInfos.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("BaseTileInfos is Empty"));
+		return false;
+	}
+
+	FaceInfos.Empty();
+
+	for (const FBaseTileInfo& BaseTileInfo : BaseTileInfos)
+	{
+		for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
+		{
+			/** Up, Down 이면 회전한 면도 추가해야함 */
+			if(Direction == EFace::Up || Direction == EFace::Down)
+			{
+				FaceInfos.AddUnique(FFaceInfo(Direction, BaseTileInfo.Faces[FWFC3DFaceUtils::GetIndex(Direction)]));
+				for (int32 RotationStep = 1; RotationStep < 4; ++RotationStep)
+				{
+					FaceInfos.AddUnique(FFaceInfo(Direction, FWFC3DFaceUtils::RotateUDFace(BaseTileInfo.Faces[FWFC3DFaceUtils::GetIndex(Direction)], RotationStep)));
+				}
+			}
+			else
+			{
+				/** BRLF 면은 회전한 면을 추가하지 않음 */
+				FaceInfos.AddUnique(FFaceInfo(Direction, BaseTileInfo.Faces[FWFC3DFaceUtils::GetIndex(Direction)]));
+			}
+		}
+	}
+
+	int FaceInfoSize = FaceInfos.Num();
+	for (int32 Index = 0; Index < FaceInfoSize; ++Index)
+	{
+		FaceInfoToIndex.Add(FaceInfos[Index], Index);
+	}
+	return true;
 }
 
 bool UWFC3DModelDataAsset::InitializeFaceToTileBitArray()
@@ -182,10 +245,10 @@ bool UWFC3DModelDataAsset::InitializeTileVariantInfo()
 		UE_LOG(LogTemp, Error, TEXT("BaseTileInfo is Empty"));
 		return false;
 	}
-	
+
 	TileVariants.Empty();
 	TileVariants.SetNum(BaseTileInfos.Num());
-	
+
 	const TMap<FName, uint8*>& RowMap = TileVariantDataTable->GetRowMap();
 
 	// RowMap 순회
@@ -209,5 +272,4 @@ bool UWFC3DModelDataAsset::InitializeTileVariantInfo()
 
 bool UWFC3DModelDataAsset::InitializeTileRotationInfo()
 {
-	
 }

@@ -52,6 +52,15 @@ private:
 	/** Initialize */
 	bool InitializeCommonData();
 
+	/**
+	 *	초기화 담당
+	 *  근데 조금 순서가 꼬인 것 같음
+	 *  FaceInfo에 회전한 UDFace들이 누락됨, 이걸 어떻게 하지?
+	 *  1. FaceInfo를 초기화 할 때 회전한 UDFace들을 추가한다.
+	 *  2. TileInfo를 초기화 할 때 누락된 회전한 UDFace들을 추가한다.
+	 *		- 이건 함수가 하는 일에 맞지 않음
+	 *		
+	 */
 	bool InitializeBaseTileInfo();
 	bool InitializeTileInfo();
 	bool InitializeFaceInfo();
@@ -78,11 +87,15 @@ private:
 	
 	/** Common Data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<FFaceInfo> FaceInfos;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TArray<FTileInfo> TileInfos;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	TArray<FFaceInfo> FaceInfos;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	TMap<FFaceInfo, int32> FaceInfoToIndex;
+	
+	
 	/** Algorithm Data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TArray<FBitString> FaceToTileBitStrings;

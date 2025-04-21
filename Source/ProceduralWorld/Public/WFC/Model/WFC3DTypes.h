@@ -80,9 +80,10 @@ public:
 	/**
 	 * @param InBaseTileID - 기본 타일 ID
 	 * @param InFaces - 각 면 정보
+	 * @param InWeight - 타일의 가중치
 	 */
-	FTileInfo(const int32& InBaseTileID, const TArray<int32>& InFaces)
-		: BaseTileID(InBaseTileID), Faces(InFaces)
+	FTileInfo(const int32& InBaseTileID, const TArray<int32>& InFaces, const float& InWeight)
+		: BaseTileID(InBaseTileID), Faces(InFaces), Weight(InWeight)
 	{
 	}
 
@@ -158,6 +159,7 @@ public:
 		return HashCombine(GetTypeHash(FaceInfo.Direction), GetTypeHash(FaceInfo.Name));
 	}
 };
+
 
 /**
  * TBitArray를 문자열 형태로 저장하는 구조체

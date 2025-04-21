@@ -37,13 +37,16 @@ FString FWFC3DFaceUtils::RotateUDFace(const FString& Face, int32 RotationSteps)
 	return Face;
 }
 
-FTileInfo FWFC3DFaceUtils::RotateTileClockwise(const FTileInfo& TileInfo, const int32& RotationStep)
+FTileInfo FWFC3DFaceUtils::RotateTileClockwise(const FTileInfo& TileInfo,
+                                               const TArray<FFaceInfo>& FaceInfos,
+                                               const TMap<FFaceInfo,int32>& FaceInfoToIndex,
+                                               const int32& RotationStep)
 {
 	FTileInfo NewTileInfo(TileInfo);
 
 	// UD(Up/Down) 회전
-	NewTileInfo.Faces[GetIndex(EFace::Up)] = RotateUDFace(TileInfo.Faces[GetIndex(EFace::Up)], RotationStep);
-	NewTileInfo.Faces[GetIndex(EFace::Down)] = RotateUDFace(TileInfo.Faces[GetIndex(EFace::Down)], RotationStep);
+	NewTileInfo.Faces[GetIndex(EFace::Up)] = FaceInfoToIndex[FFaceInfo( EFace::Up, RotateUDFace(FaceInfos[TileInfo.Faces[GetIndex(EFace::Up)]].Name, RotationStep))];
+	NewTileInfo.Faces[GetIndex(EFace::Down)] = FaceInfoToIndex[FFaceInfo( EFace::Down, RotateUDFace(FaceInfos[TileInfo.Faces[GetIndex(EFace::Down)]].Name, RotationStep))];
 
 	// BRLF(Back/Right/Left/Front) 회전
 	for (uint8 i = 1; i < 5; ++i)

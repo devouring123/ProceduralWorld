@@ -57,13 +57,16 @@ public:
 	 */
 	static FString RotateUDFace(const FString& Face, int32 RotationSteps);
 
+	// TODO: ModelDataAsset 으로 이동하기
 	/**
 	 * 주어진 타일 정보를 지정된 스텝만큼 시계 방향으로 회전시킵니다.
 	 * @param TileInfo - 회전할 타일 정보
+	 * @param FaceInfos
+	 * @param FaceInfoToIndex - Face 정보 맵
 	 * @param RotationStep - 회전 스텝 (0-3)
 	 * @return 회전된 타일 정보
 	 */
-	static FTileInfo RotateTileClockwise(const FTileInfo& TileInfo, const int32& RotationStep);
+	static FTileInfo RotateTileClockwise(const FTileInfo& TileInfo, const TArray<FFaceInfo>& FaceInfos, const TMap<FFaceInfo,int32>& FaceInfoToIndex, const int32& RotationStep);
 	
 	/**
 	 * Face 배열에서 주어진 Face와 일치하는 Face가 있는지 확인합니다.
