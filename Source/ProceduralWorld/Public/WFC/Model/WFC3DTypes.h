@@ -45,14 +45,24 @@ public:
 	FBaseTileInfo() = default;
 
 	/**
-     * @param InFaces - 각 면의 타입 정보
+     * @param InUp - 타일의 상단 면 정보
+     * @param InBack - 타일의 뒷면 정보
+     * @param InRight - 타일의 오른쪽 면 정보
+     * @param InLeft - 타일의 왼쪽 면 정보
+     * @param InFront - 타일의 앞면 정보
+     * @param InDown - 타일의 하단 면 정보
+     * @param InWeight - 타일의 가중치
      */
-	FBaseTileInfo(const TArray<FString>& InFaces) : Faces(InFaces)
+	FBaseTileInfo(const FString& InUp, const FString& InBack, const FString& InRight, const FString& InLeft, const FString& InFront, const FString& InDown, const float& InWeight)
+		: Faces({InUp, InBack, InRight, InLeft, InFront, InDown}), Weight(InWeight)
 	{
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data")
 	TArray<FString> Faces = {"", "", "", "", "", ""}; // 각 면의 면 정보
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data")
+	float Weight = 1.0f; // 타일의 가중치
 };
 
 /**
@@ -231,24 +241,24 @@ private:
 USTRUCT(BlueprintType)
 struct FTileRotationInfo
 {
-    GENERATED_BODY()
+	GENERATED_BODY()
 
 	FTileRotationInfo() = default;
 
-    /**
-     * @param InBaseTileID - 기본 타일 ID
-     * @param InRotationStep - 회전 스텝 (0-3)
-     */
-    FTileRotationInfo(const int32& InBaseTileID, const int32& InRotationStep)
-        : BaseTileID(InBaseTileID), RotationStep(InRotationStep)
-    {
-    }
+	/**
+	 * @param InBaseTileID - 기본 타일 ID
+	 * @param InRotationStep - 회전 스텝 (0-3)
+	 */
+	FTileRotationInfo(const int32& InBaseTileID, const int32& InRotationStep)
+		: BaseTileID(InBaseTileID), RotationStep(InRotationStep)
+	{
+	}
 
-    /** 기본 타일 ID */
+	/** 기본 타일 ID */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	int32 BaseTileID = 0;
 
-    /** 회전 스텝(0-3) */
+	/** 회전 스텝(0-3) */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	int32 RotationStep = 0;
 };
@@ -264,6 +274,11 @@ struct PROCEDURALWORLD_API FTileVisualInfo
 
 public:
 	FTileVisualInfo() = default;
+
+	FTileVisualInfo(UStaticMesh* InStaticMesh, const TArray<UMaterialInterface*>& InMaterials, const float& InWeight)
+		: StaticMesh(InStaticMesh), Materials(InMaterials), Weight(InWeight)
+	{
+	}
 
 	/** 타일의 스태틱 메시 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
@@ -343,7 +358,7 @@ public:
 
 	/** 타일의 선택 가중치 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	float TileWeight = 1.0f;
+	float Weight = 1.0f;
 
 	/** 상단 면 타입 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")

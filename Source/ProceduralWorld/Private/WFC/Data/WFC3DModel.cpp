@@ -53,7 +53,7 @@ bool UWFC3DModel::SetBaseTileInfos()
 	{
 		if (const FTileInfoTable* RowData = reinterpret_cast<const FTileInfoTable*>(Row.Value))
 		{
-			FBaseTileInfo NewBaseTileInfo;
+			FBaseTileInfo NewBaseTileInfo(RowData->Up, );
 			NewBaseTileInfo.Faces = {
 				RowData->Up,
 				RowData->Back,
@@ -62,7 +62,7 @@ bool UWFC3DModel::SetBaseTileInfos()
 				RowData->Front,
 				RowData->Down,
 			};
-			NewBaseTileInfo.TileWeight = RowData->TileWeight;
+			NewBaseTileInfo.TileWeight = RowData->Weight;
 			BaseTileInfos.Add(Row.Key, MoveTemp(NewBaseTileInfo));
 		}
 		else

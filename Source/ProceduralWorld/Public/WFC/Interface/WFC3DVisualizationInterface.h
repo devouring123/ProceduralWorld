@@ -29,12 +29,12 @@ public:
 	virtual bool InitializeVisualizationData() = 0;
 
 	/** 모든 타일 회전 정보 가져오기 */
-	virtual const TArray<FTileRotationInfo>& GetTileRotationInfo() const = 0;
+	virtual const TArray<FTileRotationInfo>* GetTileRotationInfo() const = 0;
 
 	/** 타일 변형 정보 가져오기 */
-	virtual const FTileVariantInfo& GetTileVariant(const int32& BaseTileIndex) const = 0;
+	virtual const FTileVariantInfo* GetTileVariant(const int32& BaseTileIndex) const = 0;
 
 	/** 랜덤 타일 가져오기 */
-	virtual const FTileVisualInfo& GetRandomTileVisualInfo(const int32& BaseTileIndex, const FString& BiomeName) const = 0;
+	virtual const FTileVisualInfo* GetRandomTileVisualInfo(const int32& BaseTileIndex, const FString& BiomeName) const = 0;
 	
 };
