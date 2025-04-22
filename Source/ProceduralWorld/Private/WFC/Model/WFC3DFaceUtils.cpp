@@ -70,39 +70,3 @@ FFaceInfo FWFC3DFaceUtils::GetOppositeFace(const FFaceInfo& Face)
 	}
 	return FFaceInfo(OppositeDirection, FlipBRLFFace(Face.Name));
 }
-
-bool FWFC3DFaceUtils::HasMatchingFace(const int32 FaceIndex, const TArray<int32>& FaceIndices)
-{
-	// Face 쌍과 인덱스 추출
-	const uint8 OppositeIndex = GetOppositeIndex(FaceIndex.Direction);
-
-	// UD(Up/Down) Face 매칭 확인
-	if (FaceIndex.Direction == EFace::Up || FaceIndex.Direction == EFace::Down)
-	{
-		return FaceIndices[OppositeIndex] == FaceIndex.Name;
-	}
-
-	// BRLF(Back/Right/Left/Front) Face 매칭 확인
-	if (FaceIndex.Direction >= EFace::Back && FaceIndex.Direction <= EFace::Front)
-	{
-		// 대칭 면 확인 (symmetrical face)
-		// Face1 == "3s", Face2 == "3s" => true
-		if (FaceIndices[OppositeIndex] == FaceIndex.Name &&
-			FaceIndices[OppositeIndex].Contains(TEXT("s")) &&
-			FaceIndex.Name.Contains(TEXT("s")))
-		{
-			return true;
-		}
-
-		// 암-수 커넥터 확인 (female-male connector)
-		// Face1 == "2f", Face2 == "2" => true
-		// Face1 == "2", Face2 == "2f" => true
-		if (FaceIndices[OppositeIndex] == FaceIndex.Name + TEXT("f") ||
-			FaceIndices[OppositeIndex] + TEXT("f") == FaceIndex.Name)
-		{
-			return true;
-		}
-	}
-
-	return false;
-}

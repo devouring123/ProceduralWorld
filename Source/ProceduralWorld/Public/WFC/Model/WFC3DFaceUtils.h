@@ -12,7 +12,6 @@
 class PROCEDURALWORLD_API FWFC3DFaceUtils
 {
 public:
-
 	/**
 	 * 주어진 Face의 반대 방향 Face를 반환합니다.
 	 * @param Face - 반대 방향을 찾을 Face
@@ -63,14 +62,15 @@ public:
 	 * @return 반전된 Face 문자열
 	 */
 	static FString FlipBRLFFace(const FString& FaceName);
-	
+
 	/**
 	 * 반대 방향 Face를 리턴합니다.
 	 * @param Face - 반대 방향을 찾을 Face
 	 * @return 반전된 Face 정보
 	 */
 	static FFaceInfo GetOppositeFace(const FFaceInfo& Face);
-	
+
+	// TODO : Delete this function
 	/**
 	 * Face 배열에서 주어진 Face와 일치하는 Face가 있는지 확인합니다.
 	 * @param FaceIndex - 확인할 Face 정보
@@ -92,19 +92,19 @@ public:
 		EFace::Front,
 		EFace::Down
 	};
-	
+
 private:
 	/** 각 방향에 대한 방향 벡터 배열 */
 	static const FIntVector DirectionVectors[6];
-	
+
 	/** Face 회전 매핑 테이블 */
 	static constexpr EFace RotationMap[6][4] = {
-		{EFace::None, EFace::None, EFace::None, EFace::None}, // Up
+		{EFace::Up, EFace::Up, EFace::Up, EFace::Up}, // Up
 		{EFace::Back, EFace::Left, EFace::Front, EFace::Right}, // Back
 		{EFace::Right, EFace::Back, EFace::Left, EFace::Front}, // Right
 		{EFace::Left, EFace::Front, EFace::Right, EFace::Back}, // Left
 		{EFace::Front, EFace::Right, EFace::Back, EFace::Left}, // Front
-		{EFace::None, EFace::None, EFace::None, EFace::None}  // Down
+		{EFace::Down, EFace::Down, EFace::Down, EFace::Down} // Down
 	};
 };
 

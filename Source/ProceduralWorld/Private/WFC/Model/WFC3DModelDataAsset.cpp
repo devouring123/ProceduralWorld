@@ -26,7 +26,7 @@ bool UWFC3DModelDataAsset::InitializeCommonData()
 bool UWFC3DModelDataAsset::InitializeAlgorithmData()
 {
 	bool bSuccess = true;
-	bSuccess &= InitializeFaceToTileBitStringAndBitArray();
+	bSuccess &= InitializeFaceToTile();
 	return bSuccess;
 }
 
@@ -87,6 +87,11 @@ const float UWFC3DModelDataAsset::GetTileWeight(const int32 TileIndex) const
 		UE_LOG(LogTemp, Error, TEXT("TileInfos is Empty"));
 		return 0.0f;
 	}
+	if (TileIndex < 0 || TileIndex >= TileInfos.Num())
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileIndex is out of range"));
+		return 0.0f;
+	}
 	return TileInfos[TileIndex].Weight;
 }
 
@@ -94,7 +99,6 @@ bool UWFC3DModelDataAsset::InitializeVisualizationData()
 {
 	bool bSuccess = true;
 	bSuccess &= InitializeTileVariantInfo();
-	bSuccess &= InitializeTileRotationInfo();
 	return bSuccess;
 }
 
@@ -123,9 +127,52 @@ const FTileVariantInfo* UWFC3DModelDataAsset::GetTileVariant(const int32 TileInd
 	return &TileVariants[TileIndex];
 }
 
-/** TODO: 구현 */
 const FTileVisualInfo* UWFC3DModelDataAsset::GetRandomTileVisualInfo(const int32 BaseTileIndex, const FString& BiomeName) const
 {
+	if (TileVariants.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileVariants is Empty"));
+		return nullptr;
+	}
+	if (BaseTileIndex < 0 || BaseTileIndex >= TileVariants.Num())
+	{
+		UE_LOG(LogTemp, Error, TEXT("BaseTileIndex is out of range"));
+		return nullptr;
+	}
+	if (BiomeName.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("BiomeName is empty"));
+		return nullptr;
+	}
+	const FTileVariantInfo* TileVariantInfo = &TileVariants[BaseTileIndex];
+	if (!TileVariantInfo)
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileVariantInfo is nullptr"));
+		return nullptr;
+	}
+	const FTileByBiome* TileByBiome = TileVariantInfo->Biomes.Find(BiomeName);
+	if (!TileByBiome)
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileByBiome is nullptr"));
+		return nullptr;
+	}
+	if (TileByBiome->Tiles.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileByBiome has no tiles"));
+		return nullptr;
+	}
+
+	// Random Stream으로 변경 해야 함
+	const float RandomWeight = FMath::FRandRange(0.0f, TileByBiome->TotalWeight);
+	float AccumulatedWeight = 0.0f;
+	for (const FTileVisualInfo& Tile : TileByBiome->Tiles)
+	{
+		AccumulatedWeight += Tile.Weight;
+		if (AccumulatedWeight >= RandomWeight)
+		{
+			return &Tile;
+		}
+	}
 	return nullptr;
 }
 
@@ -181,24 +228,21 @@ bool UWFC3DModelDataAsset::InitializeFaceInfo()
 	{
 		for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
 		{
-			/** Up, Down 이면 회전한 면도 추가해야함 */
 			if (Direction == EFace::Up || Direction == EFace::Down)
 			{
 				FaceInfos.AddUnique(FFaceInfo(Direction, BaseTileInfo.Faces[FWFC3DFaceUtils::GetIndex(Direction)]));
 				for (int32 RotationStep = 1; RotationStep < 4; ++RotationStep)
 				{
-					FaceInfos.AddUnique(
-						FFaceInfo(
-							Direction,
-							FWFC3DFaceUtils::RotateUDFace(BaseTileInfo.Faces[FWFC3DFaceUtils::GetIndex(Direction)], RotationStep)
-						)
-					);
+					FaceInfos.AddUnique(FFaceInfo(Direction, FWFC3DFaceUtils::RotateUDFace(BaseTileInfo.Faces[FWFC3DFaceUtils::GetIndex(Direction)], RotationStep)));
 				}
 			}
 			else
 			{
-				/** BRLF 면은 회전한 면을 추가하지 않음 */
 				FaceInfos.AddUnique(FFaceInfo(Direction, BaseTileInfo.Faces[FWFC3DFaceUtils::GetIndex(Direction)]));
+				for (int32 RotationStep = 1; RotationStep < 4; ++RotationStep)
+				{
+					FaceInfos.AddUnique(FFaceInfo(FWFC3DFaceUtils::Rotate(Direction, RotationStep), BaseTileInfo.Faces[FWFC3DFaceUtils::GetIndex(Direction)]));
+				}
 			}
 		}
 	}
@@ -216,21 +260,21 @@ bool UWFC3DModelDataAsset::InitializeFaceInfo()
 		/** UD(Up/Down) 면은 반대방향으로 설정 */
 		if (FaceInfos[Index].Direction == EFace::Up || FaceInfos[Index].Direction == EFace::Down)
 		{
-			OppositeFaceIndex[Index] = FaceToIndex.FindChecked(
+			OppositeFaceIndex.Add(FaceToIndex.FindChecked(
 				FFaceInfo(
 					FWFC3DFaceUtils::GetOpposite(FaceInfos[Index].Direction),
 					FaceInfos[Index].Name
 				)
-			);
+			));
 		}
 		else
 		{
-			OppositeFaceIndex[Index] = FaceToIndex.FindChecked(
+			OppositeFaceIndex.Add(FaceToIndex.FindChecked(
 				FFaceInfo(
 					FWFC3DFaceUtils::GetOpposite(FaceInfos[Index].Direction),
 					FWFC3DFaceUtils::FlipBRLFFace(FaceInfos[Index].Name)
 				)
-			);
+			));
 		}
 	}
 
@@ -257,16 +301,27 @@ bool UWFC3DModelDataAsset::InitializeTileInfo()
 				FaceToIndex.FindChecked({Direction, BaseTileInfos[Index].Faces[FWFC3DFaceUtils::GetIndex(Direction)]});
 		}
 		TileInfo.Weight = BaseTileInfos[Index].Weight;
-		TileInfos.AddUnique(TileInfo);
+
+		if (!TileInfos.Contains(TileInfo))
+		{
+			TileInfos.Add(TileInfo);
+			TileRotationInfos.Add({Index, 0});
+		}
+
 		for (uint8 RotationStep = 1; RotationStep < 4; ++RotationStep)
 		{
-			TileInfos.AddUnique(RotateTileClockwise(TileInfo, RotationStep));
+			FTileInfo RotatedTileInfo = RotateTileClockwise(TileInfo, RotationStep);
+			if (!TileInfos.Contains(RotatedTileInfo))
+			{
+				TileInfos.Add(MoveTemp(RotatedTileInfo));
+				TileRotationInfos.Add({Index, RotationStep});
+			}
 		}
 	}
 	return true;
 }
 
-bool UWFC3DModelDataAsset::InitializeFaceToTileBitStringAndBitArray()
+bool UWFC3DModelDataAsset::InitializeFaceToTile()
 {
 	if (FaceInfos.IsEmpty())
 	{
@@ -278,10 +333,10 @@ bool UWFC3DModelDataAsset::InitializeFaceToTileBitStringAndBitArray()
 		UE_LOG(LogTemp, Error, TEXT("TileInfos is Empty"));
 		return false;
 	}
-	
+
 	FaceToTileBitArrays.Empty();
 	FaceToTileBitStrings.Empty();
-	
+
 	int32 TileSetSize = TileInfos.Num();
 	for (const FFaceInfo& Face : FaceInfos)
 	{
@@ -339,12 +394,6 @@ bool UWFC3DModelDataAsset::InitializeTileVariantInfo()
 	return true;
 }
 
-/** TODO: 구현 */
-bool UWFC3DModelDataAsset::InitializeTileRotationInfo()
-{
-	return true;
-}
-
 FTileInfo UWFC3DModelDataAsset::RotateTileClockwise(const FTileInfo& TileToRotate, const int32 RotationStep)
 {
 	FTileInfo NewTileInfo(TileToRotate);
@@ -352,18 +401,13 @@ FTileInfo UWFC3DModelDataAsset::RotateTileClockwise(const FTileInfo& TileToRotat
 	NewTileInfo.Faces[FWFC3DFaceUtils::GetIndex(EFace::Up)] =
 		FaceToIndex[FFaceInfo(
 			EFace::Up,
-			FWFC3DFaceUtils::RotateUDFace(
-				FaceInfos[TileToRotate.Faces[FWFC3DFaceUtils::GetIndex(EFace::Up)]].Name,
-				RotationStep
-			)
+			FWFC3DFaceUtils::RotateUDFace(FaceInfos[TileToRotate.Faces[FWFC3DFaceUtils::GetIndex(EFace::Up)]].Name, RotationStep)
 		)];
 	NewTileInfo.Faces[FWFC3DFaceUtils::GetIndex(EFace::Down)] =
 		FaceToIndex[FFaceInfo(
 			EFace::Down,
 			FWFC3DFaceUtils::RotateUDFace(
-				FaceInfos[TileToRotate.Faces[FWFC3DFaceUtils::GetIndex(EFace::Down)]].Name,
-				RotationStep
-			)
+				FaceInfos[TileToRotate.Faces[FWFC3DFaceUtils::GetIndex(EFace::Down)]].Name, RotationStep)
 		)];
 
 	// BRLF(Back/Right/Left/Front) 회전

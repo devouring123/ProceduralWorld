@@ -31,7 +31,7 @@ public:
 	/** Initialize */
 	bool InitializeData();
 	bool InitializeCommonData();
-	
+
 	/** Algorithm Interface */
 	virtual bool InitializeAlgorithmData() override;
 	virtual const TArray<FTileInfo>* GetTileInfos() const override;
@@ -49,17 +49,12 @@ public:
 	/** End Visualization Interface */
 
 private:
-	
 	/** Initialize */
 	bool InitializeBaseTileInfo();
 	bool InitializeFaceInfo();
 	bool InitializeTileInfo();
-
-	/** FaceIndex -> TileIndex */
-	bool InitializeFaceToTileBitStringAndBitArray();
-
+	bool InitializeFaceToTile();
 	bool InitializeTileVariantInfo();
-	bool InitializeTileRotationInfo();
 
 	/**
 	 * 주어진 타일 정보를 지정된 스텝만큼 시계 방향으로 회전시킵니다.
@@ -89,12 +84,12 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TArray<FTileInfo> TileInfos;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TMap<FFaceInfo, int32> FaceToIndex;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TMap<int32, int32> OppositeFaceIndex;
+	TArray<int32> OppositeFaceIndex;
 
 	/** Algorithm Data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
