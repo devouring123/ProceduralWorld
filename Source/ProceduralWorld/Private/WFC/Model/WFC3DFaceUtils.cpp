@@ -12,10 +12,10 @@ const FIntVector FWFC3DFaceUtils::DirectionVectors[6] = {
 	FIntVector(0, 0, -1) // Down
 };
 
-FString FWFC3DFaceUtils::RotateUDFace(const FString& Face, int32 RotationSteps)
+FString FWFC3DFaceUtils::RotateUDFace(const FString& FaceName, int32 RotationSteps)
 {
 	FRegexPattern Pattern(TEXT("([+-]?\\d+)([a-zA-Z])"));
-	FRegexMatcher Matcher(Pattern, Face);
+	FRegexMatcher Matcher(Pattern, FaceName);
 
 	if (Matcher.FindNext())
 	{
@@ -24,7 +24,7 @@ FString FWFC3DFaceUtils::RotateUDFace(const FString& Face, int32 RotationSteps)
 
 		if (CharPart.IsEmpty())
 		{
-			return Face;
+			return FaceName;
 		}
 
 		// 문자 순환 처리 ('a' -> 'b' -> 'c' -> 'd' -> 'a')
@@ -34,48 +34,62 @@ FString FWFC3DFaceUtils::RotateUDFace(const FString& Face, int32 RotationSteps)
 		return NumberPart + FString(1, &NextChar);
 	}
 
-	return Face;
+	return FaceName;
 }
 
-FTileInfo FWFC3DFaceUtils::RotateTileClockwise(const FTileInfo& TileInfo,
-                                               const TArray<FFaceInfo>& FaceInfos,
-                                               const TMap<FFaceInfo,int32>& FaceInfoToIndex,
-                                               const int32& RotationStep)
+FString FWFC3DFaceUtils::FlipBRLFFace(const FString& FaceName)
 {
-	FTileInfo NewTileInfo(TileInfo);
-
-	// UD(Up/Down) 회전
-	NewTileInfo.Faces[GetIndex(EFace::Up)] = FaceInfoToIndex[FFaceInfo( EFace::Up, RotateUDFace(FaceInfos[TileInfo.Faces[GetIndex(EFace::Up)]].Name, RotationStep))];
-	NewTileInfo.Faces[GetIndex(EFace::Down)] = FaceInfoToIndex[FFaceInfo( EFace::Down, RotateUDFace(FaceInfos[TileInfo.Faces[GetIndex(EFace::Down)]].Name, RotationStep))];
-
-	// BRLF(Back/Right/Left/Front) 회전
-	for (uint8 i = 1; i < 5; ++i)
-    {
-        NewTileInfo.Faces[i] = TileInfo.Faces[GetIndex(Rotate(static_cast<EFace>(i), RotationStep))];
-    }
-
-	return NewTileInfo;
+	if (FaceName.IsEmpty())
+	{
+		return TEXT("NONE");
+	}
+    
+	const int32 NameLength = FaceName.Len();
+    
+	if (NameLength > 0 && FaceName[NameLength - 1] == 's')
+	{
+		return FaceName;
+	}
+    
+	if (NameLength > 0 && FaceName[NameLength - 1] == 'f')
+	{
+		return FaceName.LeftChop(1);
+	}
+    
+	return FaceName + TEXT("f");
 }
 
-bool FWFC3DFaceUtils::HasMatchingFace(const FFaceInfo& FaceInfo, const TArray<FString>& Faces)
+
+FFaceInfo FWFC3DFaceUtils::GetOppositeFace(const FFaceInfo& Face)
+{
+	const EFace OppositeDirection = GetOpposite(Face.Direction);
+    
+	if (Face.Direction == EFace::Up || Face.Direction == EFace::Down)
+	{
+		return FFaceInfo(OppositeDirection, Face.Name);
+	}
+	return FFaceInfo(OppositeDirection, FlipBRLFFace(Face.Name));
+}
+
+bool FWFC3DFaceUtils::HasMatchingFace(const int32 FaceIndex, const TArray<int32>& FaceIndices)
 {
 	// Face 쌍과 인덱스 추출
-	const uint8 OppositeIndex = GetOppositeIndex(FaceInfo.Direction);
+	const uint8 OppositeIndex = GetOppositeIndex(FaceIndex.Direction);
 
 	// UD(Up/Down) Face 매칭 확인
-	if (FaceInfo.Direction == EFace::Up || FaceInfo.Direction == EFace::Down)
+	if (FaceIndex.Direction == EFace::Up || FaceIndex.Direction == EFace::Down)
 	{
-		return Faces[OppositeIndex] == FaceInfo.Name;
+		return FaceIndices[OppositeIndex] == FaceIndex.Name;
 	}
 
 	// BRLF(Back/Right/Left/Front) Face 매칭 확인
-	if (FaceInfo.Direction >= EFace::Back && FaceInfo.Direction <= EFace::Front)
+	if (FaceIndex.Direction >= EFace::Back && FaceIndex.Direction <= EFace::Front)
 	{
 		// 대칭 면 확인 (symmetrical face)
 		// Face1 == "3s", Face2 == "3s" => true
-		if (Faces[OppositeIndex] == FaceInfo.Name &&
-			Faces[OppositeIndex].Contains(TEXT("s")) &&
-			FaceInfo.Name.Contains(TEXT("s")))
+		if (FaceIndices[OppositeIndex] == FaceIndex.Name &&
+			FaceIndices[OppositeIndex].Contains(TEXT("s")) &&
+			FaceIndex.Name.Contains(TEXT("s")))
 		{
 			return true;
 		}
@@ -83,8 +97,8 @@ bool FWFC3DFaceUtils::HasMatchingFace(const FFaceInfo& FaceInfo, const TArray<FS
 		// 암-수 커넥터 확인 (female-male connector)
 		// Face1 == "2f", Face2 == "2" => true
 		// Face1 == "2", Face2 == "2f" => true
-		if (Faces[OppositeIndex] == FaceInfo.Name + TEXT("f") ||
-			Faces[OppositeIndex] + TEXT("f") == FaceInfo.Name)
+		if (FaceIndices[OppositeIndex] == FaceIndex.Name + TEXT("f") ||
+			FaceIndices[OppositeIndex] + TEXT("f") == FaceIndex.Name)
 		{
 			return true;
 		}

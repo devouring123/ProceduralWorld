@@ -51,30 +51,33 @@ public:
 
 	/**
 	 * UD(Up/Down) Face 문자열을 회전시킵니다.
-	 * @param Face - 회전할 Face 문자열
+	 * @param FaceName - 회전할 Face 문자열
 	 * @param RotationSteps - 회전 스텝 (0-3)
 	 * @return 회전된 Face 문자열
 	 */
-	static FString RotateUDFace(const FString& Face, int32 RotationSteps);
+	static FString RotateUDFace(const FString& FaceName, int32 RotationSteps);
 
-	// TODO: ModelDataAsset 으로 이동하기
 	/**
-	 * 주어진 타일 정보를 지정된 스텝만큼 시계 방향으로 회전시킵니다.
-	 * @param TileInfo - 회전할 타일 정보
-	 * @param FaceInfos
-	 * @param FaceInfoToIndex - Face 정보 맵
-	 * @param RotationStep - 회전 스텝 (0-3)
-	 * @return 회전된 타일 정보
+	 * BRLF(Back/Right/Left/Front) Face 문자열을 반전시킵니다.
+	 * @param FaceName - 반전할 Face 문자열
+	 * @return 반전된 Face 문자열
 	 */
-	static FTileInfo RotateTileClockwise(const FTileInfo& TileInfo, const TArray<FFaceInfo>& FaceInfos, const TMap<FFaceInfo,int32>& FaceInfoToIndex, const int32& RotationStep);
+	static FString FlipBRLFFace(const FString& FaceName);
+	
+	/**
+	 * 반대 방향 Face를 리턴합니다.
+	 * @param Face - 반대 방향을 찾을 Face
+	 * @return 반전된 Face 정보
+	 */
+	static FFaceInfo GetOppositeFace(const FFaceInfo& Face);
 	
 	/**
 	 * Face 배열에서 주어진 Face와 일치하는 Face가 있는지 확인합니다.
-	 * @param FaceInfo - 확인할 Face 정보
-	 * @param Faces - Face 문자열 배열
+	 * @param FaceIndex - 확인할 Face 정보
+	 * @param FaceIndices - Face 문자열 배열
 	 * @return 일치하는 Face가 있으면 true, 아니면 false
 	 */
-	static bool HasMatchingFace(const FFaceInfo& FaceInfo, const TArray<FString>& Faces);
+	static bool HasMatchingFace(int32 FaceIndex, const TArray<int32>& FaceIndices);
 
 	/**
 	 * 모든 방향(Up, Back, Right, Left, Front, Down)을 표현하는 상수 배열

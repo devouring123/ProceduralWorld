@@ -35,11 +35,11 @@ public:
 	virtual const TArray<FFaceInfo>* GetFaceInfos() const = 0;
 
 	/** 특정 면에 대해 호환되는 타일의 비트맵 가져오기 */
-	virtual const TBitArray<>* GetCompatibleTiles(const int32& FaceIndex) const = 0;
+	virtual const TBitArray<>* GetCompatibleTiles(int32 FaceIndex) const = 0;
 
 	/** 특정 타일의 면 인덱스 가져오기 */
-	virtual const TArray<int32>* GetTileFaceIndices(const int32& TileIndex) const = 0;
+	virtual const TArray<int32>* GetTileFaceIndices(int32 TileIndex) const = 0;
 
 	/** 특정 타일의 가중치 가져오기 */
-	virtual const float GetTileWeight(const int32& TileIndex) const = 0;
+	virtual const float GetTileWeight(int32 TileIndex) const = 0;
 };
