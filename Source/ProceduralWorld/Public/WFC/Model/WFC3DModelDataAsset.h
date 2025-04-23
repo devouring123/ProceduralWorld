@@ -103,4 +103,51 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TArray<FTileRotationInfo> TileRotationInfos;
+
+
+	/** Debug */
+	void PrintFaceInfos()
+	{
+		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKeys Size: %d"), FaceInfos.Num());
+		for (uint8 i = 0; i < FaceInfos.Num(); ++i)
+		{
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%s, %s)"), i, 
+				   *StaticEnum<EFace>()->GetNameStringByValue((int64)FaceInfos[i].Direction),
+				   *FaceInfos[i].Name);
+		}
+	}
+
+	void PrintFaceToTileBitMap()
+	{
+		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Size: %d"), FaceToTileBitArrays.Num());
+		for (auto& Elem : FaceToTileBitArrays)
+		{
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Key: %d"), Elem.Key);
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Value: %s"), *FBitString::ToString(Elem.Value));
+		}
+	}
+
+	void PrintTileVariants()
+	{
+		UE_LOG(LogTemp, Display, TEXT("TileVariants Size: %d"), TileVariants.Num());
+		for (auto& Elem : TileVariants)
+		{
+			UE_LOG(LogTemp, Display, TEXT("TileName: %s"), *Elem.Key.ToString());
+			for (auto& Biome : Elem.Value.Biomes)
+			{
+				UE_LOG(LogTemp, Display, TEXT("    Biome: %s"), *Biome.Key.ToString());
+				for (auto& Tile : Biome.Value.Tiles)
+				{
+					UE_LOG(LogTemp, Display, TEXT("        Tile StaticMesh: %s"), *Tile.StaticMesh->GetName());
+					UE_LOG(LogTemp, Display, TEXT("        Tile Materials Size: %d"), Tile.Materials.Num());
+					for (auto& Material : Tile.Materials)
+					{
+						UE_LOG(LogTemp, Display, TEXT("            Tile Material: %s"), *Material->GetName());
+					}
+					UE_LOG(LogTemp, Display, TEXT("        Tile Weight: %f"), Tile.Weight);
+				}
+				UE_LOG(LogTemp, Display, TEXT("    Biome TotalWeight: %f"), Biome.Value.TotalWeight);
+			}
+		}
+	}
 };

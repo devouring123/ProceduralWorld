@@ -162,7 +162,7 @@ const FTileVisualInfo* UWFC3DModelDataAsset::GetRandomTileVisualInfo(const int32
 		return nullptr;
 	}
 
-	// Random Stream으로 변경 해야 함
+	// TODO: Random Stream으로 변경 해야 함
 	const float RandomWeight = FMath::FRandRange(0.0f, TileByBiome->TotalWeight);
 	float AccumulatedWeight = 0.0f;
 	for (const FTileVisualInfo& Tile : TileByBiome->Tiles)
