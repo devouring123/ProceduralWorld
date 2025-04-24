@@ -73,6 +73,9 @@ private:
 
 	/** Base Tile Data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	TArray<FString> BaseTileNames;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TMap<FString, int32> BaseTileNameToIndex;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
@@ -83,13 +86,13 @@ private:
 	TArray<FFaceInfo> FaceInfos;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<FTileInfo> TileInfos;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TMap<FFaceInfo, int32> FaceToIndex;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	TArray<int32> OppositeFaceIndex;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	TArray<FTileInfo> TileInfos;
 
 	/** Algorithm Data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
@@ -109,33 +112,37 @@ private:
 	void PrintFaceInfos()
 	{
 		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKeys Size: %d"), FaceInfos.Num());
-		for (uint8 i = 0; i < FaceInfos.Num(); ++i)
+		for (int32 Index = 0; Index < FaceInfos.Num(); ++Index)
 		{
-			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%s, %s)"), i, 
-				   *StaticEnum<EFace>()->GetNameStringByValue((int64)FaceInfos[i].Direction),
-				   *FaceInfos[i].Name);
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%s, %s)"), Index, 
+				   *StaticEnum<EFace>()->GetNameStringByValue((int64)FaceInfos[Index].Direction),
+				   *FaceInfos[Index].Name);
 		}
 	}
 
 	void PrintFaceToTileBitMap()
 	{
 		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Size: %d"), FaceToTileBitArrays.Num());
-		for (auto& Elem : FaceToTileBitArrays)
+		
+		for (int32 Index = 0; Index < FaceToTileBitArrays.Num(); ++Index)
 		{
-			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Key: %d"), Elem.Key);
-			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Value: %s"), *FBitString::ToString(Elem.Value));
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Key: %d"), Index);
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Value: %s"), *FBitString::ToString(FaceToTileBitArrays[Index]));
 		}
 	}
 
 	void PrintTileVariants()
 	{
 		UE_LOG(LogTemp, Display, TEXT("TileVariants Size: %d"), TileVariants.Num());
-		for (auto& Elem : TileVariants)
+		
+		for (int32 VariantIndex = 0; VariantIndex < TileVariants.Num(); ++VariantIndex)
 		{
-			UE_LOG(LogTemp, Display, TEXT("TileName: %s"), *Elem.Key.ToString());
-			for (auto& Biome : Elem.Value.Biomes)
+			UE_LOG(LogTemp, Display, TEXT("TileName: %s"), *BaseTileNames[VariantIndex]);
+
+			const FTileVariantInfo& TileVariantInfo = TileVariants[VariantIndex];
+			for (auto& Biome : TileVariantInfo.Biomes)
 			{
-				UE_LOG(LogTemp, Display, TEXT("    Biome: %s"), *Biome.Key.ToString());
+				UE_LOG(LogTemp, Display, TEXT("    Biome: %s"), *Biome.Key);
 				for (auto& Tile : Biome.Value.Tiles)
 				{
 					UE_LOG(LogTemp, Display, TEXT("        Tile StaticMesh: %s"), *Tile.StaticMesh->GetName());

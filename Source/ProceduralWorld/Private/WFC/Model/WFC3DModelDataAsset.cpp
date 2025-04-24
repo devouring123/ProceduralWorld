@@ -193,6 +193,7 @@ bool UWFC3DModelDataAsset::InitializeBaseTileInfo()
 	{
 		if (const FTileInfoTable* RowData = reinterpret_cast<const FTileInfoTable*>(Row.Value))
 		{
+			BaseTileNames.Add(Row.Key.ToString());
 			BaseTileNameToIndex.Add(Row.Key.ToString(), BaseTileInfos.Num());
 			BaseTileInfos.Emplace(
 				RowData->Up,
