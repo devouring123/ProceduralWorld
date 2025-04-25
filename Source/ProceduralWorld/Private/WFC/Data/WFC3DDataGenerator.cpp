@@ -30,7 +30,7 @@ void AWFC3DDataGenerator::OnConstruction(const FTransform& Transform)
 bool AWFC3DDataGenerator::CreateModelData() const
 {
 	// Create Model Data
-	return WFC3DModel->CreateData();
+	return WFC3DModel->InitializeData();
 }
 
 bool AWFC3DDataGenerator::PrintModelData() const

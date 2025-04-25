@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WFC3DFaceUtils.h"
 #include "WFC/Interface/WFC3DAlgorithmInterface.h"
 #include "WFC/Interface/WFC3DVisualizationInterface.h"
 #include "Engine/DataAsset.h"
@@ -22,7 +23,7 @@ public:
 	/** Constructor */
 	UWFC3DModelDataAsset() = default;
 
-	UWFC3DModelDataAsset::UWFC3DModelDataAsset(UDataTable* InBaseTileDataTable, UDataTable* InTileVariantDataTable)
+	UWFC3DModelDataAsset(UDataTable* InBaseTileDataTable, UDataTable* InTileVariantDataTable)
 	{
 		BaseTileDataTable = InBaseTileDataTable;
 		TileVariantDataTable = InTileVariantDataTable;
@@ -30,7 +31,7 @@ public:
 
 	/** Initialize */
 	bool InitializeData();
-	bool InitializeCommonData();
+	bool PrintData();
 
 	/** Algorithm Interface */
 	virtual bool InitializeAlgorithmData() override;
@@ -50,11 +51,15 @@ public:
 
 private:
 	/** Initialize */
+	bool InitializeCommonData();
 	bool InitializeBaseTileInfo();
 	bool InitializeFaceInfo();
 	bool InitializeTileInfo();
 	bool InitializeFaceToTile();
 	bool InitializeTileVariantInfo();
+
+	bool LoadFaceToTileBitArrays();
+
 
 	/**
 	 * 주어진 타일 정보를 지정된 스텝만큼 시계 방향으로 회전시킵니다.
@@ -65,76 +70,94 @@ private:
 	FTileInfo RotateTileClockwise(const FTileInfo& TileInfo, int32 RotationStep);
 
 	/** Data Table */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
 	TObjectPtr<UDataTable> BaseTileDataTable = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
 	TObjectPtr<UDataTable> TileVariantDataTable = nullptr;
 
 	/** Base Tile Data */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<FString> BaseTileNames;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TMap<FString, int32> BaseTileNameToIndex;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
 	TArray<FBaseTileInfo> BaseTileInfos;
 
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
+	TArray<FString> BaseTileNames;
+
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
+	TMap<FString, int32> BaseTileNameToIndex;
+
 	/** Common Data */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
 	TArray<FFaceInfo> FaceInfos;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
 	TMap<FFaceInfo, int32> FaceToIndex;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	TArray<int32> OppositeFaceIndex;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
+	TArray<int32> OppositeFaceIndices;
+
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
 	TArray<FTileInfo> TileInfos;
 
 	/** Algorithm Data */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
 	TArray<FBitString> FaceToTileBitStrings;
 
 	TArray<TBitArray<>> FaceToTileBitArrays;
 
 	/** Visualization Data */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
 	TArray<FTileVariantInfo> TileVariants;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	UPROPERTY(EditAnywhere, Category = "WFC3D|Data")
 	TArray<FTileRotationInfo> TileRotationInfos;
 
 
 	/** Debug */
-	void PrintFaceInfos()
+	bool PrintFaceInfos()
 	{
-		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKeys Size: %d"), FaceInfos.Num());
+		UE_LOG(LogTemp, Display, TEXT("FaceInfo Size: %d"), FaceInfos.Num());
 		for (int32 Index = 0; Index < FaceInfos.Num(); ++Index)
 		{
-			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMapKey %d: (%s, %s)"), Index, 
-				   *StaticEnum<EFace>()->GetNameStringByValue((int64)FaceInfos[Index].Direction),
-				   *FaceInfos[Index].Name);
+			UE_LOG(LogTemp, Display, TEXT("FaceInfo %d: (%s, %s)"), Index,
+			       *StaticEnum<EFace>()->GetNameStringByValue((int64)FaceInfos[Index].Direction),
+			       *FaceInfos[Index].Name);
 		}
+		return true;
 	}
 
-	void PrintFaceToTileBitMap()
+	bool PrintTileInfos()
 	{
-		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Size: %d"), FaceToTileBitArrays.Num());
-		
+		UE_LOG(LogTemp, Display, TEXT("TileInfos Size: %d"), TileInfos.Num());
+		for (int32 Index = 0; Index < TileInfos.Num(); ++Index)
+		{
+			UE_LOG(LogTemp, Display, TEXT("TileInfo %d: BaseTileID: %d"), Index, TileInfos[Index].BaseTileID);
+			for (int32 FaceIndex = 0; FaceIndex < TileInfos[Index].Faces.Num(); ++FaceIndex)
+			{
+				UE_LOG(LogTemp, Display, TEXT("    TileInfo %d: %s: %s"), Index,
+					*StaticEnum<EFace>()->GetNameStringByValue((int64)FWFC3DFaceUtils::AllDirections[FaceIndex]),
+					*FaceInfos[TileInfos[Index].Faces[FaceIndex]].Name);
+			}
+			UE_LOG(LogTemp, Display, TEXT("TileInfo %d: Weight: %f"), Index, TileInfos[Index].Weight);
+		}
+		return true;
+	}
+
+	bool PrintFaceToTileBitMap()
+	{
+		UE_LOG(LogTemp, Display, TEXT("FaceToTileBitArrays Size: %d"), FaceToTileBitArrays.Num());
+
 		for (int32 Index = 0; Index < FaceToTileBitArrays.Num(); ++Index)
 		{
-			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Key: %d"), Index);
-			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitMap Value: %s"), *FBitString::ToString(FaceToTileBitArrays[Index]));
+			UE_LOG(LogTemp, Display, TEXT("FaceToTileBitArray %d : %s"), Index, *FBitString::ToString(FaceToTileBitArrays[Index]));
 		}
+		return true;
 	}
 
-	void PrintTileVariants()
+	bool PrintTileVariants()
 	{
 		UE_LOG(LogTemp, Display, TEXT("TileVariants Size: %d"), TileVariants.Num());
-		
+
 		for (int32 VariantIndex = 0; VariantIndex < TileVariants.Num(); ++VariantIndex)
 		{
 			UE_LOG(LogTemp, Display, TEXT("TileName: %s"), *BaseTileNames[VariantIndex]);
@@ -156,5 +179,6 @@ private:
 				UE_LOG(LogTemp, Display, TEXT("    Biome TotalWeight: %f"), Biome.Value.TotalWeight);
 			}
 		}
+		return true;
 	}
 };

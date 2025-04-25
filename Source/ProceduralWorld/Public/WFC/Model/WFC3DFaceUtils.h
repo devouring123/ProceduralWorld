@@ -93,6 +93,18 @@ public:
 		EFace::Down
 	};
 
+	static constexpr EFace VerticalDirections[2] = {
+        EFace::Up,
+        EFace::Down
+    };
+	
+	static constexpr EFace SideDirections[4] = {
+        EFace::Back,
+        EFace::Right,
+        EFace::Left,
+        EFace::Front
+    };
+
 private:
 	/** 각 방향에 대한 방향 벡터 배열 */
 	static const FIntVector DirectionVectors[6];
