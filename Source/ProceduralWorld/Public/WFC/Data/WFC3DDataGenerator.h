@@ -19,7 +19,7 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	UWFC3DModelDataAsset* WFC3DModel;
+	TObjectPtr<UWFC3DModelDataAsset> WFC3DModel;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	bool bCreateModelData = false;
