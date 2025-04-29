@@ -16,7 +16,7 @@ bool UWFC3DModelDataAsset::InitializeData()
 
 bool UWFC3DModelDataAsset::PrintData()
 {
-	bool bSuccess = true;	
+	bool bSuccess = true;
 	bSuccess &= PrintFaceInfos();
 	bSuccess &= PrintTileInfos();
 	bSuccess &= PrintFaceToTileBitMap();
@@ -51,6 +51,57 @@ const TArray<FFaceInfo>* UWFC3DModelDataAsset::GetFaceInfos() const
 	return &FaceInfos;
 }
 
+const FTileInfo* UWFC3DModelDataAsset::GetTileInfo(int32 TileIndex) const
+{
+	if (TileInfos.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileInfos is Empty"));
+		return nullptr;
+	}
+	if (!TileInfos.IsValidIndex(TileIndex))
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileIndex is Out of Range"));
+		return nullptr;
+	}
+	return &TileInfos[TileIndex];
+}
+
+const int32 UWFC3DModelDataAsset::GetTileInfosNum() const
+{
+	if (TileInfos.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileInfos is Empty"));
+		return 0;
+	}
+	return TileInfos.Num();
+}
+
+const FFaceInfo* UWFC3DModelDataAsset::GetFaceInfo(int32 FaceIndex) const
+{
+	if (FaceInfos.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("FaceInfos is Empty"));
+		return nullptr;
+	}
+	if (!FaceInfos.IsValidIndex(FaceIndex))
+	{
+		UE_LOG(LogTemp, Error, TEXT("FaceIndex is Out of Range"));
+		return nullptr;
+	}
+	return &FaceInfos[FaceIndex];
+}
+
+const int32 UWFC3DModelDataAsset::GetFaceInfosNum() const
+{
+	if (FaceInfos.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("FaceInfos is Empty"));
+		return 0;
+	}
+	return FaceInfos.Num();
+}
+
+/** 현재는 BitArrays가 비어있으면 BitString에서 못 가져 옴 */
 const TBitArray<>* UWFC3DModelDataAsset::GetCompatibleTiles(const int32 FaceIndex) const
 {
 	if (FaceToTileBitArrays.IsEmpty())
@@ -58,19 +109,19 @@ const TBitArray<>* UWFC3DModelDataAsset::GetCompatibleTiles(const int32 FaceInde
 		UE_LOG(LogTemp, Error, TEXT("FaceToTileBitArrays is Empty"));
 		return nullptr;
 	}
-	
+
 	if (FaceToTileBitStrings.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("FaceToTileBitStrings is Empty"));
 		return nullptr;
 	}
-	
-	if (FaceIndex < 0 || FaceIndex >= FaceToTileBitArrays.Num())
+
+	if (!FaceToTileBitStrings.IsValidIndex(FaceIndex))
 	{
-		UE_LOG(LogTemp, Error, TEXT("FaceIndex is out of range"));
+		UE_LOG(LogTemp, Error, TEXT("FaceIndex is Out of Range"));
 		return nullptr;
 	}
-	
+
 	return &FaceToTileBitArrays[FaceIndex];
 }
 
@@ -81,9 +132,9 @@ const TArray<int32>* UWFC3DModelDataAsset::GetTileFaceIndices(const int32 TileIn
 		UE_LOG(LogTemp, Error, TEXT("TileInfos is Empty"));
 		return nullptr;
 	}
-	if (TileIndex < 0 || TileIndex >= TileInfos.Num())
+	if (!TileInfos.IsValidIndex(TileIndex))
 	{
-		UE_LOG(LogTemp, Error, TEXT("TileIndex is out of range"));
+		UE_LOG(LogTemp, Error, TEXT("TileIndex is Out of Range"));
 		return nullptr;
 	}
 	return &TileInfos[TileIndex].Faces;
@@ -96,9 +147,9 @@ const float UWFC3DModelDataAsset::GetTileWeight(const int32 TileIndex) const
 		UE_LOG(LogTemp, Error, TEXT("TileInfos is Empty"));
 		return 0.0f;
 	}
-	if (TileIndex < 0 || TileIndex >= TileInfos.Num())
+	if (!TileInfos.IsValidIndex(TileIndex))
 	{
-		UE_LOG(LogTemp, Error, TEXT("TileIndex is out of range"));
+		UE_LOG(LogTemp, Error, TEXT("TileIndex is Out of Range"));
 		return 0.0f;
 	}
 	return TileInfos[TileIndex].Weight;
@@ -111,7 +162,7 @@ bool UWFC3DModelDataAsset::InitializeVisualizationData()
 	return bSuccess;
 }
 
-const TArray<FTileRotationInfo>* UWFC3DModelDataAsset::GetTileRotationInfo() const
+const TArray<FTileRotationInfo>* UWFC3DModelDataAsset::GetTileRotationInfos() const
 {
 	if (TileRotationInfos.IsEmpty())
 	{
@@ -121,6 +172,21 @@ const TArray<FTileRotationInfo>* UWFC3DModelDataAsset::GetTileRotationInfo() con
 	return &TileRotationInfos;
 }
 
+const FTileRotationInfo* UWFC3DModelDataAsset::GetTileRotationInfo(int32 TileIndex) const
+{
+	if (TileRotationInfos.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileRotationInfos is Empty"));
+		return nullptr;
+	}
+	if (!TileRotationInfos.IsValidIndex(TileIndex))
+	{
+		UE_LOG(LogTemp, Error, TEXT("TileIndex is Out of Range"));
+		return nullptr;
+	}
+	return &TileRotationInfos[TileIndex];
+}
+
 const FTileVariantInfo* UWFC3DModelDataAsset::GetTileVariant(const int32 TileIndex) const
 {
 	if (TileVariants.IsEmpty())
@@ -128,9 +194,9 @@ const FTileVariantInfo* UWFC3DModelDataAsset::GetTileVariant(const int32 TileInd
 		UE_LOG(LogTemp, Error, TEXT("TileVariants is Empty"));
 		return nullptr;
 	}
-	if (TileIndex < 0 || TileIndex >= TileVariants.Num())
+	if (!TileInfos.IsValidIndex(TileIndex))
 	{
-		UE_LOG(LogTemp, Error, TEXT("TileIndex is out of range"));
+		UE_LOG(LogTemp, Error, TEXT("TileIndex is Out of Range"));
 		return nullptr;
 	}
 	return &TileVariants[TileIndex];
@@ -143,9 +209,9 @@ const FTileVisualInfo* UWFC3DModelDataAsset::GetRandomTileVisualInfo(const int32
 		UE_LOG(LogTemp, Error, TEXT("TileVariants is Empty"));
 		return nullptr;
 	}
-	if (BaseTileIndex < 0 || BaseTileIndex >= TileVariants.Num())
+	if (!TileVariants.IsValidIndex(BaseTileIndex))
 	{
-		UE_LOG(LogTemp, Error, TEXT("BaseTileIndex is out of range"));
+		UE_LOG(LogTemp, Error, TEXT("BaseTileIndex is Out of Range"));
 		return nullptr;
 	}
 	if (BiomeName.IsEmpty())
@@ -312,7 +378,7 @@ bool UWFC3DModelDataAsset::InitializeTileInfo()
 
 	TileInfos.Empty();
 	TileRotationInfos.Empty();
-	
+
 	for (int32 Index = 0; Index < BaseTileInfos.Num(); ++Index)
 	{
 		FTileInfo TileInfo;
@@ -324,20 +390,23 @@ bool UWFC3DModelDataAsset::InitializeTileInfo()
 		}
 		TileInfo.Weight = BaseTileInfos[Index].Weight;
 
-		if (!TileInfos.Contains(TileInfo))
+		if (TileInfos.Contains(TileInfo))
 		{
-			TileInfos.Add(TileInfo);
-			TileRotationInfos.Add({Index, 0});
+			continue;
 		}
-
+		
+		TileInfos.Add(TileInfo);
+		TileRotationInfos.Add({Index, 0});
+		
 		for (uint8 RotationStep = 1; RotationStep < 4; ++RotationStep)
 		{
 			FTileInfo RotatedTileInfo = RotateTileClockwise(TileInfo, RotationStep);
-			if (!TileInfos.Contains(RotatedTileInfo))
+			if (TileInfos.Contains(RotatedTileInfo))
 			{
-				TileInfos.Add(MoveTemp(RotatedTileInfo));
-				TileRotationInfos.Add({Index, RotationStep});
+				continue;
 			}
+			TileInfos.Add(MoveTemp(RotatedTileInfo));
+			TileRotationInfos.Add({Index, RotationStep});
 		}
 	}
 	return true;

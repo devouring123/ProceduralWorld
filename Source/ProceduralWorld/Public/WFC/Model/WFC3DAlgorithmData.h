@@ -7,27 +7,27 @@
 
 struct FFaceInfo;
 struct FTileInfo;
-class IWFC3DAlgorithmInterface;
 /**
  * 
  */
-class PROCEDURALWORLD_API WFC3DAlgorithmData
+USTRUCT(BlueprintType)
+struct PROCEDURALWORLD_API FWFC3DAlgorithmData
 {
-public:
-	WFC3DAlgorithmData() = default;
-	virtual ~WFC3DAlgorithmData() = default;
+	GENERATED_BODY()
 
-	void Initialize(const IWFC3DAlgorithmInterface* InAlgorithmInterface)
+public:
+	FWFC3DAlgorithmData(const IWFC3DAlgorithmInterface* InAlgorithmInterface)
+		: AlgorithmInterface(InAlgorithmInterface),
+		  TileInfos(InAlgorithmInterface->GetTileInfos()),
+		  FaceInfos(InAlgorithmInterface->GetFaceInfos())
 	{
-		AlgorithmInterface = InAlgorithmInterface;
-		TileInfos = *AlgorithmInterface->GetTileInfos();
 	}
-	
+
+	/** Initialize */
+	bool InitializeData();
+
 private:
 	const IWFC3DAlgorithmInterface* AlgorithmInterface = nullptr;
-	TArray<FTileInfo> TileInfos;
-	TArray<FFaceInfo> FaceInfos;
-	TArray<TBitArray<>> FaceToTileBitArrays;
-
-	
+	const TArray<FTileInfo>* TileInfos;
+	const TArray<FFaceInfo>* FaceInfos;
 };

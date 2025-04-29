@@ -28,8 +28,11 @@ public:
 	/** 모델 데이터 초기화 */
 	virtual bool InitializeVisualizationData() = 0;
 
-	/** 모든 타일 회전 정보 가져오기 */
-	virtual const TArray<FTileRotationInfo>* GetTileRotationInfo() const = 0;
+	/** 타일 회전 정보 배열 가져오기 */
+	virtual const TArray<FTileRotationInfo>* GetTileRotationInfos() const = 0;
+
+	/** 타일 회전 정보 가져오기 */
+	virtual const FTileRotationInfo* GetTileRotationInfo(int32 TileIndex) const = 0;
 
 	/** 타일 변형 정보 가져오기 */
 	virtual const FTileVariantInfo* GetTileVariant(int32 BaseTileIndex) const = 0;

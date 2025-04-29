@@ -37,6 +37,10 @@ public:
 	virtual bool InitializeAlgorithmData() override;
 	virtual const TArray<FTileInfo>* GetTileInfos() const override;
 	virtual const TArray<FFaceInfo>* GetFaceInfos() const override;
+	virtual const FTileInfo* GetTileInfo(int32 TileIndex) const override;
+	virtual const int32 GetTileInfosNum() const override;
+	virtual const FFaceInfo* GetFaceInfo(int32 FaceIndex) const override;
+	virtual const int32 GetFaceInfosNum() const override;
 	virtual const TBitArray<>* GetCompatibleTiles(int32 FaceIndex) const override;
 	virtual const TArray<int32>* GetTileFaceIndices(int32 TileIndex) const override;
 	virtual const float GetTileWeight(int32 TileIndex) const override;
@@ -44,7 +48,8 @@ public:
 
 	/** Visualization Interface */
 	virtual bool InitializeVisualizationData() override;
-	virtual const TArray<FTileRotationInfo>* GetTileRotationInfo() const override;
+	virtual const TArray<FTileRotationInfo>* GetTileRotationInfos() const override;
+	virtual const FTileRotationInfo* GetTileRotationInfo(int32 TileIndex) const override;
 	virtual const FTileVariantInfo* GetTileVariant(int32 TileIndex) const override;
 	virtual const FTileVisualInfo* GetRandomTileVisualInfo(int32 BaseTileIndex, const FString& BiomeName) const override;
 	/** End Visualization Interface */

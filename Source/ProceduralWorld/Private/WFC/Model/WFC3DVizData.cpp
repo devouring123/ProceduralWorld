@@ -2,11 +2,3 @@
 
 
 #include "WFC/Model/WFC3DVizData.h"
-
-WFC3DVizData::WFC3DVizData()
-{
-}
-
-WFC3DVizData::~WFC3DVizData()
-{
-}

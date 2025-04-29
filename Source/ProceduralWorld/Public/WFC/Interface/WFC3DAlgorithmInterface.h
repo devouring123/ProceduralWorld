@@ -27,12 +27,24 @@ class PROCEDURALWORLD_API IWFC3DAlgorithmInterface
 public:
 	/** 모델 데이터 초기화 */
 	virtual bool InitializeAlgorithmData() = 0;
-
+	
 	/** 타일 정보 배열 가져오기 */
 	virtual const TArray<FTileInfo>* GetTileInfos() const = 0;
 
+	/** 타일 정보 가져오기 */
+	virtual const FTileInfo* GetTileInfo(int32 TileIndex) const = 0;
+
+	/** 타일 정보 배열 길이 가져오기 */
+	virtual const int32 GetTileInfosNum() const = 0;
+	
 	/** 면 정보 배열 가져오기 */
 	virtual const TArray<FFaceInfo>* GetFaceInfos() const = 0;
+
+	/** 면 정보 가져오기 */
+	virtual const FFaceInfo* GetFaceInfo(int32 FaceIndex) const = 0;
+
+	/** 면 정보 배열 길이 가져오기 */
+	virtual const int32 GetFaceInfosNum() const = 0;
 
 	/** 특정 면에 대해 호환되는 타일의 비트맵 가져오기 */
 	virtual const TBitArray<>* GetCompatibleTiles(int32 FaceIndex) const = 0;

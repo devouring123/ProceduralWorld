@@ -3,13 +3,18 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WFC/Interface/WFC3DVisualizationInterface.h"
 
 /**
  * 
  */
-class PROCEDURALWORLD_API WFC3DVizData
+USTRUCT(BlueprintType)
+struct PROCEDURALWORLD_API FWFC3DVizData
 {
+	GENERATED_BODY()
+	
 public:
-	WFC3DVizData();
-	~WFC3DVizData();
+	
+	FWFC3DVizData();
+	
 };

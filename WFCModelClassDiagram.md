@@ -3,86 +3,74 @@ classDiagram
 %% 인터페이스 정의
     class IWFC3DAlgorithmInterface {
         <<interface>>
-        +virtual const TArray~FTileInfo~& GetTileInfos() const = 0
-        +virtual const TArray~FFaceInfo~& GetFaceInfos() const = 0
-        +virtual TBitArray GetCompatibleTiles(int32 FaceIndex) const = 0
-        +virtual FTileFaceIndices GetTileFaces(int32 TileIndex) const = 0
-        +virtual float GetTileWeight(int32 TileIndex) const = 0
+        +bool InitializeAlgorithmData()
+        +const TArray~FTileInfo~* GetTileInfos() const
+        +const TBitArray~>* GetCompatibleTiles(int32 FaceIndex) const
+        +const TArray~int32~* GetTileFaceIndices(int32 TileIndex) const
+        +const float GetTileWeight(int32 TileIndex) const
     }
 
     class IWFC3DVisualizationInterface {
         <<interface>>
-        +virtual UStaticMesh* GetTileMesh(int32 TileIndex) const = 0
-        +virtual TArray~UMaterialInterface*~ GetTileMaterials(int32 TileIndex) const = 0
-        +virtual FTileVariantInfo* GetTileVariant(int32 TileIndex) const = 0
-        +virtual TArray~int32~ GetTileIDs() const = 0
+        +bool InitializeVisualizationData()
+        +const FTileVariantInfo* GetTileVariant(int32 TileIndex) const
+        +const FTileVisualInfo* GetRandomTileVisualInfo(int32 BaseTileIndex, const FString& BiomeName) const
     }
 
-%% 데이터 에셋 및 구현 클래스
+%% 주요 클래스들
     class UWFC3DModelDataAsset {
-        +UPROPERTY() TObjectPtr~UDataTable~ BaseTileDataTable
-        +UPROPERTY() TObjectPtr~UDataTable~ TileVariantDataTable
-        +UPROPERTY() TArray~FTileInfo~ TileInfos
-        +UPROPERTY() TArray~FFaceInfo~ FaceInfos
-        +UPROPERTY() TMap~int32, FTileFaceIndices~ TileToFaceMap
-        +UPROPERTY() TMap~int32, FTileBitString~ FaceToTileBitStringMap
-        +UPROPERTY() TMap~int32, FTileVariantInfo~ TileVariants
-        +UPROPERTY() TMap~int32, FTileVisualInfo~ TileVisualMap
-
-        +bool Initialize()
-        +bool CreateData()
-        +bool LoadData()
-        +bool PrintData()
+        -TObjectPtr~UDataTable~ BaseTileDataTable
+        -TObjectPtr~UDataTable~ TileVariantDataTable
+        -TArray~FBaseTileInfo~ BaseTileInfos
+        -TArray~FString~ BaseTileNames
+        -TArray~FFaceInfo~ FaceInfos
+        -TArray~FTileInfo~ TileInfos
+        +bool InitializeData()
+        +const TArray~FTileInfo~* GetTileInfos() const
+        +const TArray~FFaceInfo~* GetFaceInfos() const
     }
 
     class FWFC3DAlgorithmData {
-        -const IWFC3DAlgorithmInterface* ModelData
-        -TArray~FTileInfo~ TileInfos
-        -TArray~FFaceInfo~ FaceInfos
-        -TMap~int32, TBitArray~ FaceToTileBitArrayMap
-        -TMap~int32, FTileFaceIndices~ TileToFaceMap
+        -const UWFC3DModelDataAsset* ModelData
+        -TArray~TBitArray~>~ FaceToTileBitArrays
+        -TMap~int32, TArray~int32~~ TileToFaceIndicesMap
         -TArray~float~ TileWeights
         -float TotalWeight
-
-        +void Initialize(const IWFC3DAlgorithmInterface* InModelData)
-        +const TArray~FTileInfo~& GetTileInfos() const
-        +const TArray~FFaceInfo~& GetFaceInfos() const
-        +TBitArray GetCompatibleTiles(int32 FaceIndex) const
-        +FTileFaceIndices GetTileFaces(int32 TileIndex) const
-        +float GetTileWeight(int32 TileIndex) const
+        +bool Initialize()
+        +const TBitArray~>* GetCompatibleTiles(int32 FaceIndex) const
+        +const TArray~int32~* GetTileFaceIndices(int32 TileIndex) const
+        +const float GetTileWeight(int32 TileIndex) const
         +float GetTotalWeight() const
+        +int32 SelectRandomTileByWeight(const TBitArray~>& CompatibleTiles) const
     }
 
     class FWFC3DVizData {
-        -const IWFC3DVisualizationInterface* ModelData
+        -const UWFC3DModelDataAsset* ModelData
+        -TArray~FTileVariantInfo~ TileVariants
+        -TArray~FTileRotationInfo~ TileRotationInfos
         -TMap~int32, FTileVisualInfo~ TileVisualMap
         -FString CurrentBiome
-
-        +void Initialize(const IWFC3DVisualizationInterface* InModelData)
-        +UStaticMesh* GetTileMesh(int32 TileIndex) const
-        +TArray~UMaterialInterface*~ GetTileMaterials(int32 TileIndex) const
-        +FTileVariantInfo* GetTileVariant(int32 TileIndex) const
-        +void LoadTileMeshes(const FString& BiomeName)
+        +bool Initialize()
+        +const FTileVariantInfo* GetTileVariant(int32 TileIndex) const
+        +const FTileVisualInfo* GetRandomTileVisualInfo(int32 BaseTileIndex, const FString& BiomeName) const
+        +void SetCurrentBiome(const FString& BiomeName)
     }
 
     class UWFC3DCombinedModel {
-        +UPROPERTY() UWFC3DModelDataAsset* ModelDataAsset
+        -UWFC3DModelDataAsset* ModelDataAsset
         -FWFC3DAlgorithmData AlgorithmData
         -FWFC3DVizData VisualizationData
-
-        +bool Initialize()
-        +FWFC3DAlgorithmData& GetAlgorithmData()
-        +FWFC3DVizData& GetVisualizationData()
+        +bool Initialize(UWFC3DModelDataAsset* InModelData)
         +IWFC3DAlgorithmInterface* GetAlgorithmInterface() const
         +IWFC3DVisualizationInterface* GetVisualizationInterface() const
     }
 
 %% 관계 정의
-    IWFC3DAlgorithmInterface <|.. UWFC3DModelDataAsset : implements
-    IWFC3DVisualizationInterface <|.. UWFC3DModelDataAsset : implements
+    IWFC3DAlgorithmInterface <|.. FWFC3DAlgorithmData : implements
+    IWFC3DVisualizationInterface <|.. FWFC3DVizData : implements
     UWFC3DCombinedModel o-- UWFC3DModelDataAsset : contains
     UWFC3DCombinedModel *-- FWFC3DAlgorithmData : contains
     UWFC3DCombinedModel *-- FWFC3DVizData : contains
-    FWFC3DAlgorithmData --> IWFC3DAlgorithmInterface : uses
-    FWFC3DVizData --> IWFC3DVisualizationInterface : uses
+    FWFC3DAlgorithmData --> UWFC3DModelDataAsset : uses
+    FWFC3DVizData --> UWFC3DModelDataAsset : uses~~~~~~~~~~~~~~~~
 ```
