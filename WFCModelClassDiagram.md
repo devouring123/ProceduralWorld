@@ -5,6 +5,11 @@ classDiagram
         <<interface>>
         +bool InitializeAlgorithmData()
         +const TArray~FTileInfo~* GetTileInfos() const
+        +const FTileInfo* GetTileInfo(int32 TileIndex) const
+        +const int32 GetTileInfosNum() const
+        +const TArray~FFaceInfo~* GetFaceInfos() const
+        +const FFaceInfo* GetFaceInfo(int32 FaceIndex) const
+        +const int32 GetFaceInfosNum() const
         +const TBitArray~>* GetCompatibleTiles(int32 FaceIndex) const
         +const TArray~int32~* GetTileFaceIndices(int32 TileIndex) const
         +const float GetTileWeight(int32 TileIndex) const
@@ -13,6 +18,8 @@ classDiagram
     class IWFC3DVisualizationInterface {
         <<interface>>
         +bool InitializeVisualizationData()
+        +const TArray~FTileRotationInfo~* GetTileRotationInfos() const
+        +const FTileRotationInfo* GetTileRotationInfo(int32 TileIndex) const
         +const FTileVariantInfo* GetTileVariant(int32 TileIndex) const
         +const FTileVisualInfo* GetRandomTileVisualInfo(int32 BaseTileIndex, const FString& BiomeName) const
     }
@@ -23,54 +30,46 @@ classDiagram
         -TObjectPtr~UDataTable~ TileVariantDataTable
         -TArray~FBaseTileInfo~ BaseTileInfos
         -TArray~FString~ BaseTileNames
+        -TMap~FString, int32~ BaseTileNameToIndex
         -TArray~FFaceInfo~ FaceInfos
+        -TMap~FFaceInfo, int32~ FaceToIndex
+        -TArray~int32~ OppositeFaceIndices
         -TArray~FTileInfo~ TileInfos
-        +bool InitializeData()
-        +const TArray~FTileInfo~* GetTileInfos() const
-        +const TArray~FFaceInfo~* GetFaceInfos() const
-    }
-
-    class FWFC3DAlgorithmData {
-        -const UWFC3DModelDataAsset* ModelData
+        -TArray~FBitString~ FaceToTileBitStrings
         -TArray~TBitArray~>~ FaceToTileBitArrays
-        -TMap~int32, TArray~int32~~ TileToFaceIndicesMap
-        -TArray~float~ TileWeights
-        -float TotalWeight
-        +bool Initialize()
+        -TArray~FTileVariantInfo~ TileVariants
+        -TArray~FTileRotationInfo~ TileRotationInfos
+        +bool InitializeData()
+        +bool InitializeAlgorithmData()
+        +bool InitializeVisualizationData()
+        +const TArray~FTileInfo~* GetTileInfos() const
+        +const FTileInfo* GetTileInfo(int32 TileIndex) const
+        +const int32 GetTileInfosNum() const
+        +const TArray~FFaceInfo~* GetFaceInfos() const
+        +const FFaceInfo* GetFaceInfo(int32 FaceIndex) const
+        +const int32 GetFaceInfosNum() const
         +const TBitArray~>* GetCompatibleTiles(int32 FaceIndex) const
         +const TArray~int32~* GetTileFaceIndices(int32 TileIndex) const
         +const float GetTileWeight(int32 TileIndex) const
-        +float GetTotalWeight() const
-        +int32 SelectRandomTileByWeight(const TBitArray~>& CompatibleTiles) const
-    }
-
-    class FWFC3DVizData {
-        -const UWFC3DModelDataAsset* ModelData
-        -TArray~FTileVariantInfo~ TileVariants
-        -TArray~FTileRotationInfo~ TileRotationInfos
-        -TMap~int32, FTileVisualInfo~ TileVisualMap
-        -FString CurrentBiome
-        +bool Initialize()
+        +const TArray~FTileRotationInfo~* GetTileRotationInfos() const
+        +const FTileRotationInfo* GetTileRotationInfo(int32 TileIndex) const
         +const FTileVariantInfo* GetTileVariant(int32 TileIndex) const
         +const FTileVisualInfo* GetRandomTileVisualInfo(int32 BaseTileIndex, const FString& BiomeName) const
-        +void SetCurrentBiome(const FString& BiomeName)
     }
 
     class UWFC3DCombinedModel {
-        -UWFC3DModelDataAsset* ModelDataAsset
-        -FWFC3DAlgorithmData AlgorithmData
-        -FWFC3DVizData VisualizationData
+        -UPROPERTY() UWFC3DModelDataAsset* ModelDataAsset
         +bool Initialize(UWFC3DModelDataAsset* InModelData)
         +IWFC3DAlgorithmInterface* GetAlgorithmInterface() const
         +IWFC3DVisualizationInterface* GetVisualizationInterface() const
+        +bool ExecuteWFC(const FWFCParams& Params)
+        +void VisualizeResult(UWorld* World, const TArray~FVector~& Locations)
     }
 
 %% 관계 정의
-    IWFC3DAlgorithmInterface <|.. FWFC3DAlgorithmData : implements
-    IWFC3DVisualizationInterface <|.. FWFC3DVizData : implements
+    IWFC3DAlgorithmInterface <|.. UWFC3DModelDataAsset : implements
+    IWFC3DVisualizationInterface <|.. UWFC3DModelDataAsset : implements
     UWFC3DCombinedModel o-- UWFC3DModelDataAsset : contains
-    UWFC3DCombinedModel *-- FWFC3DAlgorithmData : contains
-    UWFC3DCombinedModel *-- FWFC3DVizData : contains
-    FWFC3DAlgorithmData --> UWFC3DModelDataAsset : uses
-    FWFC3DVizData --> UWFC3DModelDataAsset : uses~~~~~~~~~~~~~~~~
+    UWFC3DCombinedModel --> IWFC3DAlgorithmInterface : uses
+    UWFC3DCombinedModel --> IWFC3DVisualizationInterface : uses
 ```

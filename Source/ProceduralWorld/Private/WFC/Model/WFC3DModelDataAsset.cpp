@@ -41,16 +41,6 @@ const TArray<FTileInfo>* UWFC3DModelDataAsset::GetTileInfos() const
 	return &TileInfos;
 }
 
-const TArray<FFaceInfo>* UWFC3DModelDataAsset::GetFaceInfos() const
-{
-	if (FaceInfos.IsEmpty())
-	{
-		UE_LOG(LogTemp, Error, TEXT("FaceInfos is Empty"));
-		return nullptr;
-	}
-	return &FaceInfos;
-}
-
 const FTileInfo* UWFC3DModelDataAsset::GetTileInfo(int32 TileIndex) const
 {
 	if (TileInfos.IsEmpty())
@@ -74,6 +64,16 @@ const int32 UWFC3DModelDataAsset::GetTileInfosNum() const
 		return 0;
 	}
 	return TileInfos.Num();
+}
+
+const TArray<FFaceInfo>* UWFC3DModelDataAsset::GetFaceInfos() const
+{
+	if (FaceInfos.IsEmpty())
+	{
+		UE_LOG(LogTemp, Error, TEXT("FaceInfos is Empty"));
+		return nullptr;
+	}
+	return &FaceInfos;
 }
 
 const FFaceInfo* UWFC3DModelDataAsset::GetFaceInfo(int32 FaceIndex) const

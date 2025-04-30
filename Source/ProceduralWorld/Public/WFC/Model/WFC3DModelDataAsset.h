@@ -36,9 +36,9 @@ public:
 	/** Algorithm Interface */
 	virtual bool InitializeAlgorithmData() override;
 	virtual const TArray<FTileInfo>* GetTileInfos() const override;
-	virtual const TArray<FFaceInfo>* GetFaceInfos() const override;
 	virtual const FTileInfo* GetTileInfo(int32 TileIndex) const override;
 	virtual const int32 GetTileInfosNum() const override;
+	virtual const TArray<FFaceInfo>* GetFaceInfos() const override;
 	virtual const FFaceInfo* GetFaceInfo(int32 FaceIndex) const override;
 	virtual const int32 GetFaceInfosNum() const override;
 	virtual const TBitArray<>* GetCompatibleTiles(int32 FaceIndex) const override;
