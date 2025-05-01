@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "WFC/Model/WFC3DModelDataAsset.h"
+#include "WFC/Data/WFC3DModelDataAsset.h"
 #include "WFC3DDataGenerator.generated.h"
 
 UCLASS()

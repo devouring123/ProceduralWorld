@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "WFC/Model/WFC3DCombinedModel.h"
-#include "WFC/Model/WFC3DModelDataAsset.h"
+#include "WFC/Data/WFC3DCombinedModel.h"
+#include "WFC/Data/WFC3DModelDataAsset.h"
 
 bool UWFC3DCombinedModel::InitializeModelData()
 {

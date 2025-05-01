@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "WFC/Model/WFC3DTypes.h"
+#include "WFC/Data/WFC3DTypes.h"
 #include "WFC3DAlgorithmInterface.generated.h"
 
 // This class does not need to be modified.

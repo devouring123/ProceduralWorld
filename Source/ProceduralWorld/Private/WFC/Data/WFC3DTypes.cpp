@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "WFC/Model/WFC3DTypes.h"
+#include "WFC/Data/WFC3DTypes.h"
 
 void FTileByBiome::CalculateTotalWeight()
 {

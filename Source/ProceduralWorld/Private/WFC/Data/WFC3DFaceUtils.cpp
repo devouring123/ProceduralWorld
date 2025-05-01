@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "WFC/Model/WFC3DFaceUtils.h"
+#include "WFC/Data/WFC3DFaceUtils.h"
 
 // 방향 벡터 초기화
 const FIntVector FWFC3DFaceUtils::DirectionVectors[6] = {
