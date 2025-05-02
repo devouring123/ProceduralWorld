@@ -2,3 +2,47 @@
 
 
 #include "WFC/Data/WFC3DGrid.h"
+
+#include "WFC/Data/WFC3DCell.h"
+
+FWFC3DCell* UWFC3DGrid::GetCell(const int32 Index)
+{
+	if (!IsValidLocation(Index))
+	{
+		return nullptr;
+	}
+	return &WFC3DCells[Index];
+}
+
+FWFC3DCell* UWFC3DGrid::GetCell(const FIntVector& Location)
+{
+	if (!IsValidLocation(Location))
+	{
+		return nullptr;
+	}
+	return &WFC3DCells[Location.X + Location.Y * Dimension.X + Location.Z * Dimension.X * Dimension.Y];
+}
+
+FWFC3DCell* UWFC3DGrid::GetCell(const int32 X, const int32 Y, const int32 Z)
+{
+	if (!IsValidLocation(X, Y, Z))
+	{
+		return nullptr;
+	}
+	return &WFC3DCells[X + Y * Dimension.X + Z * Dimension.X * Dimension.Y];
+}
+
+bool UWFC3DGrid::IsValidLocation(const int32 Index) const
+{
+	return WFC3DCells.IsValidIndex(Index);
+}
+
+bool UWFC3DGrid::IsValidLocation(const FIntVector& Location) const
+{
+	return IsValidLocation(Location.X, Location.Y, Location.Z);
+}
+
+bool UWFC3DGrid::IsValidLocation(const int32 X, const int32 Y, const int32 Z) const
+{
+	return X >= 0 && X < Dimension.X && Y >= 0 && Y < Dimension.Y && Z >= 0 && Z < Dimension.Z;
+}

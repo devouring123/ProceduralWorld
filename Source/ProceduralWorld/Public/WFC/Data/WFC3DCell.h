@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "WFC3DCell.generated.h"
+#include "WFC/Data/WFC3DTypes.h"
+
 /**
- * 
+ * WFC 알고리즘의 셀 구조체
  */
 USTRUCT(BlueprintType)
 struct PROCEDURALWORLD_API FWFC3DCell
@@ -14,8 +16,9 @@ struct PROCEDURALWORLD_API FWFC3DCell
 
 	FWFC3DCell() = default;
 
-	void Init();
+	void FWFC3DCell::Init(const int32 TileInfoNum, const int32 FaceInfoNum, const int32 Index, const FIntVector& Dimension);
 
+	/** Common Data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	bool bIsCollapsed = false;
 
@@ -25,9 +28,27 @@ struct PROCEDURALWORLD_API FWFC3DCell
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	FIntVector Location;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	FTileInfo* CollapsedTileInfo = nullptr;
 
-	
-	
+	/** Algorithm Data */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	int32 Entropy = 0;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	uint8 PropagatedFaces = 0;
+
+	TBitArray<> RemainingTileOptionsBitset;
 	
+	TArray<TBitArray<>> MergedFaceOptionsBitset;
+
+	/** Visualization Data */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	FTileVisualInfo* CollapsedTileVisualInfo = nullptr;
+	
+	static FORCEINLINE FIntVector&& IndexToLocation(const int32 Index, const FIntVector& Dimension);
+
+	bool FORCEINLINE IsFacePropagated(const EFace& Direction) const;
+	
+	void FORCEINLINE SetPropagatedFaces(const EFace& Direction);
 };
