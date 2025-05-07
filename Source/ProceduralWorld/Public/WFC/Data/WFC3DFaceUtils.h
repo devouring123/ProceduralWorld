@@ -106,6 +106,14 @@ public:
     };
 
 private:
+	/** 유틸리티 클래스 생성자 및 소멸자 삭제 */
+	FWFC3DFaceUtils() = delete;
+	FWFC3DFaceUtils(const FWFC3DFaceUtils&) = delete;
+	FWFC3DFaceUtils& operator=(const FWFC3DFaceUtils&) = delete;
+	FWFC3DFaceUtils(FWFC3DFaceUtils&&) = delete;
+	FWFC3DFaceUtils& operator=(FWFC3DFaceUtils&&) = delete;
+	~FWFC3DFaceUtils() = delete;
+	
 	/** 각 방향에 대한 방향 벡터 배열 */
 	static const FIntVector DirectionVectors[6];
 

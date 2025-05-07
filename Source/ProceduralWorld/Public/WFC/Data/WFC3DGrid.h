@@ -32,10 +32,6 @@ public:
 	FWFC3DCell* GetCell(const FIntVector& Location);
 	FWFC3DCell* GetCell(const int32 X, const int32 Y, const int32 Z);
 
-	bool IsValidLocation(const int32 Index) const;
-	bool IsValidLocation(const FIntVector& Location) const;
-	bool IsValidLocation(const int32 X, const int32 Y, const int32 Z) const;
-
 private:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
@@ -46,4 +42,8 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	int32 RemainingCells = 0;
+
+	bool IsValidLocation(const int32 Index) const;
+	bool IsValidLocation(const FIntVector& Location) const;
+	bool IsValidLocation(const int32 X, const int32 Y, const int32 Z) const;
 };

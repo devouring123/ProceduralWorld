@@ -14,8 +14,10 @@ struct PROCEDURALWORLD_API FWFC3DCell
 {
 	GENERATED_BODY()
 
-	FWFC3DCell() = default;
+public:
 
+	FWFC3DCell() = default;
+	
 	void FWFC3DCell::Init(const int32 TileInfoNum, const int32 FaceInfoNum, const int32 Index, const FIntVector& Dimension);
 
 	/** Common Data */
@@ -35,17 +37,20 @@ struct PROCEDURALWORLD_API FWFC3DCell
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	int32 Entropy = 0;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	uint8 PropagatedFaces = 0;
-
 	TBitArray<> RemainingTileOptionsBitset;
 	
 	TArray<TBitArray<>> MergedFaceOptionsBitset;
-
+	
+private:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	uint8 PropagatedFaces = 0;
+	
+public:
 	/** Visualization Data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	FTileVisualInfo* CollapsedTileVisualInfo = nullptr;
-	
+
+	/** Function */
 	static FORCEINLINE FIntVector&& IndexToLocation(const int32 Index, const FIntVector& Dimension);
 
 	bool FORCEINLINE IsFacePropagated(const EFace& Direction) const;
