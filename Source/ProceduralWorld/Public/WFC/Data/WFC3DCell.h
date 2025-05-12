@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WFC3DCell.generated.h"
 #include "WFC/Data/WFC3DTypes.h"
+#include "WFC3DCell.generated.h"
 
 /**
  * WFC 알고리즘의 셀 구조체
@@ -18,7 +18,7 @@ public:
 
 	FWFC3DCell() = default;
 	
-	void FWFC3DCell::Init(const int32 TileInfoNum, const int32 FaceInfoNum, const int32 Index, const FIntVector& Dimension);
+	void Initialize(const int32 TileInfoNum, const int32 FaceInfoNum, const int32 Index, const FIntVector& Dimension);
 
 	/** Common Data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
@@ -29,8 +29,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	FIntVector Location;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	
 	FTileInfo* CollapsedTileInfo = nullptr;
 
 	/** Algorithm Data */
@@ -42,16 +41,15 @@ public:
 	TArray<TBitArray<>> MergedFaceOptionsBitset;
 	
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	UPROPERTY(EditAnywhere, Category = "WFC3D")
 	uint8 PropagatedFaces = 0;
 	
 public:
 	/** Visualization Data */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	FTileVisualInfo* CollapsedTileVisualInfo = nullptr;
 
 	/** Function */
-	static FORCEINLINE FIntVector&& IndexToLocation(const int32 Index, const FIntVector& Dimension);
+	static FORCEINLINE FIntVector IndexToLocation(const int32 Index, const FIntVector& Dimension);
 
 	bool FORCEINLINE IsFacePropagated(const EFace& Direction) const;
 	

@@ -16,9 +16,8 @@ class PROCEDURALWORLD_API UWFC3DGrid : public UObject
 	GENERATED_BODY()
 
 public:
+	UWFC3DGrid() = default;
 
-	UWFC3DGrid() = delete;
-	
 	UWFC3DGrid(const FIntVector& InDimension): Dimension(InDimension)
 	{
 		/** Initialize the Grid with Dimension */
@@ -32,17 +31,23 @@ public:
 	FWFC3DCell* GetCell(const FIntVector& Location);
 	FWFC3DCell* GetCell(const int32 X, const int32 Y, const int32 Z);
 
+	FIntVector GetDimension() const { return Dimension; }
+	int32 GetRemainingCells() const;
+	int32 Num() const { return WFC3DCells.Num(); }
+
 private:
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	UPROPERTY(EditAnywhere, Category = "WFC3D")
 	TArray<FWFC3DCell> WFC3DCells;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	UPROPERTY(EditAnywhere, Category = "WFC3D")
 	FIntVector Dimension;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	UPROPERTY(EditAnywhere, Category = "WFC3D")
 	int32 RemainingCells = 0;
 
+	UPROPERTY(EditAnywhere, Category = "WFC3D")
+	bool bChangedRemainingCells = false;
+	
 	bool IsValidLocation(const int32 Index) const;
 	bool IsValidLocation(const FIntVector& Location) const;
 	bool IsValidLocation(const int32 X, const int32 Y, const int32 Z) const;

@@ -32,6 +32,11 @@ FWFC3DCell* UWFC3DGrid::GetCell(const int32 X, const int32 Y, const int32 Z)
 	return &WFC3DCells[X + Y * Dimension.X + Z * Dimension.X * Dimension.Y];
 }
 
+int32 UWFC3DGrid::GetRemainingCells() const
+{
+	return RemainingCells;
+}
+
 bool UWFC3DGrid::IsValidLocation(const int32 Index) const
 {
 	return WFC3DCells.IsValidIndex(Index);
