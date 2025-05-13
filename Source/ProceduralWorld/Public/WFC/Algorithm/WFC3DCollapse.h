@@ -120,38 +120,45 @@ struct PROCEDURALWORLD_API FCollapseStrategy
 	GENERATED_BODY()
 
 public:
-	/** 셀 선택 함수 */
-	SelectCellFunc CellSelectorFunc;
+	/** 셀 선택 전략 Enum */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
+	ECollapseCellSelectStrategy CellSelectStrategy;
 
-	/** TileInfo 선택 함수 */
-	SelectTileInfoFunc TileInfoSelectorFunc;
+	/** TileInfo 선택 전략 Enum */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
+	ECollapseTileSelectStrategy TileSelectStrategy;
 
-	/** 단일 셀 붕괴 함수 */
-	CollapseSingleCellFunc CellCollapserFunc;
+	/** 단일 셀 붕괴 전략 Enum */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
+	ECollapseCellCollapseStrategy CellCollapseStrategy;
 
 	/** 전략 이름 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
 	FString StrategyName;
 
+	
 	FCollapseStrategy()
-		: CellSelectorFunc(WFC3DCollapseFunctions::CellSelector::ByEntropy),
-		  TileInfoSelectorFunc(WFC3DCollapseFunctions::TileInfoSelector::ByWeight),
-		  CellCollapserFunc(WFC3DCollapseFunctions::CellCollapser::Default),
+		: CellSelectStrategy(ECollapseCellSelectStrategy::ByEntropy),
+		  TileSelectStrategy(ECollapseTileSelectStrategy::ByWeight),
+		  CellCollapseStrategy(ECollapseCellCollapseStrategy::Default),
 		  StrategyName(TEXT("Standard"))
 	{
 	}
-
+	
 	FCollapseStrategy(
-		SelectCellFunc InCellSelectorFunc,
-		SelectTileInfoFunc InTileInfoSelectorFunc,
-		CollapseSingleCellFunc InCellCollapserFunc,
+		ECollapseCellSelectStrategy InCellSelectStrategy,
+		ECollapseTileSelectStrategy InTileSelectStrategy,
+		ECollapseCellCollapseStrategy InCellCollapseStrategy,
 		const FString& InStrategyName)
-		: CellSelectorFunc(InCellSelectorFunc),
-		  TileInfoSelectorFunc(InTileInfoSelectorFunc),
-		  CellCollapserFunc(InCellCollapserFunc),
+		: CellSelectStrategy(InCellSelectStrategy),
+		  TileSelectStrategy(InTileSelectStrategy),
+		  CellCollapseStrategy(InCellCollapseStrategy),
 		  StrategyName(InStrategyName)
 	{
 	}
 
+
+	/** TODO: Delete This Function */
 	/**
 	 * 이 전략에 기반한 Collapse 실행
 	 * @param Grid - WFC3D 그리드
@@ -162,6 +169,8 @@ public:
 	FCollapseResult ExecuteCollapse(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream) const;
 };
 
+/** TODO: Add Static Maps (Enum -> FuncPtr) */
+/** TODO: Macro를 사용하여 Enum과 FuncPtr를 연결, Enum이름과 FuncPtr의 이름을 동일하게 작성 */
 /**
  * WFC3D 알고리즘의 Collapse 전략 관리
  */

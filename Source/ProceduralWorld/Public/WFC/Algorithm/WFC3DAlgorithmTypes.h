@@ -115,9 +115,8 @@ enum class ECollapseStrategy : uint8
 };
 
 /**
- * Collapse 전략 결과 구조체
+ * Collapse 셀 선택 전략 결과 열거형
  */
-
 UENUM()
 enum class ECollapseCellSelectStrategy : uint8
 {
@@ -131,6 +130,9 @@ enum class ECollapseCellSelectStrategy : uint8
 	Custom UMETA(DisplayName = "Custom")
 };
 
+/**
+ * Collapse 타일 선택 전략 열거형
+ */
 UENUM()
 enum class ECollapseTileSelectStrategy : uint8
 {
@@ -144,7 +146,9 @@ enum class ECollapseTileSelectStrategy : uint8
 	Custom UMETA(DisplayName = "Custom")
 };
 
-
+/**
+ * Collapse 셀 붕괴 전략 열거형
+ */
 UENUM()
 enum class ECollapseCellCollapseStrategy : uint8
 {

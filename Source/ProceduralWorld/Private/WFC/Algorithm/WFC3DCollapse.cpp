@@ -244,6 +244,8 @@ FCollapseResult FCollapseStrategy::ExecuteCollapse(UWFC3DGrid* Grid, const UWFC3
         return Result;
     }
 
+    /** TODO: Enum -> FuncPtr 연결 필요 = Map으로 연결 */
+    
     /** Cell Select */
     int32 SelectedCellIndex = CellSelectorFunc(Grid, RandomStream);
     if (SelectedCellIndex < 0)
