@@ -5,6 +5,10 @@
 #include "CoreMinimal.h"
 #include "WFC3DAlgorithmTypes.generated.h"
 
+struct FWFC3DCell;
+struct FRandomStream;
+struct FTileInfo;
+
 class UWFC3DGrid;
 class UWFC3DModelDataAsset;
 
@@ -54,19 +58,42 @@ public:
 template <typename T>
 using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
 
+/** TODO: 설명 추가 */
+/**
+ * Collapse 전략 함수 포인터 타입
+ * UWFC3DGrid*, UWFC3DModelData*, FRandomStream&, int32 SelectedCellIndex 매개변수를 받고
+ * const FTileInfo*를 반환하는 정적 함수 포인터
+ */
+
+using SelectCellFunc = TStaticFuncPtr<int32(UWFC3DGrid*, const FRandomStream&)>;
+
+/**
+ * TileInfo 선택 함수 포인터 타입
+ * UWFC3DGrid*, UWFC3DModelData*, FRandomStream&, int32 SelectedCellIndex 매개변수를 받고
+ * const FTileInfo*를 반환하는 정적 함수 포인터
+ */
+using SelectTileInfoFunc = TStaticFuncPtr<const FTileInfo*(UWFC3DGrid*, const UWFC3DModelDataAsset*, const FRandomStream&, int32)>;
+
+/**
+ * 단일 셀 붕괴 함수 포인터 타입
+ * FWFC3DCell*, int32 SelectedCellIndex, FTileInfo* 매개변수를 받고
+ * bool을 반환하는 정적 함수 포인터
+ */
+using CollapseSingleCellFunc = TStaticFuncPtr<bool(FWFC3DCell*, int32, const FTileInfo*)>;
+
 /**
  * Collapse 알고리즘 함수 포인터 타입
  * UWFC3DGrid*, UWFC3DModelData*, FRandomStream& 매개변수를 받고
  * FCollapseResult를 반환하는 정적 함수 포인터
  */
-using CollapseFunc = TStaticFuncPtr<FCollapseResult(UWFC3DGrid*, const UWFC3DModelDataAsset*, FRandomStream&)>;
+using CollapseFunc = TStaticFuncPtr<FCollapseResult(UWFC3DGrid*, const UWFC3DModelDataAsset*, const FRandomStream&)>;
 
 /**
  * Propagation 알고리즘 함수 포인터 타입
  * UWFC3DGrid*, UWFC3DModelData*, FRandomStream&, int32 RangeLimit 매개변수를 받고
  * FPropagationResult를 반환하는 정적 함수 포인터
  */
-using PropagateFunc = TStaticFuncPtr<FPropagationResult(UWFC3DGrid*, const UWFC3DModelDataAsset*, FRandomStream&, const int32 RangeLimit)>;
+using PropagateFunc = TStaticFuncPtr<FPropagationResult(UWFC3DGrid*, const UWFC3DModelDataAsset*, const FRandomStream&, const int32 RangeLimit)>;
 
 /** 
  * Collapse 전략 열거형 
@@ -87,6 +114,47 @@ enum class ECollapseStrategy : uint8
 	Custom UMETA(DisplayName = "Custom")
 };
 
+/**
+ * Collapse 전략 결과 구조체
+ */
+
+UENUM()
+enum class ECollapseCellSelectStrategy : uint8
+{
+	/** 엔트로피 기반 셀 선택 */
+	ByEntropy UMETA(DisplayName = "By Entropy"),
+
+	/** 랜덤 셀 선택 */
+	Random UMETA(DisplayName = "Random"),
+
+	/** 사용자 정의 셀 선택 */
+	Custom UMETA(DisplayName = "Custom")
+};
+
+UENUM()
+enum class ECollapseTileSelectStrategy : uint8
+{
+	/** 가중치 기반 타일 선택 */
+	ByWeight UMETA(DisplayName = "By Weight"),
+
+	/** 랜덤 타일 선택 */
+	Random UMETA(DisplayName = "Random"),
+	
+	/** 사용자 정의 타일 선택 */
+	Custom UMETA(DisplayName = "Custom")
+};
+
+
+UENUM()
+enum class ECollapseCellCollapseStrategy : uint8
+{
+	/** 기본 셀 붕괴 */
+	Default UMETA(DisplayName = "Default"),
+
+	/** 사용자 정의 셀 붕괴 */
+	Custom UMETA(DisplayName = "Custom")
+};
+
 /** 
  * Propagation 전략 열거형 
  */
@@ -103,8 +171,9 @@ enum class EPropagationStrategy : uint8
 	Custom UMETA(DisplayName = "Custom")
 };
 
-namespace WFC3DHelperFunctions
+class FWFC3DHelperFunctions
 {
+public:
 	/**
 	 * 비트셋에서 모든 인덱스를 가져오는 함수
 	 * @param Bitset - TBitArray<> 비트셋
@@ -120,5 +189,15 @@ namespace WFC3DHelperFunctions
 	 */
 	static int32 GetWeightedRandomIndex(const TArray<float>& Weights, const FRandomStream& RandomStream);
 
-}
+private:
+	/** 유틸리티 클래스 생성자 및 소멸자 삭제 */
+	FWFC3DHelperFunctions() = delete;
+	FWFC3DHelperFunctions(const FWFC3DHelperFunctions&) = delete;
+	FWFC3DHelperFunctions& operator=(const FWFC3DHelperFunctions&) = delete;
+	FWFC3DHelperFunctions(FWFC3DHelperFunctions&&) = delete;
+	FWFC3DHelperFunctions& operator=(FWFC3DHelperFunctions&&) = delete;
+	~FWFC3DHelperFunctions() = delete;
+
+	
+};
 

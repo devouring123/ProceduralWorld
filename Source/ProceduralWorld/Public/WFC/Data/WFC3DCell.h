@@ -30,7 +30,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	FIntVector Location;
 	
-	FTileInfo* CollapsedTileInfo = nullptr;
+	const FTileInfo* CollapsedTileInfo = nullptr;
 
 	/** Algorithm Data */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")

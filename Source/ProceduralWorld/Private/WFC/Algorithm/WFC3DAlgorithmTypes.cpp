@@ -3,7 +3,7 @@
 
 #include "WFC/Algorithm/WFC3DAlgorithmTypes.h"
 
-TArray<int32> WFC3DHelperFunctions::GetAllIndexFromBitset(const TBitArray<>& Bitset)
+TArray<int32> FWFC3DHelperFunctions::GetAllIndexFromBitset(const TBitArray<>& Bitset)
 {
 	TArray<int32> Result;
 	int32 Index = 0;
@@ -19,7 +19,7 @@ TArray<int32> WFC3DHelperFunctions::GetAllIndexFromBitset(const TBitArray<>& Bit
 	return Result;
 }
 
-int32 WFC3DHelperFunctions::GetWeightedRandomIndex(const TArray<float>& Weights, const FRandomStream& RandomStream)
+int32 FWFC3DHelperFunctions::GetWeightedRandomIndex(const TArray<float>& Weights, const FRandomStream& RandomStream)
 {
 	float TotalWeight = 0.0f;
 	for (const float Weight : Weights)

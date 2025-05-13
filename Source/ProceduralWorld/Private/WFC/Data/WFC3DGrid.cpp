@@ -37,6 +37,11 @@ int32 UWFC3DGrid::GetRemainingCells() const
 	return RemainingCells;
 }
 
+void UWFC3DGrid::DecreaseRemainingCells()
+{
+	--RemainingCells;
+}
+
 bool UWFC3DGrid::IsValidLocation(const int32 Index) const
 {
 	return WFC3DCells.IsValidIndex(Index);

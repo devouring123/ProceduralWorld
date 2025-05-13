@@ -92,7 +92,7 @@ public:
 	int32 BaseTileID = 0;
 
 	/** 
-	 * 각 면의 연결 정보
+	 * 각 면의 인덱스
 	 * 순서대로 Up, Back, Right, Left, Front, Down 면의 인덱스를 나타냅니다.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, EditFixedSize, Category = "WFC3D|Data",

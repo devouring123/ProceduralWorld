@@ -33,6 +33,7 @@ public:
 
 	FIntVector GetDimension() const { return Dimension; }
 	int32 GetRemainingCells() const;
+	void DecreaseRemainingCells();
 	int32 Num() const { return WFC3DCells.Num(); }
 
 private:
@@ -44,9 +45,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "WFC3D")
 	int32 RemainingCells = 0;
-
-	UPROPERTY(EditAnywhere, Category = "WFC3D")
-	bool bChangedRemainingCells = false;
 	
 	bool IsValidLocation(const int32 Index) const;
 	bool IsValidLocation(const FIntVector& Location) const;
