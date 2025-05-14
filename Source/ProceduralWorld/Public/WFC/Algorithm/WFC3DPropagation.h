@@ -24,15 +24,14 @@ struct PROCEDURALWORLD_API FPropagationStrategy
 	GENERATED_BODY()
 
 public:
-	
-	
 };
 
 
 /**
  * WFC3D 알고리즘의 Propagate 함수 모음
  */
-namespace PROCEDURALWORLD_API WFC3DPropagateFunctions
+namespace
+PROCEDURALWORLD_API WFC3DPropagateFunctions
 {
 	/**
 	 * Cell 전파 함수
@@ -41,7 +40,18 @@ namespace PROCEDURALWORLD_API WFC3DPropagateFunctions
 	 * @param ModelData - WFC3D 모델 데이터
 	 */
 	bool PropagateSingleCell(const FIntVector& Location, UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData);
-	
+
+	/**
+	 * 전파할 위치가 유효한지 검사하는 함수
+	 * @param Location - 위치
+	 * @param Dimension - 그리드 크기
+	 * @return 
+	 */
+	FORCEINLINE bool IsValidLocation(const FIntVector& Location, const FIntVector& Dimension)
+	{
+		return Location.X >= 0 && Location.Y >= 0 && Location.Z >= 0 && Location.X < Dimension.X && Location.Y < Dimension.Y && Location.Z < Dimension.Z;
+	}
+
 	/**
 	 * 기본 Propagation 함수
 	 */
@@ -51,7 +61,7 @@ namespace PROCEDURALWORLD_API WFC3DPropagateFunctions
 	//  * 범위 제한 Propagation 함수
 	//  */
 	// FPropagationResult RangeLimitedPropagate(UWFC3DGrid* Grid, UWFC3DModelDataAsset* ModelData, FRandomStream& RandomStream, const int32 RangeLimit = 5);
-	
+
 	// /**
 	//  * 커스텀 Propagation 함수
 	//  */

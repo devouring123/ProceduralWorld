@@ -31,10 +31,11 @@ public:
 	FWFC3DCell* GetCell(const FIntVector& Location);
 	FWFC3DCell* GetCell(const int32 X, const int32 Y, const int32 Z);
 
-	FIntVector GetDimension() const { return Dimension; }
+	FORCEINLINE FIntVector GetDimension() const { return Dimension; }
+	FORCEINLINE int32 Num() const { return WFC3DCells.Num(); }
+
 	int32 GetRemainingCells() const;
 	void DecreaseRemainingCells();
-	int32 Num() const { return WFC3DCells.Num(); }
 
 private:
 	UPROPERTY(EditAnywhere, Category = "WFC3D")

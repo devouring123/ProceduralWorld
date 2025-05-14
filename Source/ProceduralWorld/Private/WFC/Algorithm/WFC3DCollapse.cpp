@@ -6,7 +6,7 @@
 
 namespace WFC3DCollapseFunctions
 {
-	FCollapseResult ExecuteCollapse(const FWFC3DAlgorithmContext& Context, const FCollapseStrategy& CollapseStrategy)
+	FCollapseResult ExecuteCollapse(const FWFC3DCollapseContext& Context, const FCollapseStrategy& CollapseStrategy)
 	{
 		FCollapseResult Result;
 		UWFC3DGrid* Grid = Context.Grid;

@@ -21,11 +21,11 @@ class FWFC3DFunctionMaps;
  */
 #define DECLARE_COLLAPSER_CELL_SELECTOR_STRATEGY(StrategyName) \
     extern ECollapseCellSelectStrategy StrategyName##_Enum; \
-    int32 StrategyName(const FWFC3DAlgorithmContext& Context)
+    int32 StrategyName(const FWFC3DCollapseContext& Context)
 
 #define DECLARE_COLLAPSER_TILE_SELECTOR_STRATEGY(StrategyName) \
     extern ECollapseTileInfoSelectStrategy StrategyName##_Enum; \
-    const FTileInfo* StrategyName(const FWFC3DAlgorithmContext& Context, const int32 SelectedCellIndex)
+    const FTileInfo* StrategyName(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex)
 
 #define DECLARE_COLLAPSER_CELL_COLLAPSER_STRATEGY(StrategyName) \
     extern ECollapseSingleCellStrategy StrategyName##_Enum; \
@@ -44,7 +44,7 @@ class FWFC3DFunctionMaps;
         } \
     }; \
     static FRegister_##StrategyName##_CellSelector Register_##StrategyName##_Instance; \
-    int32 StrategyName(const FWFC3DAlgorithmContext& Context)
+    int32 StrategyName(const FWFC3DCollapseContext& Context)
 
 #define IMPLEMENT_COLLAPSER_TILE_SELECTOR_STRATEGY(StrategyName) \
     ECollapseTileInfoSelectStrategy StrategyName##_Enum = ECollapseTileInfoSelectStrategy::StrategyName; \
@@ -56,7 +56,7 @@ class FWFC3DFunctionMaps;
         } \
     }; \
     static FRegister_##StrategyName##_TileSelector Register_##StrategyName##_Instance; \
-    const FTileInfo* StrategyName(const FWFC3DAlgorithmContext& Context, const int32 SelectedCellIndex)
+    const FTileInfo* StrategyName(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex)
 
 #define IMPLEMENT_COLLAPSER_CELL_COLLAPSER_STRATEGY(StrategyName) \
     ECollapseSingleCellStrategy StrategyName##_Enum = ECollapseSingleCellStrategy::StrategyName; \

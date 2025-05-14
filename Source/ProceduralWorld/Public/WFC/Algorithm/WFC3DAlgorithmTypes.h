@@ -14,13 +14,13 @@ class UWFC3DGrid;
 class UWFC3DModelDataAsset;
 
 /**
- * WFC3D 알고리즘 컨텍스트 - 모든 전략 함수에 공통적으로 사용되는 매개변수
+ * WFC3D Collapse 컨텍스트 - Collapse 함수에 공통적으로 사용되는 매개변수
  */
-struct FWFC3DAlgorithmContext
+struct FWFC3DCollapseContext
 {
-	FWFC3DAlgorithmContext() = delete;
+	FWFC3DCollapseContext() = delete;
 
-	FWFC3DAlgorithmContext(
+	FWFC3DCollapseContext(
 		UWFC3DGrid* InGrid,
 		const UWFC3DModelDataAsset* InModelData,
 		const FRandomStream* InRandomStream)
@@ -38,7 +38,10 @@ struct FWFC3DAlgorithmContext
 	const FRandomStream* RandomStream;
 };
 
-struct FWFC3DPropagationContext : FWFC3DAlgorithmContext
+/**
+ * WFC3D Propagation 컨텍스트 - Propagation 함수에 공통적으로 사용되는 매개변수
+ */
+struct FWFC3DPropagationContext
 {
 	FWFC3DPropagationContext() = delete;
 
@@ -48,11 +51,20 @@ struct FWFC3DPropagationContext : FWFC3DAlgorithmContext
 		const FRandomStream* InRandomStream,
 		const FIntVector& InCollapseLocation,
 		const int32 InRangeLimit)
-		: FWFC3DAlgorithmContext(InGrid, InModelData, InRandomStream),
+		: Grid(InGrid),
+		  ModelData(InModelData),
+		  RandomStream(InRandomStream),
 		  CollapseLocation(InCollapseLocation),
 		  RangeLimit(InRangeLimit)
 	{
 	}
+
+	/** Grid는 항상 수정 가능 해야 함 */
+	mutable UWFC3DGrid* Grid;
+
+	const UWFC3DModelDataAsset* ModelData;
+
+	const FRandomStream* RandomStream;
 
 	const FIntVector CollapseLocation;
 
@@ -110,7 +122,7 @@ using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateU
  * @return int32 - 선택된 셀 인덱스
  */
 
-using SelectCellFunc = TStaticFuncPtr<int32(const FWFC3DAlgorithmContext&)>;
+using SelectCellFunc = TStaticFuncPtr<int32(const FWFC3DCollapseContext&)>;
 
 /**
  * TileInfo 선택 함수 포인터 타입
@@ -118,7 +130,7 @@ using SelectCellFunc = TStaticFuncPtr<int32(const FWFC3DAlgorithmContext&)>;
  * @param int32 - 선택된 셀 인덱스
  * @return const FTileInfo* - 선택된 TileInfo
  */
-using SelectTileInfoFunc = TStaticFuncPtr<const FTileInfo*(const FWFC3DAlgorithmContext&, const int32)>;
+using SelectTileInfoFunc = TStaticFuncPtr<const FTileInfo*(const FWFC3DCollapseContext&, const int32)>;
 
 /**
  * 단일 Cell Collapse 함수 포인터 타입
@@ -134,7 +146,7 @@ using CollapseSingleCellFunc = TStaticFuncPtr<bool(FWFC3DCell*, const int32, con
  * const FWFC3DAlgorithmContext&, FCollapseStrategy 매개변수를 받고
  * FCollapseResult를 반환하는 정적 함수 포인터
  */
-using CollapseFunc = TStaticFuncPtr<FCollapseResult(const FWFC3DAlgorithmContext&, const FCollapseStrategy&)>;
+using CollapseFunc = TStaticFuncPtr<FCollapseResult(const FWFC3DCollapseContext&, const FCollapseStrategy&)>;
 
 
 /**

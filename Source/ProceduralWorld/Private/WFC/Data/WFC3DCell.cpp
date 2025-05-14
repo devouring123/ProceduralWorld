@@ -37,10 +37,10 @@ FIntVector FWFC3DCell::IndexToLocation(const int32 Index, const FIntVector& Dime
 
 bool FWFC3DCell::IsFacePropagated(const EFace& Direction) const
 {
-	return PropagatedFaces & 1 << static_cast<uint8>(Direction);
+	return PropagatedFaces & 1 << FWFC3DFaceUtils::GetIndex(Direction);
 }
 
 void FWFC3DCell::SetPropagatedFaces(const EFace& Direction)
 {
-	PropagatedFaces |= 1 << static_cast<uint8>(Direction);
+	PropagatedFaces |= 1 << FWFC3DFaceUtils::GetIndex(Direction);
 }

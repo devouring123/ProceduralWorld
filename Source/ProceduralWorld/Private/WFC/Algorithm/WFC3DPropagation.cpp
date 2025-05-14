@@ -37,11 +37,38 @@ FPropagationResult WFC3DPropagateFunctions::StandardPropagate(const FWFC3DPropag
 	
 	/** Propagation */
 	TQueue<FIntVector> PropagationQueue;
-	for (const auto& Direction: FWFC3DFaceUtils::AllDirections)
+	const FIntVector& CollapseLocation = Context.CollapseLocation;
+	const FIntVector& Dimension = Grid->GetDimension();
+	
+	for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
 	{
-		// PropagationQueue.Enqueue();
+		FIntVector PropagationLocation = CollapseLocation + FWFC3DFaceUtils::GetDirectionVector(Direction);
+		FWFC3DCell* CellToPropagate = Grid->GetCell(PropagationLocation);
+		if (CellToPropagate == nullptr || CellToPropagate->bIsCollapsed || CellToPropagate->bIsPropagated)
+		{
+			continue;
+		}
+		PropagationQueue.Enqueue(PropagationLocation);
+		CellToPropagate->SetPropagatedFaces(Direction);
 	}
 
+	while (!PropagationQueue.IsEmpty())
+	{
+		FIntVector PropagationLocation;
+		if (!PropagationQueue.Dequeue(PropagationLocation))
+		{
+			break;
+		}
+		FWFC3DCell* PropagatedCell = Grid->GetCell(PropagationLocation);
+		if (PropagatedCell == nullptr || PropagatedCell->bIsCollapsed || PropagatedCell->bIsPropagated)
+		{
+			continue;
+		}
+		
+		
+
+		
+	}	
 	
 	return Result;	
 }
