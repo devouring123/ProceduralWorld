@@ -5,12 +5,59 @@
 #include "CoreMinimal.h"
 #include "WFC3DAlgorithmTypes.generated.h"
 
+struct FCollapseStrategy;
 struct FWFC3DCell;
 struct FRandomStream;
 struct FTileInfo;
 
 class UWFC3DGrid;
 class UWFC3DModelDataAsset;
+
+/**
+ * WFC3D 알고리즘 컨텍스트 - 모든 전략 함수에 공통적으로 사용되는 매개변수
+ */
+struct FWFC3DAlgorithmContext
+{
+	FWFC3DAlgorithmContext() = delete;
+
+	FWFC3DAlgorithmContext(
+		UWFC3DGrid* InGrid,
+		const UWFC3DModelDataAsset* InModelData,
+		const FRandomStream* InRandomStream)
+		: Grid(InGrid),
+		  ModelData(InModelData),
+		  RandomStream(InRandomStream)
+	{
+	}
+
+	/** Grid는 항상 수정 가능 해야 함 */
+	mutable UWFC3DGrid* Grid;
+
+	const UWFC3DModelDataAsset* ModelData;
+
+	const FRandomStream* RandomStream;
+};
+
+struct FWFC3DPropagationContext : FWFC3DAlgorithmContext
+{
+	FWFC3DPropagationContext() = delete;
+
+	FWFC3DPropagationContext(
+		UWFC3DGrid* InGrid,
+		const UWFC3DModelDataAsset* InModelData,
+		const FRandomStream* InRandomStream,
+		const FIntVector& InCollapseLocation,
+		const int32 InRangeLimit)
+		: FWFC3DAlgorithmContext(InGrid, InModelData, InRandomStream),
+		  CollapseLocation(InCollapseLocation),
+		  RangeLimit(InRangeLimit)
+	{
+	}
+
+	const FIntVector CollapseLocation;
+
+	const int32 RangeLimit;
+};
 
 /**
  * Collapse 결과 구조체
@@ -21,15 +68,16 @@ struct PROCEDURALWORLD_API FCollapseResult
 	GENERATED_BODY()
 
 public:
+	FCollapseResult() = default;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	bool bSuccess = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	int32 SelectedIndex;
+	int32 CollapsedIndex = -1;
 
-	FCollapseResult() : bSuccess(false), SelectedIndex(-1)
-	{
-	}
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	FIntVector CollapsedLocation = FIntVector::ZeroValue;
 };
 
 /**
@@ -41,15 +89,13 @@ struct PROCEDURALWORLD_API FPropagationResult
 	GENERATED_BODY()
 
 public:
+	FPropagationResult() = default;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	bool bSuccess = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	int32 AffectedCellCount;
-
-	FPropagationResult() : bSuccess(false), AffectedCellCount(0)
-	{
-	}
+	int32 AffectedCellCount = -1;
 };
 
 /**
@@ -58,61 +104,46 @@ public:
 template <typename T>
 using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
 
-/** TODO: 설명 추가 */
 /**
- * Collapse 전략 함수 포인터 타입
- * UWFC3DGrid*, UWFC3DModelData*, FRandomStream&, int32 SelectedCellIndex 매개변수를 받고
- * const FTileInfo*를 반환하는 정적 함수 포인터
+ * Cell 선택 함수 포인터 타입
+ * @param FWFC3DAlgorithmContex& - WFC3D Algorithm Context
+ * @return int32 - 선택된 셀 인덱스
  */
 
-using SelectCellFunc = TStaticFuncPtr<int32(UWFC3DGrid*, const FRandomStream&)>;
+using SelectCellFunc = TStaticFuncPtr<int32(const FWFC3DAlgorithmContext&)>;
 
 /**
  * TileInfo 선택 함수 포인터 타입
- * UWFC3DGrid*, UWFC3DModelData*, FRandomStream&, int32 SelectedCellIndex 매개변수를 받고
- * const FTileInfo*를 반환하는 정적 함수 포인터
+ * @param FWFC3DAlgorithmContex& - WFC3D Algorithm Context
+ * @param int32 - 선택된 셀 인덱스
+ * @return const FTileInfo* - 선택된 TileInfo
  */
-using SelectTileInfoFunc = TStaticFuncPtr<const FTileInfo*(UWFC3DGrid*, const UWFC3DModelDataAsset*, const FRandomStream&, int32)>;
+using SelectTileInfoFunc = TStaticFuncPtr<const FTileInfo*(const FWFC3DAlgorithmContext&, const int32)>;
 
 /**
- * 단일 셀 붕괴 함수 포인터 타입
- * FWFC3DCell*, int32 SelectedCellIndex, FTileInfo* 매개변수를 받고
- * bool을 반환하는 정적 함수 포인터
+ * 단일 Cell Collapse 함수 포인터 타입
+ * @param FWFC3DCell* - 붕괴할 Cell
+ * @param int32 - 붕괴할 Cell의 인덱스
+ * @param FTileInfo* - 붕괴할 Cell에 들어갈 TileInfo
+ * @return bool - 붕괴 성공 여부
  */
-using CollapseSingleCellFunc = TStaticFuncPtr<bool(FWFC3DCell*, int32, const FTileInfo*)>;
+using CollapseSingleCellFunc = TStaticFuncPtr<bool(FWFC3DCell*, const int32, const FTileInfo*)>;
 
 /**
  * Collapse 알고리즘 함수 포인터 타입
- * UWFC3DGrid*, UWFC3DModelData*, FRandomStream& 매개변수를 받고
+ * const FWFC3DAlgorithmContext&, FCollapseStrategy 매개변수를 받고
  * FCollapseResult를 반환하는 정적 함수 포인터
  */
-using CollapseFunc = TStaticFuncPtr<FCollapseResult(UWFC3DGrid*, const UWFC3DModelDataAsset*, const FRandomStream&)>;
+using CollapseFunc = TStaticFuncPtr<FCollapseResult(const FWFC3DAlgorithmContext&, const FCollapseStrategy&)>;
+
 
 /**
  * Propagation 알고리즘 함수 포인터 타입
- * UWFC3DGrid*, UWFC3DModelData*, FRandomStream&, int32 RangeLimit 매개변수를 받고
+ * const FWFC3DPropagationContext&, FPropagationStrategy, int32 RangeLimit 매개변수를 받고
  * FPropagationResult를 반환하는 정적 함수 포인터
  */
-using PropagateFunc = TStaticFuncPtr<FPropagationResult(UWFC3DGrid*, const UWFC3DModelDataAsset*, const FRandomStream&, const int32 RangeLimit)>;
+using PropagateFunc = TStaticFuncPtr<FPropagationResult(const FWFC3DPropagationContext&, const FPropagationStrategy&, const int32 RangeLimit)>;
 
-/** 
- * Collapse 전략 열거형 
- */
-UENUM(BlueprintType)
-enum class ECollapseStrategy : uint8
-{
-	/** 엔트로피와 가중치 기반 Collapse */
-	Standard UMETA(DisplayName = "Standard"),
-	
-	/** 엔트로피 무시, 가중치 기반 Collapse */
-	OnlyWeighted UMETA(DisplayName = "Only Weighted"),
-
-	/** 엔트로피와 가중치 무시 전체 랜덤 Collapse */
-	OnlyRandom UMETA(DisplayName = "Random"),
-	
-	/** 사용자 정의 Collapse */
-	Custom UMETA(DisplayName = "Custom")
-};
 
 /**
  * Collapse 셀 선택 전략 결과 열거형
@@ -134,14 +165,14 @@ enum class ECollapseCellSelectStrategy : uint8
  * Collapse 타일 선택 전략 열거형
  */
 UENUM()
-enum class ECollapseTileSelectStrategy : uint8
+enum class ECollapseTileInfoSelectStrategy : uint8
 {
 	/** 가중치 기반 타일 선택 */
 	ByWeight UMETA(DisplayName = "By Weight"),
 
 	/** 랜덤 타일 선택 */
 	Random UMETA(DisplayName = "Random"),
-	
+
 	/** 사용자 정의 타일 선택 */
 	Custom UMETA(DisplayName = "Custom")
 };
@@ -150,7 +181,7 @@ enum class ECollapseTileSelectStrategy : uint8
  * Collapse 셀 붕괴 전략 열거형
  */
 UENUM()
-enum class ECollapseCellCollapseStrategy : uint8
+enum class ECollapseSingleCellStrategy : uint8
 {
 	/** 기본 셀 붕괴 */
 	Default UMETA(DisplayName = "Default"),
@@ -158,6 +189,7 @@ enum class ECollapseCellCollapseStrategy : uint8
 	/** 사용자 정의 셀 붕괴 */
 	Custom UMETA(DisplayName = "Custom")
 };
+
 
 /** 
  * Propagation 전략 열거형 
@@ -191,17 +223,14 @@ public:
 	 * @param RandomStream - 랜덤 스트림
 	 * @return int32 - 가중치에 따라 선택된 랜덤한 인덱스
 	 */
-	static int32 GetWeightedRandomIndex(const TArray<float>& Weights, const FRandomStream& RandomStream);
+	static int32 GetWeightedRandomIndex(const TArray<float>& Weights, const FRandomStream* RandomStream);
 
 private:
-	/** 유틸리티 클래스 생성자 및 소멸자 삭제 */
+	/** 유틸리티 클래스 생성자 및 소멸자 제거 */
 	FWFC3DHelperFunctions() = delete;
 	FWFC3DHelperFunctions(const FWFC3DHelperFunctions&) = delete;
 	FWFC3DHelperFunctions& operator=(const FWFC3DHelperFunctions&) = delete;
 	FWFC3DHelperFunctions(FWFC3DHelperFunctions&&) = delete;
 	FWFC3DHelperFunctions& operator=(FWFC3DHelperFunctions&&) = delete;
 	~FWFC3DHelperFunctions() = delete;
-
-	
 };
-

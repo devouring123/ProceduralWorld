@@ -1,319 +1,308 @@
 #include "WFC/Algorithm/WFC3DCollapse.h"
 
+#include "WFC/Algorithm/WFC3DFunctionMaps.h"
 #include "WFC/Data/WFC3DGrid.h"
 #include "WFC/Data/WFC3DModelDataAsset.h"
 
 namespace WFC3DCollapseFunctions
 {
-    namespace CellSelector
-    {
-        int32 ByEntropy(UWFC3DGrid* Grid, const FRandomStream& RandomStream)
-        {
-            if (Grid == nullptr)
-            {
-                UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
-                return -1;
-            }
-            
-            TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
-            int32 GridCellsSize = GridCells->Num();
+	FCollapseResult ExecuteCollapse(const FWFC3DAlgorithmContext& Context, const FCollapseStrategy& CollapseStrategy)
+	{
+		FCollapseResult Result;
+		UWFC3DGrid* Grid = Context.Grid;
+		const UWFC3DModelDataAsset* ModelData = Context.ModelData;
+		if (Grid == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
+			return Result;
+		}
+		if (ModelData == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Invalid ModelData"));
+			return Result;
+		}
+		if (Grid->GetRemainingCells() <= 0)
+		{
+			UE_LOG(LogTemp, Error, TEXT("No Remaining Cells"));
+			return Result;
+		}
 
-            int32 LowestEntropy = INT32_MAX;
-            TArray<int32> CellIndicesWithLowestEntropy;
+		/** Cell Select */
+		SelectCellFunc SelectCellFuncPtr = FWFC3DFunctionMaps::GetCellSelectorFunction(CollapseStrategy.CellSelectStrategy);
+		if (SelectCellFuncPtr == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to get Cell Selector"));
+			return Result;
+		}
+		int32 SelectedCellIndex = SelectCellFuncPtr(Context);
+		if (Grid->GetAllCells()->IsValidIndex(SelectedCellIndex) == false)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to select a cell"));
+			return Result;
+		}
+		Result.CollapsedIndex = SelectedCellIndex;
+		Result.CollapsedLocation = (*Grid->GetAllCells())[SelectedCellIndex].Location;
 
-            /** Find Lowest Entropy */
-            for (int32 i = 0; i < GridCellsSize; ++i)
-            {
-                if ((*GridCells)[i].Entropy < LowestEntropy && !(*GridCells)[i].bIsCollapsed)
-                {
-                    LowestEntropy = (*GridCells)[i].Entropy;
-                    CellIndicesWithLowestEntropy.Empty();
-                    CellIndicesWithLowestEntropy.Add(i);
-                }
-                else if ((*GridCells)[i].Entropy == LowestEntropy && !(*GridCells)[i].bIsCollapsed)
-                {
-                    CellIndicesWithLowestEntropy.Add(i);
-                }
-            }
+		/** TileInfo Selector */
+		SelectTileInfoFunc SelectTileInfoFuncPtr = FWFC3DFunctionMaps::GetTileInfoSelectorFunction(CollapseStrategy.TileSelectStrategy);
+		if (SelectTileInfoFuncPtr == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to get TileInfo Selector"));
+			return Result;
+		}
+		const FTileInfo* SelectedTileInfo = SelectTileInfoFuncPtr(Context, SelectedCellIndex);
+		if (SelectedTileInfo == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to select a TileInfo"));
+			return Result;
+		}
 
-            if (LowestEntropy == INT32_MAX)
-            {
-                UE_LOG(LogTemp, Error, TEXT("No Valid Cells"));
-                return -1;
-            }
+		/** Selected Cell Collapse */
+		TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
+		CollapseSingleCellFunc CollapseSingleCellFuncPtr = FWFC3DFunctionMaps::GetCellCollapserFunction(CollapseStrategy.CellCollapseStrategy);
+		if (CollapseSingleCellFuncPtr == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to get Cell Collapser"));
+			return Result;
+		}
+		if (!CollapseSingleCellFuncPtr(&(*GridCells)[SelectedCellIndex], SelectedCellIndex, SelectedTileInfo))
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to collapse cell"));
+			return Result;
+		}
 
-            if (LowestEntropy == 0)
-            {
-                for (int32 i = 0; i < GridCellsSize; ++i)
-                {
-                    if ((*GridCells)[i].Entropy == LowestEntropy && !(*GridCells)[i].bIsCollapsed)
-                    {
-                        UE_LOG(LogTemp, Display, TEXT("Collapse Grid Failed With Lowest Entropy = 0, Index %d"), i);
-                    }
-                }
-                return -1;
-            }
+		Grid->DecreaseRemainingCells();
 
-            if (CellIndicesWithLowestEntropy.Num() == 0)
-            {
-                UE_LOG(LogTemp, Error, TEXT("No Valid Cells With Lowest Entropy"));
-                return -1;
-            }
+		Result.bSuccess = true;
 
-            /** Select Cell From Lowest Entropies */
-            int32 SelectedIndexInLowestEntropy = RandomStream.RandRange(0, CellIndicesWithLowestEntropy.Num() - 1);
-            return CellIndicesWithLowestEntropy[SelectedIndexInLowestEntropy];
-        }
+		return Result;
+	}
 
-        int32 Random(UWFC3DGrid* Grid, const FRandomStream& RandomStream)
-        {
-            if (Grid == nullptr)
-            {
-                UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
-                return -1;
-            }
-            
-            TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
-            int32 GridCellsSize = GridCells->Num();
+	namespace CellSelector
+	{
+		IMPLEMENT_COLLAPSER_CELL_SELECTOR_STRATEGY(ByEntropy)
+		{
+			UWFC3DGrid* Grid = Context.Grid;
+			const FRandomStream* RandomStream = Context.RandomStream;
+			if (Grid == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
+				return -1;
+			}
 
-            /** Find UnCollapsed Cell */
-            TArray<int32> UnCollapsedCellIndices;
-            for (int32 i = 0; i < GridCellsSize; ++i)
-            {
-                if (!(*GridCells)[i].bIsCollapsed)
-                {
-                    UnCollapsedCellIndices.Add(i);
-                }
-            }
-            
-            if (UnCollapsedCellIndices.Num() == 0)
-            {
-                UE_LOG(LogTemp, Error, TEXT("No Uncollapsed Cells"));
-                return -1;
-            }
+			TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
+			int32 GridCellsSize = GridCells->Num();
 
-            /** Select Random Cell */
-            int32 RandomIndex = RandomStream.RandRange(0, UnCollapsedCellIndices.Num() - 1);
-            return UnCollapsedCellIndices[RandomIndex];
-        }
+			int32 LowestEntropy = INT32_MAX;
+			TArray<int32> CellIndicesWithLowestEntropy;
 
-        int32 Custom(UWFC3DGrid* Grid, const FRandomStream& RandomStream)
-        {
-            /** Make Your Custom CellSelector */
-            return -1;
-        }
-    }
+			/** Find Lowest Entropy */
+			for (int32 i = 0; i < GridCellsSize; ++i)
+			{
+				if ((*GridCells)[i].Entropy < LowestEntropy && !(*GridCells)[i].bIsCollapsed)
+				{
+					LowestEntropy = (*GridCells)[i].Entropy;
+					CellIndicesWithLowestEntropy.Empty();
+					CellIndicesWithLowestEntropy.Add(i);
+				}
+				else if ((*GridCells)[i].Entropy == LowestEntropy && !(*GridCells)[i].bIsCollapsed)
+				{
+					CellIndicesWithLowestEntropy.Add(i);
+				}
+			}
 
-    namespace TileInfoSelector
-    {
-        const FTileInfo* ByWeight(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream, int32 SelectedCellIndex)
-        {
-            if (Grid == nullptr || ModelData == nullptr || SelectedCellIndex < 0)
-            {
-                UE_LOG(LogTemp, Error, TEXT("Invalid Parameters for SelectTileInfoByWeight"));
-                return nullptr;
-            }
-            
-            TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
-            if (!GridCells->IsValidIndex(SelectedCellIndex))
-            {
-                UE_LOG(LogTemp, Error, TEXT("Invalid Cell Index"));
-                return nullptr;
-            }
+			if (LowestEntropy == INT32_MAX)
+			{
+				UE_LOG(LogTemp, Error, TEXT("No Valid Cells"));
+				return -1;
+			}
 
-            /** Get Enalbe TileInfos */
-            TArray<int32> TileInfoIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset);
-            if (TileInfoIndices.Num() == 0)
-            {
-                UE_LOG(LogTemp, Error, TEXT("No Valid TileInfo Indices"));
-                return nullptr;
-            }
-            
-            /** Get Weights */
-            TArray<float> Weights;
-            for (int32 Index : TileInfoIndices)
-            {
-                Weights.Add(ModelData->GetTileInfo(Index)->Weight);
-            }
+			if (LowestEntropy == 0)
+			{
+				for (int32 i = 0; i < GridCellsSize; ++i)
+				{
+					if ((*GridCells)[i].Entropy == LowestEntropy && !(*GridCells)[i].bIsCollapsed)
+					{
+						UE_LOG(LogTemp, Display, TEXT("Collapse Grid Failed With Lowest Entropy = 0, Index %d"), i);
+					}
+				}
+				return -1;
+			}
 
-            /** Select By Weights */
-            int32 SelectedTileInfoIndex = FWFC3DHelperFunctions::GetWeightedRandomIndex(Weights, RandomStream);
-            return ModelData->GetTileInfo(TileInfoIndices[SelectedTileInfoIndex]);
-        }
+			if (CellIndicesWithLowestEntropy.Num() == 0)
+			{
+				UE_LOG(LogTemp, Error, TEXT("No Valid Cells With Lowest Entropy"));
+				return -1;
+			}
 
-        const FTileInfo* Random(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream, int32 SelectedCellIndex)
-        {
-            if (Grid == nullptr || ModelData == nullptr || SelectedCellIndex < 0)
-            {
-                UE_LOG(LogTemp, Error, TEXT("Invalid Parameters for SelectTileInfoRandom"));
-                return nullptr;
-            }
-            
-            TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
-            if (!GridCells->IsValidIndex(SelectedCellIndex))
-            {
-                UE_LOG(LogTemp, Error, TEXT("Invalid Cell Index"));
-                return nullptr;
-            }
+			/** Select Cell From Lowest Entropies */
+			int32 SelectedIndexInLowestEntropy = RandomStream->RandRange(0, CellIndicesWithLowestEntropy.Num() - 1);
+			return CellIndicesWithLowestEntropy[SelectedIndexInLowestEntropy];
+		}
 
-            /** Get Enalbe TileInfos */
-            TArray<int32> TileInfoIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset);
-            if (TileInfoIndices.Num() == 0)
-            {
-                UE_LOG(LogTemp, Error, TEXT("No Valid TileInfo Indices"));
-                return nullptr;
-            }
+		IMPLEMENT_COLLAPSER_CELL_SELECTOR_STRATEGY(Random)
+		{
+			UWFC3DGrid* Grid = Context.Grid;
+			const FRandomStream* RandomStream = Context.RandomStream;
+			if (Grid == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
+				return -1;
+			}
 
-            /** Select Randomly */
-            int32 RandomIndex = RandomStream.RandRange(0, TileInfoIndices.Num() - 1);
-            return ModelData->GetTileInfo(TileInfoIndices[RandomIndex]);
-        }
+			TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
+			int32 GridCellsSize = GridCells->Num();
 
-        const FTileInfo* Custom(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream, int32 SelectedCellIndex)
-        {
-            /** Make Your Custom TileInfoSelector */
-            return nullptr;
-        }
-    }
+			/** Find UnCollapsed Cell */
+			TArray<int32> UnCollapsedCellIndices;
+			for (int32 i = 0; i < GridCellsSize; ++i)
+			{
+				if (!(*GridCells)[i].bIsCollapsed)
+				{
+					UnCollapsedCellIndices.Add(i);
+				}
+			}
 
-    namespace CellCollapser
-    {
-        bool Default(FWFC3DCell* SelectedCell, const int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo)
-        {
-            if (SelectedCell == nullptr)
-            {
-                UE_LOG(LogTemp, Error, TEXT("Invalid Cell"));
-                return false;
-            }
-            if (SelectedTileInfo == nullptr)
-            {
-                UE_LOG(LogTemp, Error, TEXT("Invalid TileInfo"));
-                return false;
-            }
-            if (SelectedCell->bIsCollapsed)
-            {
-                UE_LOG(LogTemp, Error, TEXT("Cell is already collapsed"));
-                return false;
-            }
-            
-            SelectedCell->CollapsedTileInfo = SelectedTileInfo;
-            SelectedCell->Entropy = 1;
-            SelectedCell->bIsCollapsed = true;
-            SelectedCell->RemainingTileOptionsBitset.Init(false, SelectedCell->RemainingTileOptionsBitset.Num());
-            SelectedCell->RemainingTileOptionsBitset[SelectedCellIndex] = true;
+			if (UnCollapsedCellIndices.Num() == 0)
+			{
+				UE_LOG(LogTemp, Error, TEXT("No Uncollapsed Cells"));
+				return -1;
+			}
 
-            const TArray<int32>& FacesIndices = SelectedTileInfo->Faces;
-            for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
-            {
-                uint8 DirectionIndex = FWFC3DFaceUtils::GetIndex(Direction);
-                SelectedCell->MergedFaceOptionsBitset[DirectionIndex].Empty();
-                SelectedCell->MergedFaceOptionsBitset[DirectionIndex][FacesIndices[DirectionIndex]] = true;
-            }
+			/** Select Random Cell */
+			int32 RandomIndex = RandomStream->RandRange(0, UnCollapsedCellIndices.Num() - 1);
+			return UnCollapsedCellIndices[RandomIndex];
+		}
 
-            SelectedCell->bIsCollapsed = true;
-            SelectedCell->bIsPropagated = true;
-            
-            return true;
-        }
+		IMPLEMENT_COLLAPSER_CELL_SELECTOR_STRATEGY(Custom)
+		{
+			/** Make Your Custom CellSelector */
+			return -1;
+		}
+	}
 
-        bool Custom(FWFC3DCell* SelectedCell, int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo)
-        {
-            /** Make Your Custom CellCollapser */
-            return true;
-        }
-    }
-}
+	namespace TileInfoSelector
+	{
+		IMPLEMENT_COLLAPSER_TILE_SELECTOR_STRATEGY(ByWeight)
+		{
+			UWFC3DGrid* Grid = Context.Grid;
+			const UWFC3DModelDataAsset* ModelData = Context.ModelData;
+			const FRandomStream* RandomStream = Context.RandomStream;
+			if (Grid == nullptr || ModelData == nullptr || SelectedCellIndex < 0)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Invalid Parameters for SelectTileInfoByWeight"));
+				return nullptr;
+			}
 
-FCollapseResult FCollapseStrategy::ExecuteCollapse(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream) const
-{
-    FCollapseResult Result;
+			TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
+			if (!GridCells->IsValidIndex(SelectedCellIndex))
+			{
+				UE_LOG(LogTemp, Error, TEXT("Invalid Cell Index"));
+				return nullptr;
+			}
 
-    if (Grid == nullptr)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
-        return Result;
-    }
-    if (ModelData == nullptr)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Invalid ModelData"));
-        return Result;
-    }
-    if (Grid->GetRemainingCells() <= 0)
-    {
-        UE_LOG(LogTemp, Error, TEXT("No Remaining Cells"));
-        return Result;
-    }
+			/** Get Enalbe TileInfos */
+			TArray<int32> TileInfoIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset);
+			if (TileInfoIndices.Num() == 0)
+			{
+				UE_LOG(LogTemp, Error, TEXT("No Valid TileInfo Indices"));
+				return nullptr;
+			}
 
-    /** TODO: Enum -> FuncPtr 연결 필요 = Map으로 연결 */
-    
-    /** Cell Select */
-    int32 SelectedCellIndex = CellSelectorFunc(Grid, RandomStream);
-    if (SelectedCellIndex < 0)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to select a cell"));
-        return Result;
-    }
+			/** Get Weights */
+			TArray<float> Weights;
+			for (int32 Index : TileInfoIndices)
+			{
+				Weights.Add(ModelData->GetTileInfo(Index)->Weight);
+			}
 
-    /** TileInfo Selector */
-    const FTileInfo* SelectedTileInfo = TileInfoSelectorFunc(Grid, ModelData, RandomStream, SelectedCellIndex);
-    if (SelectedTileInfo == nullptr)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to select a TileInfo"));
-        return Result;
-    }
+			/** Select By Weights */
+			int32 SelectedTileInfoIndex = FWFC3DHelperFunctions::GetWeightedRandomIndex(Weights, RandomStream);
+			return ModelData->GetTileInfo(TileInfoIndices[SelectedTileInfoIndex]);
+		}
 
-    /** Selected Cell Collapse */
-    TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
-    if (!CellCollapserFunc(&(*GridCells)[SelectedCellIndex], SelectedCellIndex, SelectedTileInfo))
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to collapse cell"));
-        return Result;
-    }
+		IMPLEMENT_COLLAPSER_TILE_SELECTOR_STRATEGY(Random)
+		{
+			UWFC3DGrid* Grid = Context.Grid;
+			const UWFC3DModelDataAsset* ModelData = Context.ModelData;
+			const FRandomStream* RandomStream = Context.RandomStream;
+			if (Grid == nullptr || ModelData == nullptr || SelectedCellIndex < 0)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Invalid Parameters for SelectTileInfoRandom"));
+				return nullptr;
+			}
 
-    Grid->DecreaseRemainingCells();
+			TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
+			if (!GridCells->IsValidIndex(SelectedCellIndex))
+			{
+				UE_LOG(LogTemp, Error, TEXT("Invalid Cell Index"));
+				return nullptr;
+			}
 
-    Result.bSuccess = true;
-    Result.SelectedIndex = SelectedCellIndex;
+			/** Get Enalbe TileInfos */
+			TArray<int32> TileInfoIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset);
+			if (TileInfoIndices.Num() == 0)
+			{
+				UE_LOG(LogTemp, Error, TEXT("No Valid TileInfo Indices"));
+				return nullptr;
+			}
 
-    return Result;
-}
+			/** Select Randomly */
+			int32 RandomIndex = RandomStream->RandRange(0, TileInfoIndices.Num() - 1);
+			return ModelData->GetTileInfo(TileInfoIndices[RandomIndex]);
+		}
 
-FCollapseStrategy UWFC3DCollapseStrategyManager::CreateStandardStrategy()
-{
-    return FCollapseStrategy(
-        WFC3DCollapseFunctions::CellSelector::ByEntropy,
-        WFC3DCollapseFunctions::TileInfoSelector::ByWeight,
-        WFC3DCollapseFunctions::CellCollapser::Default,
-        TEXT("Standard"));
-}
+		IMPLEMENT_COLLAPSER_TILE_SELECTOR_STRATEGY(Custom)
+		{
+			/** Make Your Custom TileInfoSelector */
+			return nullptr;
+		}
+	}
 
-FCollapseStrategy UWFC3DCollapseStrategyManager::CreateWeightedStrategy()
-{
-    return FCollapseStrategy(
-        WFC3DCollapseFunctions::CellSelector::Random,
-        WFC3DCollapseFunctions::TileInfoSelector::ByWeight,
-        WFC3DCollapseFunctions::CellCollapser::Default,
-        TEXT("Weighted"));
-}
+	namespace CellCollapser
+	{
+		IMPLEMENT_COLLAPSER_CELL_COLLAPSER_STRATEGY(Default)
+		{
+			if (SelectedCell == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Invalid Cell"));
+				return false;
+			}
+			if (SelectedTileInfo == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Invalid TileInfo"));
+				return false;
+			}
+			if (SelectedCell->bIsCollapsed)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Cell is already collapsed"));
+				return false;
+			}
 
-FCollapseStrategy UWFC3DCollapseStrategyManager::CreateRandomStrategy()
-{
-    return FCollapseStrategy(
-        WFC3DCollapseFunctions::CellSelector::Random,
-        WFC3DCollapseFunctions::TileInfoSelector::Random,
-        WFC3DCollapseFunctions::CellCollapser::Default,
-        TEXT("Random"));
-}
+			SelectedCell->CollapsedTileInfo = SelectedTileInfo;
+			SelectedCell->Entropy = 1;
+			SelectedCell->bIsCollapsed = true;
+			SelectedCell->RemainingTileOptionsBitset.Init(false, SelectedCell->RemainingTileOptionsBitset.Num());
+			SelectedCell->RemainingTileOptionsBitset[SelectedCellIndex] = true;
 
-FCollapseStrategy UWFC3DCollapseStrategyManager::CreateCustomStrategy(
-    SelectCellFunc CellSelectorFunc,
-    SelectTileInfoFunc TileInfoSelectorFunc,
-    CollapseSingleCellFunc CellCollapserFunc,
-    const FString& StrategyName)
-{
-    return FCollapseStrategy(
-        CellSelectorFunc,
-        TileInfoSelectorFunc,
-        CellCollapserFunc,
-        StrategyName);
+			const TArray<int32>& FacesIndices = SelectedTileInfo->Faces;
+			for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
+			{
+				uint8 DirectionIndex = FWFC3DFaceUtils::GetIndex(Direction);
+				SelectedCell->MergedFaceOptionsBitset[DirectionIndex].Empty();
+				SelectedCell->MergedFaceOptionsBitset[DirectionIndex][FacesIndices[DirectionIndex]] = true;
+			}
+
+			SelectedCell->bIsCollapsed = true;
+			SelectedCell->bIsPropagated = true;
+
+			return true;
+		}
+
+		IMPLEMENT_COLLAPSER_CELL_COLLAPSER_STRATEGY(Custom)
+		{
+			/** Make Your Custom CellCollapser */
+			return true;
+		}
+	}
 }

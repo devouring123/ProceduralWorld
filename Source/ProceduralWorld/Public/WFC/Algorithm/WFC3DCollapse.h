@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WFC3DAlgorithmMacros.h"
 #include "WFC3DAlgorithmTypes.h"
 #include "UObject/Object.h"
 #include "WFC3DCollapse.generated.h"
@@ -13,103 +14,6 @@ struct FTileInfo;
 
 class UWFC3DGrid;
 class UWFC3DModelDataAsset;
-
-/**
- * WFC3D 알고리즘의 Collapse 함수 모음
- */
-namespace
-PROCEDURALWORLD_API WFC3DCollapseFunctions
-{
-	/**
-	 * 셀 선택 관련 함수 모음
-	 */
-	namespace CellSelector
-	{
-		/**
-		 * 엔트로피 기반 Cell 선택 함수
-		 * @param Grid - WFC3D 그리드
-		 * @param RandomStream - 랜덤 스트림
-		 * @return int32 - 선택된 셀 인덱스
-		 */
-		static int32 ByEntropy(UWFC3DGrid* Grid, const FRandomStream& RandomStream);
-
-		/**
-		 * 완전 랜덤 Cell 선택 함수
-		 * @param Grid - WFC3D 그리드
-		 * @param RandomStream - 랜덤 스트림
-		 * @return int32 - 선택된 셀 인덱스
-		 */
-		static int32 Random(UWFC3DGrid* Grid, const FRandomStream& RandomStream);
-
-		/**
-		 * Custom Cell 선택 함수
-		 * @param Grid - WFC3D 그리드
-		 * @param RandomStream - 랜덤 스트림
-		 * @return int32 - 선택된 셀 인덱스
-		 */
-		static int32 Custom(UWFC3DGrid* Grid, const FRandomStream& RandomStream);
-	}
-
-	/**
-	 * 타일 정보 선택 관련 함수 모음
-	 */
-	namespace TileInfoSelector
-	{
-		/**
-		 * 가중치 기반 TileInfo 선택 함수
-		 * @param Grid - WFC3D 그리드
-		 * @param ModelData - WFC3D 모델 데이터
-		 * @param RandomStream - 랜덤 스트림
-		 * @param SelectedCellIndex - 선택된 셀 인덱스
-		 * @return const FTileInfo* - 선택된 TileInfo
-		 */
-		static const FTileInfo* ByWeight(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream, int32 SelectedCellIndex);
-
-		/**
-		 * 랜덤 TileInfo 선택 함수
-		 * @param Grid - WFC3D 그리드
-		 * @param ModelData - WFC3D 모델 데이터
-		 * @param RandomStream - 랜덤 스트림
-		 * @param SelectedCellIndex - 선택된 셀 인덱스
-		 * @return const FTileInfo* - 선택된 TileInfo
-		 */
-		static const FTileInfo* Random(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream, int32 SelectedCellIndex);
-
-		/**
-		 * Custom TileInfo 선택 함수
-		 * @param Grid - WFC3D 그리드
-		 * @param ModelData - WFC3D 모델 데이터
-		 * @param RandomStream - 랜덤 스트림
-		 * @param SelectedCellIndex - 선택된 셀 인덱스
-		 * @return const FTileInfo* - 선택된 TileInfo
-		 */
-		static const FTileInfo* Custom(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream, int32 SelectedCellIndex);
-	}
-
-	/**
-	 * 셀 붕괴 관련 함수 모음
-	 */
-	namespace CellCollapser
-	{
-		/**
-		 * 기본 Cell 붕괴 함수
-		 * @param SelectedCell - 붕괴할 Cell
-		 * @param SelectedCellIndex - 붕괴할 Cell의 인덱스
-		 * @param SelectedTileInfo - 붕괴할 Cell에 들어갈 TileInfo
-		 * @return bool - 붕괴 성공 여부
-		 */
-		static bool Default(FWFC3DCell* SelectedCell, int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo);
-
-		/**
-		 * Custom Cell 붕괴 함수
-		 * @param SelectedCell - 붕괴할 Cell
-		 * @param SelectedCellIndex - 붕괴할 Cell의 인덱스
-		 * @param SelectedTileInfo - 붕괴할 Cell에 들어갈 TileInfo
-		 * @return bool - 붕괴 성공 여부
-		 */
-		static bool Custom(FWFC3DCell* SelectedCell, int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo);
-	}
-}
 
 /**
  * Collapse 전략 구조체 - 각 단계별 함수 포인터를 조합하여 전략 정의
@@ -126,48 +30,102 @@ public:
 
 	/** TileInfo 선택 전략 Enum */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
-	ECollapseTileSelectStrategy TileSelectStrategy;
+	ECollapseTileInfoSelectStrategy TileSelectStrategy;
 
 	/** 단일 셀 붕괴 전략 Enum */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
-	ECollapseCellCollapseStrategy CellCollapseStrategy;
-
-	/** 전략 이름 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
-	FString StrategyName;
-
+	ECollapseSingleCellStrategy CellCollapseStrategy;
 	
 	FCollapseStrategy()
 		: CellSelectStrategy(ECollapseCellSelectStrategy::ByEntropy),
-		  TileSelectStrategy(ECollapseTileSelectStrategy::ByWeight),
-		  CellCollapseStrategy(ECollapseCellCollapseStrategy::Default),
-		  StrategyName(TEXT("Standard"))
+		  TileSelectStrategy(ECollapseTileInfoSelectStrategy::ByWeight),
+		  CellCollapseStrategy(ECollapseSingleCellStrategy::Default)
 	{
 	}
-	
+
 	FCollapseStrategy(
 		ECollapseCellSelectStrategy InCellSelectStrategy,
-		ECollapseTileSelectStrategy InTileSelectStrategy,
-		ECollapseCellCollapseStrategy InCellCollapseStrategy,
-		const FString& InStrategyName)
+		ECollapseTileInfoSelectStrategy InTileSelectStrategy,
+		ECollapseSingleCellStrategy InCellCollapseStrategy)
 		: CellSelectStrategy(InCellSelectStrategy),
 		  TileSelectStrategy(InTileSelectStrategy),
-		  CellCollapseStrategy(InCellCollapseStrategy),
-		  StrategyName(InStrategyName)
+		  CellCollapseStrategy(InCellCollapseStrategy)
 	{
 	}
-
-
-	/** TODO: Delete This Function */
-	/**
-	 * 이 전략에 기반한 Collapse 실행
-	 * @param Grid - WFC3D 그리드
-	 * @param ModelData - WFC3D 모델 데이터
-	 * @param RandomStream - 랜덤 스트림
-	 * @return FCollapseResult - 붕괴 결과
-	 */
-	FCollapseResult ExecuteCollapse(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream) const;
 };
+
+/**
+ * WFC3D 알고리즘의 Collapse 함수 모음
+ */
+namespace
+PROCEDURALWORLD_API WFC3DCollapseFunctions
+{
+	/** 전략에 맞는 붕괴 함수 실행 */
+	FCollapseResult ExecuteCollapse(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream, const FCollapseStrategy& CollapseStrategy);
+
+	/**
+	 * 셀 선택 관련 함수 모음
+	 */
+	namespace CellSelector
+	{
+		/**
+		 * 엔트로피 기반 Cell 선택 함수
+		 */
+		DECLARE_COLLAPSER_CELL_SELECTOR_STRATEGY(ByEntropy);
+
+		/**
+		 * 완전 랜덤 Cell 선택 함수
+		 */
+		DECLARE_COLLAPSER_CELL_SELECTOR_STRATEGY(Random);
+
+		/**
+		 * 붕괴한 셀 인접 Cell 선택 함수
+		 */
+		// DECLARE_COLLAPSER_CELL_SELECTOR_STRATEGY(Adjacent);
+		
+		/**
+		 * Custom Cell 선택 함수
+		 */
+		DECLARE_COLLAPSER_CELL_SELECTOR_STRATEGY(Custom);
+	}
+
+	/**
+	 * 타일 정보 선택 관련 함수 모음
+	 */
+	namespace TileInfoSelector
+	{
+		/**
+		 * 가중치 기반 TileInfo 선택 함수
+		 */
+		DECLARE_COLLAPSER_TILE_SELECTOR_STRATEGY(ByWeight);
+
+		/**
+		 * 랜덤 TileInfo 선택 함수
+		 */
+		DECLARE_COLLAPSER_TILE_SELECTOR_STRATEGY(Random);
+
+		/**
+		 * Custom TileInfo 선택 함수
+		 */
+		DECLARE_COLLAPSER_TILE_SELECTOR_STRATEGY(Custom);
+	}
+
+	/**
+	 * 셀 붕괴 관련 함수 모음
+	 */
+	namespace CellCollapser
+	{
+		/**
+		 * 기본 Cell 붕괴 함수
+		 */
+		DECLARE_COLLAPSER_CELL_COLLAPSER_STRATEGY(Default);
+
+		/**
+		 * Custom Cell 붕괴 함수
+		 */
+		DECLARE_COLLAPSER_CELL_COLLAPSER_STRATEGY(Custom);
+	}
+}
 
 /** TODO: Add Static Maps (Enum -> FuncPtr) */
 /** TODO: Macro를 사용하여 Enum과 FuncPtr를 연결, Enum이름과 FuncPtr의 이름을 동일하게 작성 */

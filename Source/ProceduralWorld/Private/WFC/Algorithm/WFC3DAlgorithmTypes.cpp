@@ -19,7 +19,7 @@ TArray<int32> FWFC3DHelperFunctions::GetAllIndexFromBitset(const TBitArray<>& Bi
 	return Result;
 }
 
-int32 FWFC3DHelperFunctions::GetWeightedRandomIndex(const TArray<float>& Weights, const FRandomStream& RandomStream)
+int32 FWFC3DHelperFunctions::GetWeightedRandomIndex(const TArray<float>& Weights, const FRandomStream* RandomStream)
 {
 	float TotalWeight = 0.0f;
 	for (const float Weight : Weights)
@@ -27,7 +27,7 @@ int32 FWFC3DHelperFunctions::GetWeightedRandomIndex(const TArray<float>& Weights
 		TotalWeight += Weight;
 	}
 
-	float RandomValue = RandomStream.FRandRange(0.0f, TotalWeight);
+	float RandomValue = RandomStream->FRandRange(0.0f, TotalWeight);
 	for (int32 i = 0; i < Weights.Num(); ++i)
 	{
 		RandomValue -= Weights[i];
