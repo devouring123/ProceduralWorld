@@ -289,7 +289,7 @@ namespace WFC3DCollapseFunctions
 			for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
 			{
 				uint8 DirectionIndex = FWFC3DFaceUtils::GetIndex(Direction);
-				SelectedCell->MergedFaceOptionsBitset[DirectionIndex].Empty();
+				SelectedCell->MergedFaceOptionsBitset[DirectionIndex].Init(false, SelectedCell->MergedFaceOptionsBitset[DirectionIndex].Num());
 				SelectedCell->MergedFaceOptionsBitset[DirectionIndex][FacesIndices[DirectionIndex]] = true;
 			}
 

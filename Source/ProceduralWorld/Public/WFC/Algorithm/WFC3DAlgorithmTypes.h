@@ -48,12 +48,10 @@ struct FWFC3DPropagationContext
 	FWFC3DPropagationContext(
 		UWFC3DGrid* InGrid,
 		const UWFC3DModelDataAsset* InModelData,
-		const FRandomStream* InRandomStream,
 		const FIntVector& InCollapseLocation,
 		const int32 InRangeLimit)
 		: Grid(InGrid),
 		  ModelData(InModelData),
-		  RandomStream(InRandomStream),
 		  CollapseLocation(InCollapseLocation),
 		  RangeLimit(InRangeLimit)
 	{
@@ -63,8 +61,6 @@ struct FWFC3DPropagationContext
 	mutable UWFC3DGrid* Grid;
 
 	const UWFC3DModelDataAsset* ModelData;
-
-	const FRandomStream* RandomStream;
 
 	const FIntVector CollapseLocation;
 

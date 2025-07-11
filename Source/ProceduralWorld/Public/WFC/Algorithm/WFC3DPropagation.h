@@ -35,11 +35,11 @@ PROCEDURALWORLD_API WFC3DPropagateFunctions
 {
 	/**
 	 * Cell 전파 함수
-	 * @param Location - 전파할 Cell의 위치
+	 * @param PropagatedCell - 전파할 Cell
 	 * @param Grid - WFC3D 그리드
 	 * @param ModelData - WFC3D 모델 데이터
 	 */
-	bool PropagateSingleCell(const FIntVector& Location, UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData);
+	bool PropagateSingleCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData);
 
 	/**
 	 * 전파할 위치가 유효한지 검사하는 함수
