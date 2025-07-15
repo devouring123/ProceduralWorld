@@ -126,31 +126,3 @@ PROCEDURALWORLD_API WFC3DCollapseFunctions
 		DECLARE_COLLAPSER_CELL_COLLAPSER_STRATEGY(Custom);
 	}
 }
-
-/** TODO: Add Static Maps (Enum -> FuncPtr) */
-/** TODO: Macro를 사용하여 Enum과 FuncPtr를 연결, Enum이름과 FuncPtr의 이름을 동일하게 작성 */
-/**
- * WFC3D 알고리즘의 Collapse 전략 관리
- */
-UCLASS(Blueprintable)
-class PROCEDURALWORLD_API UWFC3DCollapseStrategyManager : public UObject
-{
-	GENERATED_BODY()
-
-public:
-	/** 기본 전략 생성 - 엔트로피 기반 셀 선택, 가중치 기반 타일 선택, 기본 붕괴 */
-	static FCollapseStrategy CreateStandardStrategy();
-
-	/** 가중치 전략 생성 - 랜덤 셀 선택, 가중치 기반 타일 선택, 기본 붕괴 */
-	static FCollapseStrategy CreateWeightedStrategy();
-
-	/** 랜덤 전략 생성 - 랜덤 셀 선택, 랜덤 타일 선택, 기본 붕괴 */
-	static FCollapseStrategy CreateRandomStrategy();
-
-	/** 사용자 정의 전략 생성 */
-	static FCollapseStrategy CreateCustomStrategy(
-		SelectCellFunc CellSelectorFunc,
-		SelectTileInfoFunc TileInfoSelectorFunc,
-		CollapseSingleCellFunc CellCollapserFunc,
-		const FString& StrategyName = TEXT("Custom"));
-};

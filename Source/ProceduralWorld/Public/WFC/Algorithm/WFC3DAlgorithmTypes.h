@@ -49,7 +49,7 @@ struct FWFC3DPropagationContext
 		UWFC3DGrid* InGrid,
 		const UWFC3DModelDataAsset* InModelData,
 		const FIntVector& InCollapseLocation,
-		const int32 InRangeLimit)
+		const int32 InRangeLimit = 0)
 		: Grid(InGrid),
 		  ModelData(InModelData),
 		  CollapseLocation(InCollapseLocation),
@@ -146,11 +146,18 @@ using CollapseFunc = TStaticFuncPtr<FCollapseResult(const FWFC3DCollapseContext&
 
 
 /**
+ * Propagation RangeLimit 함수 포인터 타입
+ * const FIntVector& CollapseLocation, const FIntVector& PropagationLocation, const int32 RangeLimit 매개변수를 받고
+ * bool을 반환하는 정적 함수 포인터
+*/
+using RangeLimitFunc = TStaticFuncPtr<bool(const FIntVector& CollapseLocation, const FIntVector& PropagationLocation, const int32 RangeLimit)>;
+
+/**
  * Propagation 알고리즘 함수 포인터 타입
- * const FWFC3DPropagationContext&, FPropagationStrategy, int32 RangeLimit 매개변수를 받고
+ * const FWFC3DPropagationContext&, FPropagationStrategy 매개변수를 받고
  * FPropagationResult를 반환하는 정적 함수 포인터
  */
-using PropagateFunc = TStaticFuncPtr<FPropagationResult(const FWFC3DPropagationContext&, const FPropagationStrategy&, const int32 RangeLimit)>;
+using PropagateFunc = TStaticFuncPtr<FPropagationResult(const FWFC3DPropagationContext&, const FPropagationStrategy&)>;
 
 
 /**
@@ -200,21 +207,22 @@ enum class ECollapseSingleCellStrategy : uint8
 
 
 /** 
- * Propagation 전략 열거형 
+ * RangeLimit 전략 열거형 
  */
 UENUM(BlueprintType)
-enum class EPropagationStrategy : uint8
+enum class ERangeLimitStrategy : uint8
 {
-	/** 기본 Propagation */
-	Standard UMETA(DisplayName = "Standard"),
+	/** Disable RangeLimit (Default) */
+	Disable UMETA(DisplayName = "Disable"),
 
-	/** 범위 제한 Propagation */
+	/** Enable RangeLimit */
 	RangeLimited UMETA(DisplayName = "Range Limited"),
-
-	/** 사용자 정의 Propagation */
-	Custom UMETA(DisplayName = "Custom")
 };
 
+
+/**
+ * WFC3D 알고리즘에서 사용되는 유틸리티 함수 모음
+ */
 class FWFC3DHelperFunctions
 {
 public:

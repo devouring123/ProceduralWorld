@@ -49,7 +49,7 @@ bool UWFC3DGrid::IsValidLocation(const int32 Index) const
 
 bool UWFC3DGrid::IsValidLocation(const FIntVector& Location) const
 {
-	return IsValidLocation(Location.X, Location.Y, Location.Z);
+	return Location.X >= 0 && Location.Y >= 0 && Location.Z >= 0 && Location.X < Dimension.X && Location.Y < Dimension.Y && Location.Z < Dimension.Z;
 }
 
 bool UWFC3DGrid::IsValidLocation(const int32 X, const int32 Y, const int32 Z) const

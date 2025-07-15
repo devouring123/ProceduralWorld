@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "WFC3DAlgorithmMacros.h"
 #include "WFC3DAlgorithmTypes.h"
 #include "UObject/Object.h"
 #include "WFC3DPropagation.generated.h"
@@ -24,6 +25,18 @@ struct PROCEDURALWORLD_API FPropagationStrategy
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
+	ERangeLimitStrategy RangeLimitStrategy;
+
+	FPropagationStrategy()
+		: RangeLimitStrategy(ERangeLimitStrategy::Disable)
+	{
+	}
+
+	FPropagationStrategy(ERangeLimitStrategy InStrategy)
+		: RangeLimitStrategy(InStrategy)
+	{
+	}
 };
 
 
@@ -33,42 +46,27 @@ public:
 namespace
 PROCEDURALWORLD_API WFC3DPropagateFunctions
 {
+	/** 전략에 맞는 함수 실행 */
+	FPropagationResult ExecutePropagation(const FWFC3DPropagationContext& Context, const FPropagationStrategy& PropagationStrategy);
+	
 	/**
-	 * Cell 전파 함수
+	 * 단일 Cell 전파 함수
 	 * @param PropagatedCell - 전파할 Cell
 	 * @param Grid - WFC3D 그리드
+	 * @param PropagationQueue - 전파 대기 큐
 	 * @param ModelData - WFC3D 모델 데이터
 	 */
-	bool PropagateSingleCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData);
-
+	bool PropagateSingleCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, TQueue<FIntVector>& PropagationQueue, const UWFC3DModelDataAsset* ModelData);
+	
 	/**
-	 * 전파할 위치가 유효한지 검사하는 함수
-	 * @param Location - 위치
-	 * @param Dimension - 그리드 크기
-	 * @return 
+	 * 전파 범위 제한 함수 모음
 	 */
-	FORCEINLINE bool IsValidLocation(const FIntVector& Location, const FIntVector& Dimension)
+	namespace RangeLimit
 	{
-		return Location.X >= 0 && Location.Y >= 0 && Location.Z >= 0 && Location.X < Dimension.X && Location.Y < Dimension.Y && Location.Z < Dimension.Z;
+		/**
+		 * 범위 제한이 있는 경우
+		 */
+		DECLARE_PROPAGATOR_RANGE_LIMIT_STRATEGY(RangeLimited);
 	}
-
-	/**
-	 * 기본 Propagation 함수
-	 */
-	FPropagationResult StandardPropagate(const FWFC3DPropagationContext& Context, const FPropagationStrategy& PropagationStrategy, const int32 RangeLimit = 0);
-
-	// /**
-	//  * 범위 제한 Propagation 함수
-	//  */
-	// FPropagationResult RangeLimitedPropagate(UWFC3DGrid* Grid, UWFC3DModelDataAsset* ModelData, FRandomStream& RandomStream, const int32 RangeLimit = 5);
-
-	// /**
-	//  * 커스텀 Propagation 함수
-	//  */
-	// FPropagationResult CustomPropagate(UWFC3DGrid* Grid, UWFC3DModelDataAsset* ModelData, FRandomStream& RandomStream, const int32 RangeLimit = 0);
-
-	/**
-	 * 전략에 따른 Propagation 함수 포인터 반환
-	 */
-	PropagateFunc GetPropagateFunction(EPropagationStrategy Strategy);
+	
 };

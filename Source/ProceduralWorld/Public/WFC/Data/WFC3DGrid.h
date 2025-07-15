@@ -37,6 +37,10 @@ public:
 	int32 GetRemainingCells() const;
 	void DecreaseRemainingCells();
 
+	FORCEINLINE bool IsValidLocation(const int32 Index) const;
+	FORCEINLINE bool IsValidLocation(const FIntVector& Location) const;
+	FORCEINLINE bool IsValidLocation(const int32 X, const int32 Y, const int32 Z) const;
+	
 private:
 	UPROPERTY(EditAnywhere, Category = "WFC3D")
 	TArray<FWFC3DCell> WFC3DCells;
@@ -46,8 +50,4 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "WFC3D")
 	int32 RemainingCells = 0;
-	
-	bool IsValidLocation(const int32 Index) const;
-	bool IsValidLocation(const FIntVector& Location) const;
-	bool IsValidLocation(const int32 X, const int32 Y, const int32 Z) const;
 };

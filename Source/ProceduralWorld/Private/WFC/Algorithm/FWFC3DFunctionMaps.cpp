@@ -38,6 +38,16 @@ CollapseSingleCellFunc FWFC3DFunctionMaps::GetCellCollapserFunction(ECollapseSin
     return nullptr; 
 }
 
+RangeLimitFunc FWFC3DFunctionMaps::GetRangeLimitFunction(ERangeLimitStrategy Strategy)
+{
+    if (RangeLimitMap.Contains(Strategy))
+    {
+        return RangeLimitMap[Strategy];       
+    }
+    UE_LOG(LogTemp, Warning, TEXT("Range limit strategy %d not found, using default"), (uint8)Strategy);
+    return nullptr;
+}
+
 void FWFC3DFunctionMaps::RegisterCellSelectorEnum(ECollapseCellSelectStrategy Enum, SelectCellFunc Function)
 {
     CellSelectorMap.Add(Enum, Function);
@@ -51,4 +61,9 @@ void FWFC3DFunctionMaps::RegisterTileInfoSelectorEnum(ECollapseTileInfoSelectStr
 void FWFC3DFunctionMaps::RegisterCellCollapserEnum(ECollapseSingleCellStrategy Enum, CollapseSingleCellFunc Function)
 {
     CellCollapserMap.Add(Enum, Function);
+}
+
+void FWFC3DFunctionMaps::RegisterRangeLimitEnum(ERangeLimitStrategy Enum, RangeLimitFunc Function)
+{
+    RangeLimitMap.Add(Enum, Function);
 }

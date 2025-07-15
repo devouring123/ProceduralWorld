@@ -7,6 +7,8 @@
 enum class ECollapseCellSelectStrategy : uint8;
 enum class ECollapseTileInfoSelectStrategy : uint8;
 enum class ECollapseSingleCellStrategy : uint8;
+// TODO: 이거 해야함
+enum class ERangeLimitStrategy : uint8;
 
 struct FWFC3DCell;
 struct FRandomStream;
@@ -30,6 +32,15 @@ class FWFC3DFunctionMaps;
 #define DECLARE_COLLAPSER_CELL_COLLAPSER_STRATEGY(StrategyName) \
     extern ECollapseSingleCellStrategy StrategyName##_Enum; \
     bool StrategyName(FWFC3DCell* SelectedCell, int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo)
+
+
+/**
+ * Propagation Strategy Declaration Macros (For Header Files) 
+ */
+#define DECLARE_PROPAGATOR_RANGE_LIMIT_STRATEGY(StrategyName) \
+    extern ERangeLimitStrategy StrategyName##_Enum; \
+    bool StrategyName(const FIntVector& CollapseLocation, const FIntVector& PropagationLocation, const int32 RangeLimit)
+
 
 /**
  * Collapse Strategy Implementation Macros (For Source Files)
@@ -70,3 +81,14 @@ class FWFC3DFunctionMaps;
     static FRegister_##StrategyName##_CellCollapser Register_##StrategyName##_Instance; \
     bool StrategyName(FWFC3DCell* SelectedCell, const int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo)
 
+#define IMPLEMENT_PROPAGATOR_RANGE_LIMIT_STRATEGY(StrategyName) \
+    ERangeLimitStrategy StrategyName##_Enum = ERangeLimitStrategy::StrategyName; \
+    struct FRegister_##StrategyName##_RangeLimit \
+    { \
+        FRegister_##StrategyName##_RangeLimit() \
+        { \
+            FWFC3DFunctionMaps::RegisterRangeLimitEnum(StrategyName##_Enum, StrategyName); \
+        } \
+    }; \
+    static FRegister_##StrategyName##_RangeLimit Register_##StrategyName##_Instance; \
+    bool StrategyName(const FIntVector& CollapseLocation, const FIntVector& PropagationLocation, const int32 RangeLimit)
