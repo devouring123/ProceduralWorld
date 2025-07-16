@@ -50,7 +50,7 @@ namespace WFC3DPropagateFunctions
 
 		// Range Limit 함수
 		RangeLimitFunc RangeLimitFuncPtr = nullptr;
-		if (PropagationStrategy.RangeLimitStrategy == ERangeLimitStrategy::RangeLimited && Context.RangeLimit != 0)
+		if (PropagationStrategy.RangeLimitStrategy != ERangeLimitStrategy::Disable && Context.RangeLimit != 0)
 		{
 			RangeLimitFuncPtr = FWFC3DFunctionMaps::GetRangeLimitFunction(PropagationStrategy.RangeLimitStrategy);
 		}
@@ -61,6 +61,7 @@ namespace WFC3DPropagateFunctions
 			FIntVector PropagationLocation;
 			PropagationQueue.Dequeue(PropagationLocation);
 			FWFC3DCell* PropagatedCell = Grid->GetCell(PropagationLocation);
+			
 			// 전파할 셀이 유효하지 않거나 이미 붕괴되었거나 전파된 경우 건너뜀
 			if (PropagatedCell == nullptr || PropagatedCell->bIsCollapsed || PropagatedCell->bIsPropagated)
 			{
@@ -71,7 +72,9 @@ namespace WFC3DPropagateFunctions
 			{
 				continue;
 			}
-			if (PropagateSingleCell(PropagatedCell, Grid, PropagationQueue, ModelData))
+			
+			// 단일 셀 전파 함수 호출
+			if (PropagateCell(PropagatedCell, Grid, PropagationQueue, ModelData))
 			{
 				PropagatedCell->bIsPropagated = true;
 				UE_LOG(LogTemp, Display, TEXT("Propagated Cell at Location: %s"), *PropagationLocation.ToString());
@@ -88,7 +91,7 @@ namespace WFC3DPropagateFunctions
 		return Result;
 	}
 
-	bool PropagateSingleCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, TQueue<FIntVector>& PropagationQueue,
+	bool PropagateCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, TQueue<FIntVector>& PropagationQueue,
 	                         const UWFC3DModelDataAsset* ModelData)
 	{
 		if (PropagatedCell == nullptr || Grid == nullptr || ModelData == nullptr)
@@ -213,10 +216,22 @@ namespace WFC3DPropagateFunctions
 
 	namespace RangeLimit
 	{
-		IMPLEMENT_PROPAGATOR_RANGE_LIMIT_STRATEGY(RangeLimited)
+		IMPLEMENT_PROPAGATOR_RANGE_LIMIT_STRATEGY(SphereRangeLimited)
 		{
 			// CollapseLocation과 PropagationLocation 사이의 거리가 RangeLimit보다 크면 false 반환
 			if ((CollapseLocation - PropagationLocation).Size() > RangeLimit)
+			{
+				return false;
+			}
+			return true;
+		}
+
+		IMPLEMENT_PROPAGATOR_RANGE_LIMIT_STRATEGY(CubeRangeLimited)
+		{
+			// CollapseLocation과 PropagationLocation의 각 축의 차이가 RangeLimit보다 크면 false 반환
+			if (FMath::Abs(CollapseLocation.X - PropagationLocation.X) > RangeLimit ||
+				FMath::Abs(CollapseLocation.Y - PropagationLocation.Y) > RangeLimit ||
+				FMath::Abs(CollapseLocation.Z - PropagationLocation.Z) > RangeLimit)
 			{
 				return false;
 			}

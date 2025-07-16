@@ -27,54 +27,78 @@ namespace WFC3DCollapseFunctions
 			return Result;
 		}
 
-		/** Cell Select */
+		/** Cell Select Function */
 		SelectCellFunc SelectCellFuncPtr = FWFC3DFunctionMaps::GetCellSelectorFunction(CollapseStrategy.CellSelectStrategy);
 		if (SelectCellFuncPtr == nullptr)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to get Cell Selector"));
 			return Result;
 		}
-		int32 SelectedCellIndex = SelectCellFuncPtr(Context);
-		if (Grid->GetAllCells()->IsValidIndex(SelectedCellIndex) == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to select a cell"));
-			return Result;
-		}
-		Result.CollapsedIndex = SelectedCellIndex;
-		Result.CollapsedLocation = (*Grid->GetAllCells())[SelectedCellIndex].Location;
-
-		/** TileInfo Selector */
+		
+		/** TileInfo Selector Function */
 		SelectTileInfoFunc SelectTileInfoFuncPtr = FWFC3DFunctionMaps::GetTileInfoSelectorFunction(CollapseStrategy.TileSelectStrategy);
 		if (SelectTileInfoFuncPtr == nullptr)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to get TileInfo Selector"));
 			return Result;
 		}
-		const FTileInfo* SelectedTileInfo = SelectTileInfoFuncPtr(Context, SelectedCellIndex);
-		if (SelectedTileInfo == nullptr)
-		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to select a TileInfo"));
-			return Result;
-		}
 
-		/** Selected Cell Collapse */
-		TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
+		/** Selected Cell Collapse Function */
 		CollapseSingleCellFunc CollapseSingleCellFuncPtr = FWFC3DFunctionMaps::GetCellCollapserFunction(CollapseStrategy.CellCollapseStrategy);
 		if (CollapseSingleCellFuncPtr == nullptr)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to get Cell Collapser"));
 			return Result;
 		}
-		if (!CollapseSingleCellFuncPtr(&(*GridCells)[SelectedCellIndex], SelectedCellIndex, SelectedTileInfo))
+
+		TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
+		while (Grid->GetRemainingCells() > 0)
+		{
+			// Cell 선택
+			int32 SelectedCellIndex = SelectCellFuncPtr(Context);
+			if (!GridCells->IsValidIndex(SelectedCellIndex))
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed to select a cell"));
+				return Result;
+			}
+
+			// 선택된 Cell의 TileInfo 선택
+			const FTileInfo* SelectedTileInfo = SelectTileInfoFuncPtr(Context, SelectedCellIndex);
+			if (SelectedTileInfo == nullptr)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed to select a TileInfo"));
+				return Result;
+			}
+
+			// 선택된 Cell Collapse
+			FCollapseCellResult CollapseCellResult = CollapseCell(&(*GridCells)[SelectedCellIndex], SelectedCellIndex, SelectedTileInfo, CollapseSingleCellFuncPtr);
+			if (!CollapseCellResult.bSuccess)
+			{
+				UE_LOG(LogTemp, Error, TEXT("Failed to collapse cell"));
+				return Result;
+			}
+			
+			Result.CollapseCellResults.Add(MoveTemp(CollapseCellResult));
+		}
+		
+		Result.bSuccess = true;
+		return Result;
+	}
+
+	FCollapseCellResult CollapseCell(FWFC3DCell* CollapseCell, const int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo,
+		const CollapseSingleCellFunc CollapseSingleCellFuncPtr)
+	{
+		FCollapseCellResult Result;
+
+		if (!CollapseSingleCellFuncPtr(CollapseCell, SelectedCellIndex, SelectedTileInfo))
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to collapse cell"));
 			return Result;
 		}
-
-		Grid->DecreaseRemainingCells();
-
+		
 		Result.bSuccess = true;
-
+		Result.CollapsedIndex = SelectedCellIndex;
+		Result.CollapsedLocation = CollapseCell->Location;
 		return Result;
 	}
 

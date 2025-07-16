@@ -7,7 +7,6 @@
 enum class ECollapseCellSelectStrategy : uint8;
 enum class ECollapseTileInfoSelectStrategy : uint8;
 enum class ECollapseSingleCellStrategy : uint8;
-// TODO: 이거 해야함
 enum class ERangeLimitStrategy : uint8;
 
 struct FWFC3DCell;

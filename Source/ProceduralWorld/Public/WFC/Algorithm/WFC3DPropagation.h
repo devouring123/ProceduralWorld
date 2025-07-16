@@ -46,9 +46,14 @@ public:
 namespace
 PROCEDURALWORLD_API WFC3DPropagateFunctions
 {
-	/** 전략에 맞는 함수 실행 */
+	/**
+	 * 전파 함수
+	 * @param Context - WFC3D 전파 컨텍스트
+	 * @param PropagationStrategy - 전파 전략
+	 * @return FPropagationResult - 전파 결과
+	 */
 	FPropagationResult ExecutePropagation(const FWFC3DPropagationContext& Context, const FPropagationStrategy& PropagationStrategy);
-	
+
 	/**
 	 * 단일 Cell 전파 함수
 	 * @param PropagatedCell - 전파할 Cell
@@ -56,17 +61,21 @@ PROCEDURALWORLD_API WFC3DPropagateFunctions
 	 * @param PropagationQueue - 전파 대기 큐
 	 * @param ModelData - WFC3D 모델 데이터
 	 */
-	bool PropagateSingleCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, TQueue<FIntVector>& PropagationQueue, const UWFC3DModelDataAsset* ModelData);
-	
+	bool PropagateCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, TQueue<FIntVector>& PropagationQueue, const UWFC3DModelDataAsset* ModelData);
+
 	/**
 	 * 전파 범위 제한 함수 모음
 	 */
 	namespace RangeLimit
 	{
 		/**
-		 * 범위 제한이 있는 경우
+		 * 구형 범위 제한이 있는 경우
 		 */
-		DECLARE_PROPAGATOR_RANGE_LIMIT_STRATEGY(RangeLimited);
+		DECLARE_PROPAGATOR_RANGE_LIMIT_STRATEGY(SphereRangeLimited);
+
+		/**
+		 * 큐브 제한이 있는 경우
+		 */
+		DECLARE_PROPAGATOR_RANGE_LIMIT_STRATEGY(CubeRangeLimited);
 	}
-	
 };

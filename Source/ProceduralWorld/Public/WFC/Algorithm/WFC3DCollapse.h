@@ -60,9 +60,24 @@ public:
 namespace
 PROCEDURALWORLD_API WFC3DCollapseFunctions
 {
-	/** 전략에 맞는 붕괴 함수 실행 */
-	FCollapseResult ExecuteCollapse(UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData, const FRandomStream& RandomStream, const FCollapseStrategy& CollapseStrategy);
+	/**
+	 * 붕괴 함수
+	 * @param Context - WFC3D 붕괴 컨텍스트
+	 * @param CollapseStrategy - 붕괴 전략 구조체
+	 * @return FCollapseResult - 붕괴 결과
+	 */
+	FCollapseResult ExecuteCollapse(const FWFC3DCollapseContext& Context, const FCollapseStrategy& CollapseStrategy);
 
+	/**
+	 * 단일 셀 붕괴 함수
+	 * @param CollapseCell - 붕괴할 셀
+	 * @param SelectedCellIndex - 붕괴할 셀의 인덱스
+	 * @param SelectedTileInfo - 붕괴할 셀에 들어갈 타일 정보
+	 * @param CollapseSingleCellFuncPtr - 셀 붕괴 함수 포인터
+	 * @return FCollapseCellResult - 붕괴 결과
+	 */
+	FCollapseCellResult CollapseCell(FWFC3DCell* CollapseCell, const int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo, const CollapseSingleCellFunc CollapseSingleCellFuncPtr);
+	
 	/**
 	 * 셀 선택 관련 함수 모음
 	 */

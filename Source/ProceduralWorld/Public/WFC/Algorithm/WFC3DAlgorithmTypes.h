@@ -68,15 +68,15 @@ struct FWFC3DPropagationContext
 };
 
 /**
- * Collapse 결과 구조체
+ * Collapse Single Cell 결과 구조체
  */
 USTRUCT(BlueprintType)
-struct PROCEDURALWORLD_API FCollapseResult
+struct PROCEDURALWORLD_API FCollapseCellResult
 {
 	GENERATED_BODY()
 
 public:
-	FCollapseResult() = default;
+	FCollapseCellResult() = default;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	bool bSuccess = false;
@@ -87,6 +87,23 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	FIntVector CollapsedLocation = FIntVector::ZeroValue;
 };
+
+/**
+ * Collapse 결과 구조체
+ */
+USTRUCT(BlueprintType)
+struct PROCEDURALWORLD_API FCollapseResult
+{
+	GENERATED_BODY()
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	bool bSuccess = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	TArray<FCollapseCellResult> CollapseCellResults;
+};
+
 
 /**
  * Propagation 결과 구조체
@@ -103,7 +120,7 @@ public:
 	bool bSuccess = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	int32 AffectedCellCount = -1;
+	int32 AffectedCellCount = 0;
 };
 
 /**
@@ -142,7 +159,7 @@ using CollapseSingleCellFunc = TStaticFuncPtr<bool(FWFC3DCell*, const int32, con
  * const FWFC3DAlgorithmContext&, FCollapseStrategy 매개변수를 받고
  * FCollapseResult를 반환하는 정적 함수 포인터
  */
-using CollapseFunc = TStaticFuncPtr<FCollapseResult(const FWFC3DCollapseContext&, const FCollapseStrategy&)>;
+using CollapseFunc = TStaticFuncPtr<FCollapseCellResult(const FWFC3DCollapseContext&, const FCollapseStrategy&)>;
 
 
 /**
@@ -212,11 +229,14 @@ enum class ECollapseSingleCellStrategy : uint8
 UENUM(BlueprintType)
 enum class ERangeLimitStrategy : uint8
 {
-	/** Disable RangeLimit (Default) */
+	/** Disable Range Limit (Default) */
 	Disable UMETA(DisplayName = "Disable"),
 
-	/** Enable RangeLimit */
-	RangeLimited UMETA(DisplayName = "Range Limited"),
+	/** Sphere Range Limit */
+	SphereRangeLimited UMETA(DisplayName = "Sphere Range Limited"),
+
+	/** Cube Range Limit */
+	CubeRangeLimited UMETA(DisplayName = "Cube Range Limited"),
 };
 
 

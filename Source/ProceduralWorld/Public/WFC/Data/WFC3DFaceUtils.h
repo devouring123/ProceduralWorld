@@ -70,15 +70,6 @@ public:
 	 */
 	static FFaceInfo GetOppositeFace(const FFaceInfo& Face);
 
-	// TODO : Delete this function
-	/**
-	 * Face 배열에서 주어진 Face와 일치하는 Face가 있는지 확인합니다.
-	 * @param FaceIndex - 확인할 Face 정보
-	 * @param FaceIndices - Face 문자열 배열
-	 * @return 일치하는 Face가 있으면 true, 아니면 false
-	 */
-	static bool HasMatchingFace(int32 FaceIndex, const TArray<int32>& FaceIndices);
-
 	/**
 	 * 모든 방향(Up, Back, Right, Left, Front, Down)을 표현하는 상수 배열
 	 * for 루프 등에서 모든 방향을 순회할 때 사용할 수 있습니다.

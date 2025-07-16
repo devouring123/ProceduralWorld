@@ -85,7 +85,7 @@ void FGrid::Init(UWFC3DModelDataAsset* InWFCModel, const FIntVector& InDimension
 	OutEmptyCell.Entropy = 1;
 	OutEmptyCell.Location = {-1, -1, -1};
 	OutEmptyCell.CollapsedTileInfo = &WFC3DModel->TileInfos[1];
-	// TODO: 아직 테스트 안해봄
+	// 아직 테스트 안해봄
 	for (uint8 Direction = 0; Direction < 6; ++Direction)
 	{
 		OutEmptyCell.MergedFaceOptionsBitset[Direction].Init(false, WFC3DModel->FaceInfos.Num());
@@ -215,7 +215,7 @@ bool FGrid::CollapseCell(const FIntVector& Location, const int32& SelectedTileIn
 	CollapsedCell->Entropy = 1;
 	CollapsedCell->RemainingTileOptionsBitset.Empty();
 
-	// TODO: 현재 96개의 Tile비트셋으로 반환 하고 있음 -> 1개만 활성화 된! TileToFace로 바꿔야함
+	// 현재 96개의 Tile비트셋으로 반환 하고 있음 -> 1개만 활성화 된! TileToFace로 바꿔야함
 	// MergedFaceOptionBitset = Face(84개)인 BitSet으로 반환 해야 함!
 	for (uint8 Direction = 0; Direction < 6; ++Direction)
 	{
