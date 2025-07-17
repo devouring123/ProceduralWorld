@@ -3,15 +3,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
-#include "WFC3DCombinedModel.generated.h"
+#include "UObject/Object.h"
+#include "WFC3DVisualizer.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROCEDURALWORLD_API UWFC3DCombinedModel : public UObject
+class PROCEDURALWORLD_API UWFC3DVisualizer : public UObject
 {
 	GENERATED_BODY()
-	
 };

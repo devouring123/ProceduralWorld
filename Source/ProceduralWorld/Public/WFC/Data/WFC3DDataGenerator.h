@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WFC3DModel.h"
 #include "GameFramework/Actor.h"
+#include "WFC/Data/WFC3DModelDataAsset.h"
 #include "WFC3DDataGenerator.generated.h"
 
 UCLASS()
@@ -19,7 +19,7 @@ public:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	UWFC3DModel* WFC3DModel;
+	TObjectPtr<UWFC3DModelDataAsset> WFC3DModel;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	bool bCreateModelData = false;
