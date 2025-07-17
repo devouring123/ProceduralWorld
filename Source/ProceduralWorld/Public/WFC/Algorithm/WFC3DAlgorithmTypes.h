@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "WFC3DAlgorithmTypes.generated.h"
 
+struct FPropagationResult;
 struct FCollapseStrategy;
 struct FWFC3DCell;
 struct FRandomStream;
@@ -14,26 +15,50 @@ class UWFC3DGrid;
 class UWFC3DModelDataAsset;
 
 /**
+ * WFC3D 알고리즘 컨텍스트 - Collapse 및 Propagation 함수에 공통적으로 사용되는 매개변수
+ */
+
+USTRUCT(BlueprintType)
+struct FWFC3DAlgorithmContext
+{
+	GENERATED_BODY()
+	FWFC3DAlgorithmContext() = delete;
+
+	FWFC3DAlgorithmContext(
+		UWFC3DGrid* InGrid,
+		const UWFC3DModelDataAsset* InModelData)
+		: Grid(InGrid),
+		  ModelData(InModelData)
+	{
+	}
+
+	/** Grid는 항상 수정 가능 해야 함 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
+	mutable UWFC3DGrid* Grid;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
+	const UWFC3DModelDataAsset* ModelData;
+};
+
+
+/**
  * WFC3D Collapse 컨텍스트 - Collapse 함수에 공통적으로 사용되는 매개변수
  */
-struct FWFC3DCollapseContext
+USTRUCT(BlueprintType)
+struct FWFC3DCollapseContext : public FWFC3DAlgorithmContext
 {
+	GENERATED_BODY()
+	
 	FWFC3DCollapseContext() = delete;
 
 	FWFC3DCollapseContext(
 		UWFC3DGrid* InGrid,
 		const UWFC3DModelDataAsset* InModelData,
 		const FRandomStream* InRandomStream)
-		: Grid(InGrid),
-		  ModelData(InModelData),
+		: FWFC3DAlgorithmContext(InGrid, InModelData),
 		  RandomStream(InRandomStream)
 	{
 	}
-
-	/** Grid는 항상 수정 가능 해야 함 */
-	mutable UWFC3DGrid* Grid;
-
-	const UWFC3DModelDataAsset* ModelData;
 
 	const FRandomStream* RandomStream;
 };
@@ -41,8 +66,11 @@ struct FWFC3DCollapseContext
 /**
  * WFC3D Propagation 컨텍스트 - Propagation 함수에 공통적으로 사용되는 매개변수
  */
-struct FWFC3DPropagationContext
+USTRUCT(BlueprintType)
+struct FWFC3DPropagationContext : public FWFC3DAlgorithmContext
 {
+	GENERATED_BODY()
+	
 	FWFC3DPropagationContext() = delete;
 
 	FWFC3DPropagationContext(
@@ -50,17 +78,11 @@ struct FWFC3DPropagationContext
 		const UWFC3DModelDataAsset* InModelData,
 		const FIntVector& InCollapseLocation,
 		const int32 InRangeLimit = 0)
-		: Grid(InGrid),
-		  ModelData(InModelData),
+		: FWFC3DAlgorithmContext(InGrid, InModelData),
 		  CollapseLocation(InCollapseLocation),
 		  RangeLimit(InRangeLimit)
 	{
 	}
-
-	/** Grid는 항상 수정 가능 해야 함 */
-	mutable UWFC3DGrid* Grid;
-
-	const UWFC3DModelDataAsset* ModelData;
 
 	const FIntVector CollapseLocation;
 
@@ -71,12 +93,12 @@ struct FWFC3DPropagationContext
  * Collapse Single Cell 결과 구조체
  */
 USTRUCT(BlueprintType)
-struct PROCEDURALWORLD_API FCollapseCellResult
+struct PROCEDURALWORLD_API FCollapseResult
 {
 	GENERATED_BODY()
 
 public:
-	FCollapseCellResult() = default;
+	FCollapseResult() = default;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	bool bSuccess = false;
@@ -86,22 +108,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	FIntVector CollapsedLocation = FIntVector::ZeroValue;
-};
-
-/**
- * Collapse 결과 구조체
- */
-USTRUCT(BlueprintType)
-struct PROCEDURALWORLD_API FCollapseResult
-{
-	GENERATED_BODY()
-	
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	bool bSuccess = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
-	TArray<FCollapseCellResult> CollapseCellResults;
 };
 
 
@@ -159,7 +165,7 @@ using CollapseSingleCellFunc = TStaticFuncPtr<bool(FWFC3DCell*, const int32, con
  * const FWFC3DAlgorithmContext&, FCollapseStrategy 매개변수를 받고
  * FCollapseResult를 반환하는 정적 함수 포인터
  */
-using CollapseFunc = TStaticFuncPtr<FCollapseCellResult(const FWFC3DCollapseContext&, const FCollapseStrategy&)>;
+using CollapseFunc = TStaticFuncPtr<FCollapseResult(const FWFC3DCollapseContext&, const FCollapseStrategy&)>;
 
 
 /**
