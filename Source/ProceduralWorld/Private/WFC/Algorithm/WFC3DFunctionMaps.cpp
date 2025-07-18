@@ -3,10 +3,11 @@
 #include "WFC/Algorithm/WFC3DFunctionMaps.h"
 #include "WFC/Algorithm/WFC3DCollapse.h"
 
-
+/** static 멤버 변수 정의 */
 TMap<ECollapseCellSelectStrategy, SelectCellFunc> FWFC3DFunctionMaps::CellSelectorMap;
 TMap<ECollapseTileInfoSelectStrategy, SelectTileInfoFunc> FWFC3DFunctionMaps::TileInfoSelectorMap;
 TMap<ECollapseSingleCellStrategy, CollapseSingleCellFunc> FWFC3DFunctionMaps::CellCollapserMap;
+TMap<ERangeLimitStrategy, RangeLimitFunc> FWFC3DFunctionMaps::RangeLimitMap;
 
 SelectCellFunc FWFC3DFunctionMaps::GetCellSelectorFunction(ECollapseCellSelectStrategy Strategy)
 {

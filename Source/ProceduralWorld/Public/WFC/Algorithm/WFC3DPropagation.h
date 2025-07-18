@@ -3,9 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WFC3DAlgorithmMacros.h"
 #include "WFC3DAlgorithmTypes.h"
-#include "UObject/Object.h"
+#include "WFC3DAlgorithmMacros.h"
 #include "WFC3DPropagation.generated.h"
 
 struct FWFC3DCell;
@@ -14,7 +13,6 @@ struct FTileInfo;
 
 class UWFC3DGrid;
 class UWFC3DModelDataAsset;
-
 
 /**
  * Propagation 전략 구조체 - 각 단계별 함수 포인터를 조합하여 전략 정의
@@ -25,9 +23,6 @@ struct PROCEDURALWORLD_API FPropagationStrategy
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
-	ERangeLimitStrategy RangeLimitStrategy;
-
 	FPropagationStrategy()
 		: RangeLimitStrategy(ERangeLimitStrategy::Disable)
 	{
@@ -37,14 +32,15 @@ public:
 		: RangeLimitStrategy(InStrategy)
 	{
 	}
-};
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
+	ERangeLimitStrategy RangeLimitStrategy;
+};
 
 /**
  * WFC3D 알고리즘의 Propagate 함수 모음
  */
-namespace
-PROCEDURALWORLD_API WFC3DPropagateFunctions
+namespace WFC3DPropagateFunctions
 {
 	/**
 	 * 전파 함수

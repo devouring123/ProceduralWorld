@@ -3,25 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WFC3DCollapse.h"
-#include "WFC3DPropagation.h"
+#include "WFC/Algorithm/WFC3DAlgorithmTypes.h"
+#include "WFC/Algorithm/WFC3DCollapse.h"
+#include "WFC/Algorithm/WFC3DPropagation.h"
 #include "UObject/Object.h"
 #include "WFC3DAlgorithm.generated.h"
-
-struct FCollapseResult;
-struct FPropagationResult;
-
-
-USTRUCT(BlueprintType)
-struct FWFC3DResult
-{
-	GENERATED_BODY()
-
-	bool bSuccess = false;
-	FCollapseResult CollapseResults;
-	TArray<FPropagationResult> PropagationResults;
-};
-
 
 /**
  * WFC3D 알고리즘의 핵심 실행 클래스
@@ -33,19 +19,31 @@ class PROCEDURALWORLD_API UWFC3DAlgorithm : public UObject
 	GENERATED_BODY()
 
 public:
-	
-	UWFC3DAlgorithm();
-	UWFC3DAlgorithm(const FCollapseStrategy& InCollapseStrategy, const FPropagationStrategy& InPropagationStrategy);
+	UWFC3DAlgorithm()
+		: CollapseStrategy(FCollapseStrategy())
+		  , PropagationStrategy(FPropagationStrategy())
+		  , RandomStream(FRandomStream())
+	{
+	}
+
+	UWFC3DAlgorithm(const FCollapseStrategy& InCollapseStrategy, const FPropagationStrategy& InPropagationStrategy)
+		: CollapseStrategy(InCollapseStrategy)
+		  , PropagationStrategy(InPropagationStrategy)
+		  , RandomStream(FRandomStream())
+	{
+	}
+
+	UWFC3DAlgorithm(const FCollapseStrategy& InCollapseStrategy, const FPropagationStrategy& InPropagationStrategy, const FRandomStream& InRandomStream)
+	: CollapseStrategy(InCollapseStrategy)
+	  , PropagationStrategy(InPropagationStrategy)
+	  , RandomStream(InRandomStream)
+	{
+	}
 
 	UFUNCTION(BlueprintCallable, Category = "WFCAlgorithm")
 	FWFC3DResult Execute(const FWFC3DAlgorithmContext& Context);
-	
+
 	FCollapseStrategy CollapseStrategy;
 	FPropagationStrategy PropagationStrategy;
-
 	FRandomStream RandomStream;
-
-
-
-	
 };

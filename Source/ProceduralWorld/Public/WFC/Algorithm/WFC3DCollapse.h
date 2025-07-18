@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WFC3DAlgorithmMacros.h"
 #include "WFC3DAlgorithmTypes.h"
+#include "WFC3DAlgorithmMacros.h"
 #include "UObject/Object.h"
 #include "WFC3DCollapse.generated.h"
 
@@ -57,19 +57,18 @@ public:
 /**
  * WFC3D 알고리즘의 Collapse 함수 모음
  */
-namespace
-PROCEDURALWORLD_API WFC3DCollapseFunctions
+namespace WFC3DCollapseFunctions
 {
 	/**
 	 * 셀 붕괴
-	 * @param Context -
-	 * @param SelectCellFuncPtr - 
-	 * @param SelectTileInfoFuncPtr
-	 * @param CollapseSingleCellFuncPtr
-	 * @return FCollapseCellResult - 붕괴 결과
+	 * @param Context - WFC3D Collapse Context
+	 * @param SelectCellFuncPtr - 셀 선택 함수 포인터
+	 * @param SelectTileInfoFuncPtr - 타일 정보 선택 함수 포인터
+	 * @param CollapseSingleCellFuncPtr - 단일 셀 붕괴 함수 포인터
+	 * @return FCollapseResult - 붕괴 결과
 	 */
-	FCollapseResult ExecuteCollapse(const FWFC3DCollapseContext& Context, SelectCellFunc SelectCellFuncPtr, SelectTileInfoFunc SelectTileInfoFuncPtr, CollapseSingleCellFunc
-	                                    CollapseSingleCellFuncPtr);
+	FCollapseResult ExecuteCollapse(const FWFC3DCollapseContext& Context, SelectCellFunc SelectCellFuncPtr, SelectTileInfoFunc SelectTileInfoFuncPtr,
+	                                CollapseSingleCellFunc CollapseSingleCellFuncPtr);
 	
 	/**
 	 * 셀 선택 관련 함수 모음

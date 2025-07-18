@@ -1,20 +1,11 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
+// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "WFC/Algorithm/WFC3DAlgorithm.h"
+#include "WFC/Algorithm/WFC3DAlgorithmTypes.h"
 #include "WFC/Algorithm/WFC3DCollapse.h"
 #include "WFC/Algorithm/WFC3DPropagation.h"
 #include "WFC/Algorithm/WFC3DFunctionMaps.h"
 #include "WFC/Data/WFC3DGrid.h"
-#include "WFC/Data/WFC3DModelDataAsset.h"
-
-UWFC3DAlgorithm::UWFC3DAlgorithm()
-{
-}
-
-UWFC3DAlgorithm::UWFC3DAlgorithm(const FCollapseStrategy& InCollapseStrategy, const FPropagationStrategy& InPropagationStrategy)
-{
-}
 
 FWFC3DResult UWFC3DAlgorithm::Execute(const FWFC3DAlgorithmContext& Context)
 {
@@ -25,54 +16,68 @@ FWFC3DResult UWFC3DAlgorithm::Execute(const FWFC3DAlgorithmContext& Context)
 
 	if (Grid == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
+		UE_LOG(LogTemp, Error, TEXT("Invalid Grid in Algorithm Context"));
 		return Result;
 	}
+
 	if (ModelData == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid ModelData"));
-		return Result;
-	}
-	if (Grid->GetRemainingCells() <= 0)
-	{
-		UE_LOG(LogTemp, Error, TEXT("No Remaining Cells"));
+		UE_LOG(LogTemp, Error, TEXT("Invalid ModelData in Algorithm Context"));
 		return Result;
 	}
 
-	/** Cell Select Function */
+	// Collapse Context 생성
+	FWFC3DCollapseContext CollapseContext(Grid, ModelData, &RandomStream);
+
+	// Collapse 함수 포인터 획득
 	SelectCellFunc SelectCellFuncPtr = FWFC3DFunctionMaps::GetCellSelectorFunction(CollapseStrategy.CellSelectStrategy);
-	if (SelectCellFuncPtr == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to get Cell Selector"));
-		return Result;
-	}
-
-	/** TileInfo Selector Function */
 	SelectTileInfoFunc SelectTileInfoFuncPtr = FWFC3DFunctionMaps::GetTileInfoSelectorFunction(CollapseStrategy.TileSelectStrategy);
-	if (SelectTileInfoFuncPtr == nullptr)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to get TileInfo Selector"));
-		return Result;
-	}
-
-	/** Selected Cell Collapse Function */
 	CollapseSingleCellFunc CollapseSingleCellFuncPtr = FWFC3DFunctionMaps::GetCellCollapserFunction(CollapseStrategy.CellCollapseStrategy);
-	if (CollapseSingleCellFuncPtr == nullptr)
+
+	if (SelectCellFuncPtr == nullptr || SelectTileInfoFuncPtr == nullptr || CollapseSingleCellFuncPtr == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to get Cell Collapser"));
+		UE_LOG(LogTemp, Error, TEXT("Failed to get Collapse function pointers"));
 		return Result;
 	}
 
-	TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
-	FWFC3DCollapseContext CollapseContext = FWFC3DCollapseContext(Grid, ModelData, &RandomStream);
-	// TODO: CollapseResult와 PropagationResult 설정하기
-	// 다른 것 들 도 다 설정 해서 Result 생성해야함
-	while (Grid->GetRemainingCells() > 0)
+	while (!Grid->GetRemainingCells())
 	{
-		FCollapseResult CollapseResult = WFC3DCollapseFunctions::ExecuteCollapse(CollapseContext, SelectCellFuncPtr, SelectTileInfoFuncPtr, CollapseSingleCellFuncPtr);
-		
+		// Collapse 실행
+		FCollapseResult CollapseResult = WFC3DCollapseFunctions::ExecuteCollapse(
+			CollapseContext,
+			SelectCellFuncPtr,
+			SelectTileInfoFuncPtr,
+			CollapseSingleCellFuncPtr
+		);
+
+		Result.CollapseResults.Add(CollapseResult);
+
+		if (!CollapseResult.bSuccess)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Collapse failed"));
+			return Result;
+		}
+
+		// Propagation Context 생성
+		FWFC3DPropagationContext PropagationContext(Grid, ModelData, CollapseResult.CollapsedLocation);
+
+		// Propagation 실행
+		FPropagationResult PropagationResult = WFC3DPropagateFunctions::ExecutePropagation(PropagationContext, PropagationStrategy);
+
+		Result.PropagationResults.Add(PropagationResult);
+
+		if (!PropagationResult.bSuccess)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Propagation failed"));
+			return Result;
+		}
+
+		UE_LOG(LogTemp, Display, TEXT("WFC3D Algorithm executed successfully. Collapsed at %s, Affected %d cells"),
+		       *CollapseResult.CollapsedLocation.ToString(),
+		       PropagationResult.AffectedCellCount);
 	}
-
-
+	
+	Result.bSuccess = true;
+	
 	return Result;
 }
