@@ -16,14 +16,37 @@ class PROCEDURALWORLD_API UWFC3DGrid : public UObject
 	GENERATED_BODY()
 
 public:
-	UWFC3DGrid() = default;
+	UWFC3DGrid() 
+		: Dimension(FIntVector(5, 5, 5))
+		, RemainingCells(0)
+	{
+		// Grid 초기화
+		WFC3DCells.Init(FWFC3DCell(), Dimension.X * Dimension.Y * Dimension.Z);
+		RemainingCells = Dimension.X * Dimension.Y * Dimension.Z;
+		
+		UE_LOG(LogTemp, Log, TEXT("WFC3DGrid Default Constructor - Dimension: %s, RemainingCells: %d"), 
+			*Dimension.ToString(), RemainingCells);
+	}
 
-	UWFC3DGrid(const FIntVector& InDimension): Dimension(InDimension)
+	UWFC3DGrid(const FIntVector& InDimension)
+		: Dimension(InDimension)
+		, RemainingCells(0)
 	{
 		/** Initialize the Grid with Dimension */
 		WFC3DCells.Init(FWFC3DCell(), Dimension.X * Dimension.Y * Dimension.Z);
 		RemainingCells = Dimension.X * Dimension.Y * Dimension.Z;
+		
+		UE_LOG(LogTemp, Log, TEXT("WFC3DGrid Constructor - Dimension: %s, RemainingCells: %d"), 
+			*Dimension.ToString(), RemainingCells);
 	}
+
+	/** Grid를 특정 크기로 초기화하는 함수 */
+	UFUNCTION(BlueprintCallable, Category = "WFC3D")
+	void InitializeGrid(const FIntVector& InDimension);
+	
+	/** Grid를 기본 크기로 초기화하는 함수 */
+	UFUNCTION(BlueprintCallable, Category = "WFC3D")
+	void InitializeGrid();
 
 	FORCEINLINE TArray<FWFC3DCell>* GetAllCells() { return &WFC3DCells; }
 
@@ -46,7 +69,7 @@ private:
 	TArray<FWFC3DCell> WFC3DCells;
 
 	UPROPERTY(EditAnywhere, Category = "WFC3D")
-	FIntVector Dimension;
+	FIntVector Dimension = FIntVector(5,5,5);
 
 	UPROPERTY(EditAnywhere, Category = "WFC3D")
 	int32 RemainingCells = 0;

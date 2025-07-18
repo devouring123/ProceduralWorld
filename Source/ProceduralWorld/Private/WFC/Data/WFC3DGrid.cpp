@@ -1,9 +1,22 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "WFC/Data/WFC3DGrid.h"
-
 #include "WFC/Data/WFC3DCell.h"
+
+void UWFC3DGrid::InitializeGrid(const FIntVector& InDimension)
+{
+	Dimension = InDimension;
+	WFC3DCells.Init(FWFC3DCell(), Dimension.X * Dimension.Y * Dimension.Z);
+	RemainingCells = Dimension.X * Dimension.Y * Dimension.Z;
+	
+	UE_LOG(LogTemp, Log, TEXT("Grid Initialized - Dimension: %s, Total Cells: %d, Remaining Cells: %d"), 
+		*Dimension.ToString(), WFC3DCells.Num(), RemainingCells);
+}
+
+void UWFC3DGrid::InitializeGrid()
+{
+	InitializeGrid(FIntVector(5, 5, 5));
+}
 
 FWFC3DCell* UWFC3DGrid::GetCell(const int32 Index)
 {
