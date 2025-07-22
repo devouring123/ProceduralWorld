@@ -7,6 +7,7 @@
 
 struct FPropagationResult;
 struct FCollapseStrategy;
+struct FPropagationStrategy;
 struct FWFC3DCell;
 struct FRandomStream;
 struct FTileInfo;
@@ -17,12 +18,15 @@ class UWFC3DModelDataAsset;
 /**
  * WFC3D 알고리즘 컨텍스트 - Collapse 및 Propagation 함수에 공통적으로 사용되는 매개변수
  */
-
 USTRUCT(BlueprintType)
 struct FWFC3DAlgorithmContext
 {
 	GENERATED_BODY()
-	FWFC3DAlgorithmContext() = delete;
+	FWFC3DAlgorithmContext()
+		: Grid(nullptr),
+		  ModelData(nullptr)
+	{
+	}
 
 	FWFC3DAlgorithmContext(
 		UWFC3DGrid* InGrid,
@@ -48,8 +52,11 @@ USTRUCT(BlueprintType)
 struct FWFC3DCollapseContext : public FWFC3DAlgorithmContext
 {
 	GENERATED_BODY()
-	
-	FWFC3DCollapseContext() = delete;
+
+	FWFC3DCollapseContext()
+		: RandomStream(nullptr)
+	{
+	}
 
 	FWFC3DCollapseContext(
 		UWFC3DGrid* InGrid,
@@ -70,8 +77,12 @@ USTRUCT(BlueprintType)
 struct FWFC3DPropagationContext : public FWFC3DAlgorithmContext
 {
 	GENERATED_BODY()
-	
-	FWFC3DPropagationContext() = delete;
+
+	FWFC3DPropagationContext()
+		: CollapseLocation(FIntVector::ZeroValue),
+		  RangeLimit(0)
+	{
+	}
 
 	FWFC3DPropagationContext(
 		UWFC3DGrid* InGrid,
@@ -84,9 +95,9 @@ struct FWFC3DPropagationContext : public FWFC3DAlgorithmContext
 	{
 	}
 
-	const FIntVector CollapseLocation;
+	FIntVector CollapseLocation;
 
-	const int32 RangeLimit;
+	int32 RangeLimit;
 };
 
 /**
@@ -128,6 +139,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	int32 AffectedCellCount = 0;
 };
+
+/**
+ * WFC3D 알고리즘 결과 구조체
+ * Collapse 결과와 Propagation 결과를 포함합니다.
+ */
+USTRUCT(BlueprintType)
+struct FWFC3DResult
+{
+	GENERATED_BODY()
+
+	bool bSuccess = false;
+	TArray<FCollapseResult> CollapseResults;
+	TArray<FPropagationResult> PropagationResults;
+};
+
 
 /**
  * 언리얼 엔진 델리게이트 시스템을 활용한 정적 함수 포인터 타입 정의
@@ -173,7 +199,7 @@ using CollapseFunc = TStaticFuncPtr<FCollapseResult(const FWFC3DCollapseContext&
  * const FIntVector& CollapseLocation, const FIntVector& PropagationLocation, const int32 RangeLimit 매개변수를 받고
  * bool을 반환하는 정적 함수 포인터
 */
-using RangeLimitFunc = TStaticFuncPtr<bool(const FIntVector& CollapseLocation, const FIntVector& PropagationLocation, const int32 RangeLimit)>;
+using RangeLimitFunc = TStaticFuncPtr<bool(const FIntVector&, const FIntVector&, const int32)>;
 
 /**
  * Propagation 알고리즘 함수 포인터 타입
