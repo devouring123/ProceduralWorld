@@ -16,7 +16,7 @@ SelectCellFunc FWFC3DFunctionMaps::GetCellSelectorFunction(ECollapseCellSelectSt
         return CellSelectorMap[Strategy];
     }
     UE_LOG(LogTemp, Warning, TEXT("Cell selector strategy %d not found, using default"), (uint8)Strategy);
-    return nullptr;
+    return CellSelectorMap[ECollapseCellSelectStrategy::ByEntropy];
 }
 
 SelectTileInfoFunc FWFC3DFunctionMaps::GetTileInfoSelectorFunction(ECollapseTileInfoSelectStrategy Strategy)
@@ -26,7 +26,7 @@ SelectTileInfoFunc FWFC3DFunctionMaps::GetTileInfoSelectorFunction(ECollapseTile
         return TileInfoSelectorMap[Strategy];
     }
     UE_LOG(LogTemp, Warning, TEXT("Tile info selector strategy %d not found, using default"), (uint8)Strategy);
-    return nullptr;
+    return TileInfoSelectorMap[ECollapseTileInfoSelectStrategy::ByWeight];
 }
 
 CollapseSingleCellFunc FWFC3DFunctionMaps::GetCellCollapserFunction(ECollapseSingleCellStrategy Strategy)
@@ -36,7 +36,7 @@ CollapseSingleCellFunc FWFC3DFunctionMaps::GetCellCollapserFunction(ECollapseSin
         return CellCollapserMap[Strategy];
     }
     UE_LOG(LogTemp, Warning, TEXT("Cell collapser strategy %d not found, using default"), (uint8)Strategy);
-    return nullptr; 
+    return CellCollapserMap[ECollapseSingleCellStrategy::Default]; 
 }
 
 RangeLimitFunc FWFC3DFunctionMaps::GetRangeLimitFunction(ERangeLimitStrategy Strategy)
@@ -46,7 +46,7 @@ RangeLimitFunc FWFC3DFunctionMaps::GetRangeLimitFunction(ERangeLimitStrategy Str
         return RangeLimitMap[Strategy];       
     }
     UE_LOG(LogTemp, Warning, TEXT("Range limit strategy %d not found, using default"), (uint8)Strategy);
-    return nullptr;
+    return RangeLimitMap[ERangeLimitStrategy::Disable];
 }
 
 void FWFC3DFunctionMaps::RegisterCellSelectorEnum(ECollapseCellSelectStrategy Enum, SelectCellFunc Function)

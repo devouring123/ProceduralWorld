@@ -2,20 +2,26 @@
 
 #include "WFC/Data/WFC3DGrid.h"
 #include "WFC/Data/WFC3DCell.h"
+#include "WFC/Data/WFC3DModelDataAsset.h"
 
-void UWFC3DGrid::InitializeGrid(const FIntVector& InDimension)
+void UWFC3DGrid::InitializeGrid(const FIntVector& InDimension, const UWFC3DModelDataAsset* InModelData)
 {
 	Dimension = InDimension;
 	WFC3DCells.Init(FWFC3DCell(), Dimension.X * Dimension.Y * Dimension.Z);
 	RemainingCells = Dimension.X * Dimension.Y * Dimension.Z;
-	
-	UE_LOG(LogTemp, Log, TEXT("Grid Initialized - Dimension: %s, Total Cells: %d, Remaining Cells: %d"), 
-		*Dimension.ToString(), WFC3DCells.Num(), RemainingCells);
-}
+ 
+	for (int32 Index = 0; Index < WFC3DCells.Num(); ++Index)
+	{
+		WFC3DCells[Index].Initialize(
+			InModelData->GetTileInfosNum(),
+			InModelData->GetFaceInfosNum(),
+			Index,
+			Dimension
+		);
+	}
 
-void UWFC3DGrid::InitializeGrid()
-{
-	InitializeGrid(FIntVector(5, 5, 5));
+	UE_LOG(LogTemp, Log, TEXT("Grid Initialized - Dimension: %s, Total Cells: %d, Remaining Cells: %d"),
+	       *Dimension.ToString(), WFC3DCells.Num(), RemainingCells);
 }
 
 FWFC3DCell* UWFC3DGrid::GetCell(const int32 Index)

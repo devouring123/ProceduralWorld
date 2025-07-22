@@ -45,49 +45,71 @@ class FWFC3DFunctionMaps;
  * Collapse Strategy Implementation Macros (For Source Files)
  */
 #define IMPLEMENT_COLLAPSER_CELL_SELECTOR_STRATEGY(StrategyName) \
-    ECollapseCellSelectStrategy StrategyName##_Enum = ECollapseCellSelectStrategy::StrategyName; \
-    struct FRegister_##StrategyName##_CellSelector \
-    { \
-        FRegister_##StrategyName##_CellSelector() \
+    int32 StrategyName##CellSelector(const FWFC3DCollapseContext& Context); \
+    namespace { \
+        struct FRegister_##StrategyName##_CellSelector \
         { \
-            FWFC3DFunctionMaps::RegisterCellSelectorEnum(StrategyName##_Enum, StrategyName); \
-        } \
-    }; \
-    static FRegister_##StrategyName##_CellSelector Register_##StrategyName##_Instance; \
-    int32 StrategyName(const FWFC3DCollapseContext& Context)
+            FRegister_##StrategyName##_CellSelector() \
+            { \
+                FCoreDelegates::OnPostEngineInit.AddLambda([]() \
+                { \
+                    FWFC3DFunctionMaps::RegisterCellSelectorEnum(ECollapseCellSelectStrategy::StrategyName, StrategyName##CellSelector); \
+                }); \
+            } \
+        }; \
+        static FRegister_##StrategyName##_CellSelector Register_##StrategyName##_Instance; \
+    } \
+    int32 StrategyName##CellSelector(const FWFC3DCollapseContext& Context)
 
 #define IMPLEMENT_COLLAPSER_TILE_SELECTOR_STRATEGY(StrategyName) \
-    ECollapseTileInfoSelectStrategy StrategyName##_Enum = ECollapseTileInfoSelectStrategy::StrategyName; \
-    struct FRegister_##StrategyName##_TileSelector \
+    const FTileInfo* StrategyName##TileSelector(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex); \
+    namespace \
     { \
-        FRegister_##StrategyName##_TileSelector() \
+        struct FRegister_##StrategyName##_TileSelector \
         { \
-            FWFC3DFunctionMaps::RegisterTileInfoSelectorEnum(StrategyName##_Enum, StrategyName); \
-        } \
-    }; \
-    static FRegister_##StrategyName##_TileSelector Register_##StrategyName##_Instance; \
-    const FTileInfo* StrategyName(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex)
-
+            FRegister_##StrategyName##_TileSelector() \
+            { \
+                FCoreDelegates::OnPostEngineInit.AddLambda([](){ \
+                    FWFC3DFunctionMaps::RegisterTileInfoSelectorEnum(ECollapseTileInfoSelectStrategy::StrategyName, StrategyName##TileSelector); \
+                }); \
+            } \
+        }; \
+        static FRegister_##StrategyName##_TileSelector Register_##StrategyName##_Instance; \
+    } \
+    const FTileInfo* StrategyName##TileSelector(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex)
+    
 #define IMPLEMENT_COLLAPSER_CELL_COLLAPSER_STRATEGY(StrategyName) \
-    ECollapseSingleCellStrategy StrategyName##_Enum = ECollapseSingleCellStrategy::StrategyName; \
-    struct FRegister_##StrategyName##_CellCollapser \
+    bool StrategyName##CellCollapser(FWFC3DCell* SelectedCell, int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo); \
+    namespace \
     { \
-        FRegister_##StrategyName##_CellCollapser() \
+        struct FRegister_##StrategyName##_CellCollapser \
         { \
-            FWFC3DFunctionMaps::RegisterCellCollapserEnum(StrategyName##_Enum, StrategyName); \
-        } \
-    }; \
-    static FRegister_##StrategyName##_CellCollapser Register_##StrategyName##_Instance; \
-    bool StrategyName(FWFC3DCell* SelectedCell, const int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo)
+            FRegister_##StrategyName##_CellCollapser() \
+            { \
+                FCoreDelegates::OnPostEngineInit.AddLambda([](){ \
+                    FWFC3DFunctionMaps::RegisterCellCollapserEnum(ECollapseSingleCellStrategy::StrategyName, StrategyName##CellCollapser); \
+                }); \
+            } \
+        }; \
+        static FRegister_##StrategyName##_CellCollapser Register_##StrategyName##_Instance; \
+    } \
+    bool StrategyName##CellCollapser(FWFC3DCell* SelectedCell, int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo)
+
+        
 
 #define IMPLEMENT_PROPAGATOR_RANGE_LIMIT_STRATEGY(StrategyName) \
-    ERangeLimitStrategy StrategyName##_Enum = ERangeLimitStrategy::StrategyName; \
-    struct FRegister_##StrategyName##_RangeLimit \
+    bool StrategyName##RangeLimit(const FIntVector& CollapseLocation, const FIntVector& PropagationLocation, const int32 RangeLimit); \
+    namespace \
     { \
-        FRegister_##StrategyName##_RangeLimit() \
+        struct FRegister_##StrategyName##_RangeLimit \
         { \
-            FWFC3DFunctionMaps::RegisterRangeLimitEnum(StrategyName##_Enum, StrategyName); \
-        } \
-    }; \
-    static FRegister_##StrategyName##_RangeLimit Register_##StrategyName##_Instance; \
-    bool StrategyName(const FIntVector& CollapseLocation, const FIntVector& PropagationLocation, const int32 RangeLimit)
+            FRegister_##StrategyName##_RangeLimit() \
+            { \
+                FCoreDelegates::OnPostEngineInit.AddLambda([](){ \
+                    FWFC3DFunctionMaps::RegisterRangeLimitEnum(ERangeLimitStrategy::StrategyName, StrategyName##RangeLimit); \
+                }); \
+            } \
+        }; \
+        static FRegister_##StrategyName##_RangeLimit Register_##StrategyName##_Instance; \
+    } \
+    bool StrategyName##RangeLimit(const FIntVector& CollapseLocation, const FIntVector& PropagationLocation, const int32 RangeLimit)
