@@ -138,8 +138,7 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 		UE_LOG(LogTemp, Error, TEXT("❌ Grid has no remaining cells to collapse! RemainingCells = %d"), Grid->GetRemainingCells());
 
 		// 전체 셀 상태 확인
-		TArray<FWFC3DCell>* AllCells = Grid->GetAllCells();
-		if (AllCells)
+		if (TArray<FWFC3DCell>* AllCells = Grid->GetAllCells())
 		{
 			int32 CollapsedCount = 0;
 			int32 UnCollapsedCount = 0;
@@ -277,6 +276,13 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 				return Result;
 			}
 
+			if (CollapseResult.bSuccess && Grid->GetRemainingCells() == 0)
+			{
+				// 모든 셀 붕괴 완료
+				UE_LOG(LogTemp, Display, TEXT("Collapse Success!! In Algorithm"));
+				break;
+			}
+			
 			// Propagation Context 생성
 			FWFC3DPropagationContext PropagationContext(Grid, ModelData, CollapseResult.CollapsedLocation);
 
@@ -287,7 +293,7 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 
 			if (!PropagationResult.bSuccess)
 			{
-				UE_LOG(LogTemp, Error, TEXT("Propagation failed"));
+				UE_LOG(LogTemp, Error, TEXT("Propagation failed In Algorithm.cpp"));
 				bIsRunning = false;
 				bIsRunningAtomic = false;
 				return Result;
@@ -354,6 +360,15 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 
 	UE_LOG(LogTemp, Log, TEXT("WFC3D Algorithm completed successfully"));
 
+	for (const FWFC3DCell& Cell : *Grid->GetAllCells())
+	{
+		Cell.PrintTileInfo();
+		for (int32 i = 0; i < Cell.CollapsedTileInfo->Faces.Num(); ++i)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Face %d: %s"), i, *ModelData->GetFaceInfo(Cell.CollapsedTileInfo->Faces[i])->Name);
+		}
+	}
+	
 	return Result;
 }
 

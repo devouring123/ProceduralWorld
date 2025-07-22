@@ -28,7 +28,7 @@ namespace WFC3DCollapseFunctions
 		}
 		if (Grid->GetRemainingCells() <= 0)
 		{
-			UE_LOG(LogTemp, Error, TEXT("No Remaining Cells"));
+			UE_LOG(LogTemp, Error, TEXT("No Remaining Cells In Collapse"));
 			return Result;
 		}
 		if (SelectCellFuncPtr == nullptr)
@@ -75,7 +75,8 @@ namespace WFC3DCollapseFunctions
 			UE_LOG(LogTemp, Error, TEXT("Failed to collapse cell"));
 			return Result;
 		}
-
+		
+		Grid->DecreaseRemainingCells();
 		Result.bSuccess = true;
 		return Result;
 	}
@@ -115,7 +116,7 @@ namespace WFC3DCollapseFunctions
 
 			if (LowestEntropy == INT32_MAX)
 			{
-				UE_LOG(LogTemp, Error, TEXT("No Valid Cells"));
+				UE_LOG(LogTemp, Error, TEXT("No Valid Cells In Cell Selector"));
 				return -1;
 			}
 
@@ -133,7 +134,7 @@ namespace WFC3DCollapseFunctions
 
 			if (CellIndicesWithLowestEntropy.Num() == 0)
 			{
-				UE_LOG(LogTemp, Error, TEXT("No Valid Cells With Lowest Entropy"));
+				UE_LOG(LogTemp, Error, TEXT("No Valid Cells With Lowest Entropy In Cell Selector"));
 				return -1;
 			}
 

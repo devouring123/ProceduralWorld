@@ -28,10 +28,19 @@ namespace WFC3DPropagateFunctions
 		}
 		if (Grid->GetRemainingCells() <= 0)
 		{
-			UE_LOG(LogTemp, Error, TEXT("No Remaining Cells"));
+			UE_LOG(LogTemp, Error, TEXT("No Remaining Cells In Propagation"));
 			return Result;
 		}
 
+		for (FWFC3DCell& Cell : *Grid->GetAllCells())
+		{
+			// 붕괴하지 않은 모든 셀의 bIsPropagated 플래그를 false로 초기화
+			if (!Cell.bIsCollapsed)
+			{
+				Cell.bIsPropagated = false;
+			}
+		}
+		
 		// Propagation Queue 초기화
 		TQueue<FIntVector> PropagationQueue;
 		const FIntVector& CollapseLocation = Context.CollapseLocation;
@@ -87,7 +96,7 @@ namespace WFC3DPropagateFunctions
 				return Result;
 			}
 		}
-
+		Result.bSuccess = true;
 		return Result;
 	}
 
@@ -138,11 +147,11 @@ namespace WFC3DPropagateFunctions
 			{
 				int32 OppositeIndex = FWFC3DFaceUtils::GetOppositeIndex(Direction);
 				const TBitArray<>* OuterCellTileOptions = ModelData->GetCompatibleTiles(ModelData->GetTileInfo(0)->Faces[OppositeIndex]);
-				// if (OuterCellTileOptions == nullptr)
-				// {
-				// 	UE_LOG(LogTemp, Error, TEXT("OuterCellTileOptions is null for Direction: %s"), *FWFC3DFaceUtils::GetDirectionVector(Direction).ToString());
-				// 	return false;
-				// }
+				if (OuterCellTileOptions == nullptr)
+				{
+					UE_LOG(LogTemp, Error, TEXT("OuterCellTileOptions is null for Direction: %s"), *FWFC3DFaceUtils::GetDirectionVector(Direction).ToString());
+					return false;
+				}
 				// TODO: OuterCellTileInfo를 ModelData에 지정하기
 				// 현재는 0번 TileIndex를 OuterCell로 가정
 				MergedTileOptionsForDirection.CombineWithBitwiseOR(

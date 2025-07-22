@@ -31,6 +31,23 @@ public:
 			bIsPropagated ? TEXT("True") : TEXT("False"),
 			Entropy);
 	}
+
+	void PrintTileInfo() const
+	{
+		UE_LOG(LogTemp, Display, TEXT("Tile Info for Cell at Location: %s"), *Location.ToString());
+		if (CollapsedTileInfo)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Collapsed BaseTileID : %d"), CollapsedTileInfo->BaseTileID);
+			for (int32 i = 0; i < CollapsedTileInfo->Faces.Num(); ++i)
+			{
+				UE_LOG(LogTemp, Display, TEXT("Face %d: %d"), i, CollapsedTileInfo->Faces[i]);
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Display, TEXT("No Tile Collapsed"));
+		}
+	}
 	
 public:
 	/** Common Data */

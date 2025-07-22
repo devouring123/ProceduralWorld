@@ -89,6 +89,8 @@ void AWFC3DAsyncExample::ExecuteAsync()
 		true
 	);
 
+	AlgorithmContext = TestContext;
+	
 	// 비동기 실행
 	WFCAlgorithm->ExecuteAsync(TestContext);
 }
@@ -177,7 +179,7 @@ void AWFC3DAsyncExample::OnAlgorithmCompleted(const FWFC3DResult& Result)
 	UE_LOG(LogTemp, Log, TEXT("성공: %s"), Result.bSuccess ? TEXT("예") : TEXT("아니오"));
 	UE_LOG(LogTemp, Log, TEXT("Collapse 결과 수: %d"), Result.CollapseResults.Num());
 	UE_LOG(LogTemp, Log, TEXT("Propagation 결과 수: %d"), Result.PropagationResults.Num());
-
+	
 	// 화면에 메시지 표시
 	if (GEngine)
 	{
