@@ -44,7 +44,7 @@ namespace WFC3DPropagateFunctions
 			{
 				continue;
 			}
-			CellToPropagate->SetPropagatedFaces(Direction);
+			CellToPropagate->SetPropagatedFaces(FWFC3DFaceUtils::GetOpposite(Direction));
 			PropagationQueue.Enqueue(PropagationLocation);
 		}
 
@@ -61,7 +61,7 @@ namespace WFC3DPropagateFunctions
 			FIntVector PropagationLocation;
 			PropagationQueue.Dequeue(PropagationLocation);
 			FWFC3DCell* PropagatedCell = Grid->GetCell(PropagationLocation);
-			
+
 			// 전파할 셀이 유효하지 않거나 이미 붕괴되었거나 전파된 경우 건너뜀
 			if (PropagatedCell == nullptr || PropagatedCell->bIsCollapsed || PropagatedCell->bIsPropagated)
 			{
@@ -72,7 +72,7 @@ namespace WFC3DPropagateFunctions
 			{
 				continue;
 			}
-			
+
 			// 단일 셀 전파 함수 호출
 			if (PropagateCell(PropagatedCell, Grid, PropagationQueue, ModelData))
 			{
@@ -92,7 +92,7 @@ namespace WFC3DPropagateFunctions
 	}
 
 	bool PropagateCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, TQueue<FIntVector>& PropagationQueue,
-	                         const UWFC3DModelDataAsset* ModelData)
+	                   const UWFC3DModelDataAsset* ModelData)
 	{
 		if (PropagatedCell == nullptr || Grid == nullptr || ModelData == nullptr)
 		{
@@ -107,7 +107,7 @@ namespace WFC3DPropagateFunctions
 
 		// 전파 받은 면에 대해서 남은 타일 옵션을 가져와서 병합 -> 남은 타일 몹션에 대해서 전파 받지 않은 방향으로 전파
 		// 전파 받은 면에 대하여 전파 받은 면의 타일 옵션을 병합
-		for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
+		for (const EFace Direction : FWFC3DFaceUtils::AllDirections)
 		{
 			FIntVector NextLocation = PropagatedCell->Location + FWFC3DFaceUtils::GetDirectionVector(Direction);
 			// 전파 받은 면이 아닌 경우에 가장 바깥이 아니라면 건너뜀
@@ -120,24 +120,33 @@ namespace WFC3DPropagateFunctions
 			TBitArray<> MergedTileOptionsForDirection = TBitArray<>(false, ModelData->GetTileInfosNum());
 
 			// 전파 받은 면이 실제로 존재하는 경우
-			if (Grid->GetCell(NextLocation))
+			const FWFC3DCell* NextCell = Grid->GetCell(NextLocation);
+			if (NextCell != nullptr)
 			{
 				TArray<int32> PropagatedFaceOptionIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset(
-					Grid->GetCell(NextLocation)->MergedFaceOptionsBitset[FWFC3DFaceUtils::GetOppositeIndex(Direction)]);
+					NextCell->MergedFaceOptionsBitset[FWFC3DFaceUtils::GetOppositeIndex(Direction)]);
 
 				for (int32 FaceIndex : PropagatedFaceOptionIndices)
 				{
 					// 해당 타일 옵션과 OR 연산
-					MergedTileOptionsForDirection.CombineWithBitwiseOR(*ModelData->GetCompatibleTiles(FaceIndex), EBitwiseOperatorFlags::MaintainSize);
+					const TBitArray<>* FaceIndexBitArray = ModelData->GetCompatibleTiles(FaceIndex);
+					MergedTileOptionsForDirection.CombineWithBitwiseOR(*FaceIndexBitArray, EBitwiseOperatorFlags::MaintainSize);
 				}
 			}
 			// 존재하지 않는 경우에는 OuterCell에서 해당 면의 타일 옵션을 가져옴
 			else
 			{
+				int32 OppositeIndex = FWFC3DFaceUtils::GetOppositeIndex(Direction);
+				const TBitArray<>* OuterCellTileOptions = ModelData->GetCompatibleTiles(ModelData->GetTileInfo(0)->Faces[OppositeIndex]);
+				// if (OuterCellTileOptions == nullptr)
+				// {
+				// 	UE_LOG(LogTemp, Error, TEXT("OuterCellTileOptions is null for Direction: %s"), *FWFC3DFaceUtils::GetDirectionVector(Direction).ToString());
+				// 	return false;
+				// }
 				// TODO: OuterCellTileInfo를 ModelData에 지정하기
-				// 현재는 1번 TileIndex를 OuterCell로 가정
+				// 현재는 0번 TileIndex를 OuterCell로 가정
 				MergedTileOptionsForDirection.CombineWithBitwiseOR(
-					*ModelData->GetCompatibleTiles(ModelData->GetTileInfo(1)->Faces[FWFC3DFaceUtils::GetOppositeIndex(Direction)]),
+					*OuterCellTileOptions,
 					EBitwiseOperatorFlags::MaintainSize);
 			}
 

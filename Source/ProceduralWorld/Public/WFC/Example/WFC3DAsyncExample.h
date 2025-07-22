@@ -48,6 +48,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "WFC Example")
 	void CheckStatus();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC Example")
+	UWFC3DModelDataAsset* TestModelData;
+	
 protected:
 	/** WFC3D 알고리즘 인스턴스 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "WFC")
