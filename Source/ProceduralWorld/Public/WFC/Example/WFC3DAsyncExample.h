@@ -60,6 +60,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC")
 	FWFC3DAlgorithmContext AlgorithmContext;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC")
+	FIntVector TestGridSize = FIntVector(5, 5, 5);
+	
 	/** 진행률 표시용 타이머 */
 	FTimerHandle ProgressTimerHandle;
 

@@ -60,6 +60,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
 	bool bIsPropagated = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D")
+	int32 CollapsedTileInfoIndex;
+	
 	const FTileInfo* CollapsedTileInfo = nullptr;
 
 	/** Algorithm Data */
@@ -73,6 +76,7 @@ public:
 	/** Visualization Data */
 	FTileVisualInfo* CollapsedTileVisualInfo = nullptr;
 
+	
 private:
 	UPROPERTY(EditAnywhere, Category = "WFC3D")
 	uint8 PropagatedFaces = 0;

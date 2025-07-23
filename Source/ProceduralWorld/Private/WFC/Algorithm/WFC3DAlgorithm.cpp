@@ -166,19 +166,29 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 		return Result;
 	}
 
+	if (Seed == 0)
+	{
+		RandomStream.GenerateNewSeed();
+	}
+	else
+	{
+		RandomStream.Initialize(Seed);
+	}
+
+
 	// Collapse Context 생성
 	FWFC3DCollapseContext CollapseContext(Grid, ModelData, &RandomStream);
 
 	// Collapse 함수 포인터 획득
 	SelectCellFunc SelectCellFuncPtr = nullptr;
-	SelectTileInfoFunc SelectTileInfoFuncPtr = nullptr;
+	SelectTileInfoIndexFunc SelectTileInfoFuncPtr = nullptr;
 	CollapseSingleCellFunc CollapseSingleCellFuncPtr = nullptr;
 
 	// ModelData가 있을 때만 실제 함수 포인터 획득
 	if (ModelData != nullptr)
 	{
 		SelectCellFuncPtr = FWFC3DFunctionMaps::GetCellSelectorFunction(CollapseStrategy.CellSelectStrategy);
-		SelectTileInfoFuncPtr = FWFC3DFunctionMaps::GetTileInfoSelectorFunction(CollapseStrategy.TileSelectStrategy);
+		SelectTileInfoFuncPtr = FWFC3DFunctionMaps::GetTileInfoIndexSelectorFunction(CollapseStrategy.TileSelectStrategy);
 		CollapseSingleCellFuncPtr = FWFC3DFunctionMaps::GetCellCollapserFunction(CollapseStrategy.CellCollapseStrategy);
 	}
 	else
@@ -194,8 +204,8 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 		UE_LOG(LogTemp, Error, TEXT("SelectCellFuncPtr is %s"), SelectCellFuncPtr ? TEXT("valid") : TEXT("null"));
 		UE_LOG(LogTemp, Error, TEXT("SelectTileInfoFuncPtr is %s"), SelectTileInfoFuncPtr ? TEXT("valid") : TEXT("null"));
 		UE_LOG(LogTemp, Error, TEXT("CollapseSingleCellFuncPtr is %s"), CollapseSingleCellFuncPtr ? TEXT("valid") : TEXT("null"));
-		
-		
+
+
 		bIsRunning = false;
 		bIsRunningAtomic = false;
 		return Result;
@@ -282,7 +292,7 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 				UE_LOG(LogTemp, Display, TEXT("Collapse Success!! In Algorithm"));
 				break;
 			}
-			
+
 			// Propagation Context 생성
 			FWFC3DPropagationContext PropagationContext(Grid, ModelData, CollapseResult.CollapsedLocation);
 
@@ -368,7 +378,7 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 			UE_LOG(LogTemp, Display, TEXT("Face %d: %s"), i, *ModelData->GetFaceInfo(Cell.CollapsedTileInfo->Faces[i])->Name);
 		}
 	}
-	
+
 	return Result;
 }
 

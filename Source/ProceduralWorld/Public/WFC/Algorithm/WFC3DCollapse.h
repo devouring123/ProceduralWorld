@@ -28,9 +28,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
 	ECollapseCellSelectStrategy CellSelectStrategy;
 
-	/** TileInfo 선택 전략 Enum */
+	/** TileInfo Index 선택 전략 Enum */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
-	ECollapseTileInfoSelectStrategy TileSelectStrategy;
+	ECollapseTileInfoIndexSelectStrategy TileSelectStrategy;
 
 	/** 단일 셀 붕괴 전략 Enum */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
@@ -38,14 +38,14 @@ public:
 	
 	FCollapseStrategy()
 		: CellSelectStrategy(ECollapseCellSelectStrategy::ByEntropy),
-		  TileSelectStrategy(ECollapseTileInfoSelectStrategy::ByWeight),
+		  TileSelectStrategy(ECollapseTileInfoIndexSelectStrategy::ByWeight),
 		  CellCollapseStrategy(ECollapseSingleCellStrategy::Default)
 	{
 	}
 
 	FCollapseStrategy(
 		ECollapseCellSelectStrategy InCellSelectStrategy,
-		ECollapseTileInfoSelectStrategy InTileSelectStrategy,
+		ECollapseTileInfoIndexSelectStrategy InTileSelectStrategy,
 		ECollapseSingleCellStrategy InCellCollapseStrategy)
 		: CellSelectStrategy(InCellSelectStrategy),
 		  TileSelectStrategy(InTileSelectStrategy),
@@ -63,11 +63,11 @@ namespace WFC3DCollapseFunctions
 	 * 셀 붕괴
 	 * @param Context - WFC3D Collapse Context
 	 * @param SelectCellFuncPtr - 셀 선택 함수 포인터
-	 * @param SelectTileInfoFuncPtr - 타일 정보 선택 함수 포인터
+	 * @param SelectTileInfoIndexFuncPtr - 타일 정보 선택 함수 포인터
 	 * @param CollapseSingleCellFuncPtr - 단일 셀 붕괴 함수 포인터
 	 * @return FCollapseResult - 붕괴 결과
 	 */
-	FCollapseResult ExecuteCollapse(const FWFC3DCollapseContext& Context, SelectCellFunc SelectCellFuncPtr, SelectTileInfoFunc SelectTileInfoFuncPtr,
+	FCollapseResult ExecuteCollapse(const FWFC3DCollapseContext& Context, SelectCellFunc SelectCellFuncPtr, SelectTileInfoIndexFunc SelectTileInfoIndexFuncPtr,
 	                                CollapseSingleCellFunc CollapseSingleCellFuncPtr);
 	
 	/**

@@ -13,6 +13,7 @@ void FWFC3DCell::Initialize(const int32 TileInfoNum, const int32 FaceInfoNum, co
 	bIsCollapsed = false;
 	bIsPropagated = false;
 	Location = IndexToLocation(Index, Dimension);
+	CollapsedTileInfoIndex = INDEX_NONE;
 	CollapsedTileInfo = nullptr;
 
 	/** Initialize Algorithm Data */

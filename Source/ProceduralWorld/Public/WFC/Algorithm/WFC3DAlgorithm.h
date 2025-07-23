@@ -148,6 +148,9 @@ public:
 	FCollapseStrategy CollapseStrategy;
 	FPropagationStrategy PropagationStrategy;
 	FRandomStream RandomStream;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFCAlgorithm")
+	int32 Seed = 0;
 
 	/** 알고리즘 완료 시 호출되는 델리게이트 */
 	UPROPERTY(BlueprintAssignable, Category = "WFCAlgorithm")

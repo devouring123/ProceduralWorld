@@ -70,11 +70,12 @@ void AWFC3DAsyncExample::ExecuteAsync()
 
 	// 테스트용 Grid 생성 및 초기화
 	UWFC3DGrid* TestGrid = NewObject<UWFC3DGrid>();
-	TestGrid->InitializeGrid({3, 3, 3}, TestModelData); // 555 그리드로 테스트
+	TestGrid->InitializeGrid({TestGridSize.X, TestGridSize.Y, TestGridSize.Z}, TestModelData); // 555 그리드로 테스트
 
 	// 컨텍스트 생성
 	FWFC3DAlgorithmContext TestContext(TestGrid, TestModelData);
-
+	AlgorithmContext = TestContext;
+	
 	UE_LOG(LogTemp, Warning, TEXT("🧪 테스트 컨텍스트 생성됨"));
 	UE_LOG(LogTemp, Warning, TEXT("Grid: %s"), TestGrid ? TEXT("Valid") : TEXT("Invalid"));
 	UE_LOG(LogTemp, Warning, TEXT("Grid Dimension: %s"), *TestGrid->GetDimension().ToString());
@@ -88,11 +89,9 @@ void AWFC3DAsyncExample::ExecuteAsync()
 		0.5f, // 0.5초마다
 		true
 	);
-
-	AlgorithmContext = TestContext;
 	
 	// 비동기 실행
-	WFCAlgorithm->ExecuteAsync(TestContext);
+	WFCAlgorithm->ExecuteAsync(AlgorithmContext);
 }
 
 void AWFC3DAsyncExample::ExecuteWithTaskGraph()
