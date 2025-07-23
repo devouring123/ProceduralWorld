@@ -197,10 +197,11 @@ void AWFC3DAsyncExample::OnAlgorithmCompleted(const FWFC3DResult& Result)
 		);
 	}
 
+	TryCount++;
+	
 	// 실패 시 재시도
 	if (!Result.bSuccess && TryCount < MaxTryCount)
 	{
-		TryCount++;
 		UE_LOG(LogTemp, Warning, TEXT("실패! 재시도 중... (시도 횟수: %d/%d)"), TryCount, MaxTryCount);
 		// 0.075초 후 재시도
 		GetWorldTimerManager().SetTimer(
