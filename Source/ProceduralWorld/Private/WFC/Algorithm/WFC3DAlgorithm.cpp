@@ -68,7 +68,7 @@ void UWFC3DAlgorithm::ExecuteAsync(const FWFC3DAlgorithmContext& Context)
 		GetWorld()->GetTimerManager().SetTimer(
 			AsyncCheckTimerHandle,
 			FTimerDelegate::CreateUObject(this, &UWFC3DAlgorithm::CheckAsyncTaskCompletion),
-			0.1f, // 0.1초마다 체크
+			0.05f, // 0.1초마다 체크
 			true
 		);
 	}
@@ -184,18 +184,6 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 	SelectTileInfoIndexFunc SelectTileInfoFuncPtr = nullptr;
 	CollapseSingleCellFunc CollapseSingleCellFuncPtr = nullptr;
 
-	// ModelData가 있을 때만 실제 함수 포인터 획득
-	if (ModelData != nullptr)
-	{
-		SelectCellFuncPtr = FWFC3DFunctionMaps::GetCellSelectorFunction(CollapseStrategy.CellSelectStrategy);
-		SelectTileInfoFuncPtr = FWFC3DFunctionMaps::GetTileInfoIndexSelectorFunction(CollapseStrategy.TileSelectStrategy);
-		CollapseSingleCellFuncPtr = FWFC3DFunctionMaps::GetCellCollapserFunction(CollapseStrategy.CellCollapseStrategy);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("⚠️ 테스트 모드: ModelData가 null이므로 함수 포인터를 건너뜁니다"));
-	}
-
 	if (ModelData != nullptr && (SelectCellFuncPtr == nullptr || SelectTileInfoFuncPtr == nullptr || CollapseSingleCellFuncPtr == nullptr))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to get Collapse function pointers"));
@@ -210,6 +198,9 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 		bIsRunningAtomic = false;
 		return Result;
 	}
+
+	// 초기화 Propagation 실행
+	WFC3DPropagateFunctions::ExecuteInitialPropagation(FWFC3DPropagationContext(Grid, ModelData, FIntVector::ZeroValue));
 
 	while (Grid->GetRemainingCells() > 0 && bIsRunningAtomic.load() && !bIsCancelledAtomic.load())
 	{
@@ -234,85 +225,51 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 
 			return Result;
 		}
+		
+		FCollapseResult CollapseResult = WFC3DCollapseFunctions::ExecuteCollapse(
+			CollapseContext,
+			SelectCellFuncPtr,
+			SelectTileInfoFuncPtr,
+			CollapseSingleCellFuncPtr
+		);
 
-		// 테스트 모드: ModelData가 없으면 간단한 더미 동작 수행
-		if (ModelData == nullptr)
+		Result.CollapseResults.Add(CollapseResult);
+
+		if (!CollapseResult.bSuccess)
 		{
-			UE_LOG(LogTemp, Log, TEXT("🧪 테스트 모드: 더미 Collapse 및 Propagation 수행"));
-
-			// 더미 Collapse 결과 생성
-			FCollapseResult CollapseResult;
-			CollapseResult.bSuccess = true;
-			CollapseResult.CollapsedIndex = CurrentStep;
-			CollapseResult.CollapsedLocation = FIntVector(
-				CurrentStep % Grid->GetDimension().X,
-				(CurrentStep / Grid->GetDimension().X) % Grid->GetDimension().Y,
-				CurrentStep / (Grid->GetDimension().X * Grid->GetDimension().Y)
-			);
-
-			Result.CollapseResults.Add(CollapseResult);
-
-			// 더미 Propagation 결과 생성
-			FPropagationResult PropagationResult;
-			PropagationResult.bSuccess = true;
-			PropagationResult.AffectedCellCount = FMath::RandRange(1, 5);
-
-			Result.PropagationResults.Add(PropagationResult);
-
-			// RemainingCells 감소 (테스트 목적)
-			Grid->DecreaseRemainingCells();
-
-			UE_LOG(LogTemp, Display, TEXT("🧪 테스트 Collapse at %s, Affected %d cells"),
-			       *CollapseResult.CollapsedLocation.ToString(),
-			       PropagationResult.AffectedCellCount);
+			UE_LOG(LogTemp, Error, TEXT("Collapse failed"));
+			bIsRunning = false;
+			bIsRunningAtomic = false;
+			return Result;
 		}
-		else
+
+		if (CollapseResult.bSuccess && Grid->GetRemainingCells() == 0)
 		{
-			// 실제 WFC 알고리즘 실행
-			FCollapseResult CollapseResult = WFC3DCollapseFunctions::ExecuteCollapse(
-				CollapseContext,
-				SelectCellFuncPtr,
-				SelectTileInfoFuncPtr,
-				CollapseSingleCellFuncPtr
-			);
-
-			Result.CollapseResults.Add(CollapseResult);
-
-			if (!CollapseResult.bSuccess)
-			{
-				UE_LOG(LogTemp, Error, TEXT("Collapse failed"));
-				bIsRunning = false;
-				bIsRunningAtomic = false;
-				return Result;
-			}
-
-			if (CollapseResult.bSuccess && Grid->GetRemainingCells() == 0)
-			{
-				// 모든 셀 붕괴 완료
-				UE_LOG(LogTemp, Display, TEXT("Collapse Success!! In Algorithm"));
-				break;
-			}
-
-			// Propagation Context 생성
-			FWFC3DPropagationContext PropagationContext(Grid, ModelData, CollapseResult.CollapsedLocation);
-
-			// Propagation 실행
-			FPropagationResult PropagationResult = WFC3DPropagateFunctions::ExecutePropagation(PropagationContext, PropagationStrategy);
-
-			Result.PropagationResults.Add(PropagationResult);
-
-			if (!PropagationResult.bSuccess)
-			{
-				UE_LOG(LogTemp, Error, TEXT("Propagation failed In Algorithm.cpp"));
-				bIsRunning = false;
-				bIsRunningAtomic = false;
-				return Result;
-			}
-
-			UE_LOG(LogTemp, Display, TEXT("WFC3D Algorithm executed successfully. Collapsed at %s, Affected %d cells"),
-			       *CollapseResult.CollapsedLocation.ToString(),
-			       PropagationResult.AffectedCellCount);
+			// 모든 셀 붕괴 완료
+			UE_LOG(LogTemp, Display, TEXT("Collapse Success!! In Algorithm"));
+			break;
 		}
+
+		// Propagation Context 생성
+		FWFC3DPropagationContext PropagationContext(Grid, ModelData, CollapseResult.CollapsedLocation);
+
+		// Propagation 실행
+		FPropagationResult PropagationResult = WFC3DPropagateFunctions::ExecutePropagation(PropagationContext, PropagationStrategy);
+
+		Result.PropagationResults.Add(PropagationResult);
+
+		if (!PropagationResult.bSuccess)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Propagation failed In Algorithm.cpp"));
+			bIsRunning = false;
+			bIsRunningAtomic = false;
+			return Result;
+		}
+
+		UE_LOG(LogTemp, Display, TEXT("WFC3D Algorithm executed successfully. Collapsed at %s, Affected %d cells"),
+		       *CollapseResult.CollapsedLocation.ToString(),
+		       PropagationResult.AffectedCellCount);
+
 
 		// 진행률 업데이트
 		CurrentStep++;

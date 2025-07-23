@@ -40,7 +40,7 @@ namespace WFC3DPropagateFunctions
 				Cell.bIsPropagated = false;
 			}
 		}
-		
+
 		// Propagation Queue 초기화
 		TQueue<FIntVector> PropagationQueue;
 		const FIntVector& CollapseLocation = Context.CollapseLocation;
@@ -100,6 +100,95 @@ namespace WFC3DPropagateFunctions
 		return Result;
 	}
 
+	FPropagationResult ExecuteInitialPropagation(const FWFC3DPropagationContext& Context)
+	{
+		FPropagationResult Result;
+		UWFC3DGrid* Grid = Context.Grid;
+		const UWFC3DModelDataAsset* ModelData = Context.ModelData;
+
+		if (Grid == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
+			return Result;
+		}
+		if (ModelData == nullptr)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Invalid ModelData"));
+			return Result;
+		}
+
+		for (FWFC3DCell& Cell : *Grid->GetAllCells())
+		{
+			// 붕괴하지 않은 모든 셀의 bIsPropagated 플래그를 false로 초기화
+			if (!Cell.bIsCollapsed)
+			{
+				Cell.bIsPropagated = false;
+			}
+		}
+
+		TQueue<FIntVector> PropagationQueue;
+		
+		// Grid의 각 꼭지점 8개 넣으면 됨
+		// 전파 방향은 각 꼭지점 => 바깥 3면에서 전파 받기
+		TArray<FWFC3DCell*> CornerCells;
+		CornerCells.Add(Grid->GetCell(0,0,0));
+		CornerCells.Add(Grid->GetCell(0,0,Grid->GetDimension().Z - 1));
+		CornerCells.Add(Grid->GetCell(0,Grid->GetDimension().Y - 1,0));
+		CornerCells.Add(Grid->GetCell(0,Grid->GetDimension().Y - 1,Grid->GetDimension().Z - 1));
+		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1,0,0));
+		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1,0,Grid->GetDimension().Z - 1));
+		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1,Grid->GetDimension().Y - 1,0));
+		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1,Grid->GetDimension().Y - 1,Grid->GetDimension().Z - 1));
+		
+		for (FWFC3DCell* Cell : CornerCells)
+		{
+			PropagationQueue.Enqueue(Cell->Location);
+			
+			// 각 꼭지점 셀의 3면에 대해서 전파 받기
+			for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
+			{
+				FIntVector PropagationLocation = Cell->Location + FWFC3DFaceUtils::GetDirectionVector(Direction);
+				FWFC3DCell* CellToPropagate = Grid->GetCell(PropagationLocation);
+				if (CellToPropagate == nullptr)
+				{
+					Cell->SetPropagatedFaces(Direction);
+					PropagationQueue.Enqueue(PropagationLocation);
+				}
+			}
+		}
+
+		while (!PropagationQueue.IsEmpty())
+		{
+			FIntVector PropagationLocation;
+			if (!PropagationQueue.Dequeue(PropagationLocation))
+			{
+				continue;
+			}
+			FWFC3DCell* PropagatedCell = Grid->GetCell(PropagationLocation);
+
+			if (PropagatedCell == nullptr || PropagatedCell->bIsCollapsed || PropagatedCell->bIsPropagated)
+			{
+				continue;
+			}
+
+			if (PropagateCell(PropagatedCell, Grid, PropagationQueue, ModelData))
+			{
+				Result.AffectedCellCount++;
+				PropagatedCell->bIsPropagated = true;
+				Result.bSuccess = true;
+				UE_LOG(LogTemp, Display, TEXT("Initial Propagation at Location: %s"), *PropagationLocation.ToString());
+			}
+			else
+			{
+				Result.bSuccess = false;
+				return Result;
+			}
+		}
+		
+		Result.bSuccess = true;
+		return Result;
+	}
+
 	bool PropagateCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, TQueue<FIntVector>& PropagationQueue,
 	                   const UWFC3DModelDataAsset* ModelData)
 	{
@@ -149,7 +238,8 @@ namespace WFC3DPropagateFunctions
 				const TBitArray<>* OuterCellTileOptions = ModelData->GetCompatibleTiles(ModelData->GetTileInfo(0)->Faces[OppositeIndex]);
 				if (OuterCellTileOptions == nullptr)
 				{
-					UE_LOG(LogTemp, Error, TEXT("OuterCellTileOptions is null for Direction: %s"), *FWFC3DFaceUtils::GetDirectionVector(Direction).ToString());
+					UE_LOG(LogTemp, Error, TEXT("OuterCellTileOptions is null for Direction: %s"),
+					       *FWFC3DFaceUtils::GetDirectionVector(Direction).ToString());
 					return false;
 				}
 				// TODO: OuterCellTileInfo를 ModelData에 지정하기

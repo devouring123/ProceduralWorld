@@ -5,6 +5,7 @@
 #include "Async/Async.h"
 #include "Async/TaskGraphInterfaces.h"
 #include "WFC/Data/WFC3DGrid.h"
+#include "WFC/Data/WFC3DModelDataAsset.h"
 
 AWFC3DAsyncExample::AWFC3DAsyncExample()
 {
@@ -32,6 +33,11 @@ void AWFC3DAsyncExample::BeginPlay()
 	// 알고리즘 컨텍스트 설정 Grid 크기 (5,5,5)
 	AlgorithmContext.Grid = NewObject<UWFC3DGrid>();
 
+	TryCount = 0;
+	bIsSuccess = false;
+
+	TestModelData->InitializeData();
+	
 	ExecuteAsync();
 }
 
@@ -176,6 +182,8 @@ void AWFC3DAsyncExample::OnAlgorithmCompleted(const FWFC3DResult& Result)
 
 	UE_LOG(LogTemp, Log, TEXT("=== 알고리즘 완료! ==="));
 	UE_LOG(LogTemp, Log, TEXT("성공: %s"), Result.bSuccess ? TEXT("예") : TEXT("아니오"));
+	bIsSuccess = Result.bSuccess;
+	UE_LOG(LogTemp, Log, TEXT("Try 수 : %d"), TryCount);
 	UE_LOG(LogTemp, Log, TEXT("Collapse 결과 수: %d"), Result.CollapseResults.Num());
 	UE_LOG(LogTemp, Log, TEXT("Propagation 결과 수: %d"), Result.PropagationResults.Num());
 	
@@ -188,6 +196,29 @@ void AWFC3DAsyncExample::OnAlgorithmCompleted(const FWFC3DResult& Result)
 			                Result.bSuccess ? TEXT("예") : TEXT("아니오"))
 		);
 	}
+
+	// 실패 시 재시도
+	if (!Result.bSuccess && TryCount < MaxTryCount)
+	{
+		TryCount++;
+		UE_LOG(LogTemp, Warning, TEXT("실패! 재시도 중... (시도 횟수: %d/%d)"), TryCount, MaxTryCount);
+		// 0.075초 후 재시도
+		GetWorldTimerManager().SetTimer(
+			ProgressTimerHandle,
+			this,
+			&AWFC3DAsyncExample::ExecuteAsync,
+			0.075f, // 0.1초 후 재시도
+			false
+		);
+	}
+	else if (TryCount >= MaxTryCount)
+	{
+		UE_LOG(LogTemp, Error, TEXT("최대 시도 횟수 초과!"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("알고리즘 실행 완료!"));
+	}	
 }
 
 void AWFC3DAsyncExample::OnAlgorithmCancelled()
