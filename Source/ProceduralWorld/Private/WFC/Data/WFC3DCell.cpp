@@ -7,8 +7,6 @@
 
 void FWFC3DCell::Initialize(const int32 TileInfoNum, const int32 FaceInfoNum, const int32 Index, const FIntVector& Dimension)
 {
-	UE_LOG(LogTemp, Display, TEXT("Index: %d"), Index);
-
 	/** Initialize Common Data */
 	bIsCollapsed = false;
 	bIsPropagated = false;

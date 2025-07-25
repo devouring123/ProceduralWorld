@@ -180,9 +180,9 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 	FWFC3DCollapseContext CollapseContext(Grid, ModelData, &RandomStream);
 
 	// Collapse 함수 포인터 획득
-	SelectCellFunc SelectCellFuncPtr = nullptr;
-	SelectTileInfoIndexFunc SelectTileInfoFuncPtr = nullptr;
-	CollapseSingleCellFunc CollapseSingleCellFuncPtr = nullptr;
+	SelectCellFunc SelectCellFuncPtr = FWFC3DFunctionMaps::GetCellSelectorFunction(CollapseStrategy.CellSelectStrategy);
+	SelectTileInfoIndexFunc SelectTileInfoFuncPtr = FWFC3DFunctionMaps::GetTileInfoIndexSelectorFunction(CollapseStrategy.TileInfoIndexSelectStrategy);
+	CollapseSingleCellFunc CollapseSingleCellFuncPtr = FWFC3DFunctionMaps::GetCellCollapserFunction(CollapseStrategy.CellCollapseStrategy);
 
 	if (ModelData != nullptr && (SelectCellFuncPtr == nullptr || SelectTileInfoFuncPtr == nullptr || CollapseSingleCellFuncPtr == nullptr))
 	{
@@ -200,7 +200,15 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 	}
 
 	// 초기화 Propagation 실행
+	UE_LOG(LogTemp, Display, TEXT("======================BEFORE INIT PROPAGATION=========================="));
+	Grid->PrintGridInfo();
+	UE_LOG(LogTemp, Display, TEXT("======================BEFORE INIT PROPAGATION END=========================="));
+
 	WFC3DPropagateFunctions::ExecuteInitialPropagation(FWFC3DPropagationContext(Grid, ModelData, FIntVector::ZeroValue));
+
+	UE_LOG(LogTemp, Display, TEXT("======================AFTER INIT PROPAGATION=========================="));
+	Grid->PrintGridInfo();
+	UE_LOG(LogTemp, Display, TEXT("======================AFTER INIT PROPAGATION END=========================="));
 
 	while (Grid->GetRemainingCells() > 0 && bIsRunningAtomic.load() && !bIsCancelledAtomic.load())
 	{
@@ -225,6 +233,8 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 
 			return Result;
 		}
+
+		UE_LOG(LogTemp, Display, TEXT("======================BEFORE COLLAPSE=========================="));
 		
 		FCollapseResult CollapseResult = WFC3DCollapseFunctions::ExecuteCollapse(
 			CollapseContext,
@@ -232,6 +242,8 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 			SelectTileInfoFuncPtr,
 			CollapseSingleCellFuncPtr
 		);
+		
+		UE_LOG(LogTemp, Display, TEXT("======================AFTER COLLAPSE=========================="));
 
 		Result.CollapseResults.Add(CollapseResult);
 
@@ -254,7 +266,11 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 		FWFC3DPropagationContext PropagationContext(Grid, ModelData, CollapseResult.CollapsedLocation);
 
 		// Propagation 실행
+		UE_LOG(LogTemp, Display, TEXT("======================BEFORE PROPAGATION=========================="));
+
 		FPropagationResult PropagationResult = WFC3DPropagateFunctions::ExecutePropagation(PropagationContext, PropagationStrategy);
+
+		UE_LOG(LogTemp, Display, TEXT("======================AFTER PROPAGATION=========================="));
 
 		Result.PropagationResults.Add(PropagationResult);
 

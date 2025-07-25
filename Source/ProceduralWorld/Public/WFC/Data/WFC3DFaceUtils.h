@@ -49,7 +49,7 @@ public:
 	static FORCEINLINE EFace Rotate(const EFace& Face, const uint8& Step);
 
 	/**
-	 * UD(Up/Down) Face 문자열을 회전시킵니다.
+	 * UD(Up/Down) Face 문자열을 시계 방향으로 회전시킵니다.
 	 * @param FaceName - 회전할 Face 문자열
 	 * @param RotationSteps - 회전 스텝 (0-3)
 	 * @return 회전된 Face 문자열
@@ -108,13 +108,13 @@ private:
 	/** 각 방향에 대한 방향 벡터 배열 */
 	static const FIntVector DirectionVectors[6];
 
-	/** Face 회전 매핑 테이블 */
+	/** Face 시계 방향 회전 매핑 테이블 */
 	static constexpr EFace RotationMap[6][4] = {
 		{EFace::Up, EFace::Up, EFace::Up, EFace::Up}, // Up
-		{EFace::Back, EFace::Left, EFace::Front, EFace::Right}, // Back
-		{EFace::Right, EFace::Back, EFace::Left, EFace::Front}, // Right
-		{EFace::Left, EFace::Front, EFace::Right, EFace::Back}, // Left
-		{EFace::Front, EFace::Right, EFace::Back, EFace::Left}, // Front
+		{EFace::Back, EFace::Right, EFace::Front, EFace::Left}, // Back
+		{EFace::Right, EFace::Front, EFace::Left, EFace::Back}, // Right
+		{EFace::Left, EFace::Back, EFace::Right, EFace::Front}, // Left
+		{EFace::Front, EFace::Left, EFace::Back, EFace::Right}, // Front
 		{EFace::Down, EFace::Down, EFace::Down, EFace::Down} // Down
 	};
 };

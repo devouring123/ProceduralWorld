@@ -127,23 +127,23 @@ namespace WFC3DPropagateFunctions
 		}
 
 		TQueue<FIntVector> PropagationQueue;
-		
+
 		// Grid의 각 꼭지점 8개 넣으면 됨
 		// 전파 방향은 각 꼭지점 => 바깥 3면에서 전파 받기
 		TArray<FWFC3DCell*> CornerCells;
-		CornerCells.Add(Grid->GetCell(0,0,0));
-		CornerCells.Add(Grid->GetCell(0,0,Grid->GetDimension().Z - 1));
-		CornerCells.Add(Grid->GetCell(0,Grid->GetDimension().Y - 1,0));
-		CornerCells.Add(Grid->GetCell(0,Grid->GetDimension().Y - 1,Grid->GetDimension().Z - 1));
-		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1,0,0));
-		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1,0,Grid->GetDimension().Z - 1));
-		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1,Grid->GetDimension().Y - 1,0));
-		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1,Grid->GetDimension().Y - 1,Grid->GetDimension().Z - 1));
-		
+		CornerCells.Add(Grid->GetCell(0, 0, 0));
+		CornerCells.Add(Grid->GetCell(0, 0, Grid->GetDimension().Z - 1));
+		CornerCells.Add(Grid->GetCell(0, Grid->GetDimension().Y - 1, 0));
+		CornerCells.Add(Grid->GetCell(0, Grid->GetDimension().Y - 1, Grid->GetDimension().Z - 1));
+		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1, 0, 0));
+		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1, 0, Grid->GetDimension().Z - 1));
+		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1, Grid->GetDimension().Y - 1, 0));
+		CornerCells.Add(Grid->GetCell(Grid->GetDimension().X - 1, Grid->GetDimension().Y - 1, Grid->GetDimension().Z - 1));
+
 		for (FWFC3DCell* Cell : CornerCells)
 		{
 			PropagationQueue.Enqueue(Cell->Location);
-			
+
 			// 각 꼭지점 셀의 3면에 대해서 전파 받기
 			for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
 			{
@@ -184,7 +184,7 @@ namespace WFC3DPropagateFunctions
 				return Result;
 			}
 		}
-		
+
 		Result.bSuccess = true;
 		return Result;
 	}
@@ -202,6 +202,10 @@ namespace WFC3DPropagateFunctions
 			UE_LOG(LogTemp, Error, TEXT("Cell already collapsed or propagated at Location: %s"), *PropagatedCell->Location.ToString());
 			return false;
 		}
+
+		UE_LOG(LogTemp, Display, TEXT("Current Propagated Cell Location: %s"), *PropagatedCell->Location.ToString());
+
+		UE_LOG(LogTemp, Error, TEXT(" BEFORE PROPAGATION RemainingTileOptionsBitset: %s"), *FBitString::ToString(PropagatedCell->RemainingTileOptionsBitset));
 
 		// 전파 받은 면에 대해서 남은 타일 옵션을 가져와서 병합 -> 남은 타일 몹션에 대해서 전파 받지 않은 방향으로 전파
 		// 전파 받은 면에 대하여 전파 받은 면의 타일 옵션을 병합
@@ -221,11 +225,15 @@ namespace WFC3DPropagateFunctions
 			const FWFC3DCell* NextCell = Grid->GetCell(NextLocation);
 			if (NextCell != nullptr)
 			{
+				UE_LOG(LogTemp, Display, TEXT("NextCell is Not Null"));
+				
 				TArray<int32> PropagatedFaceOptionIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset(
 					NextCell->MergedFaceOptionsBitset[FWFC3DFaceUtils::GetOppositeIndex(Direction)]);
 
 				for (int32 FaceIndex : PropagatedFaceOptionIndices)
 				{
+					UE_LOG(LogTemp, Display, TEXT("FaceIndex = %d"), FaceIndex);
+					
 					// 해당 타일 옵션과 OR 연산
 					const TBitArray<>* FaceIndexBitArray = ModelData->GetCompatibleTiles(FaceIndex);
 					MergedTileOptionsForDirection.CombineWithBitwiseOR(*FaceIndexBitArray, EBitwiseOperatorFlags::MaintainSize);
@@ -235,22 +243,52 @@ namespace WFC3DPropagateFunctions
 			else
 			{
 				int32 OppositeIndex = FWFC3DFaceUtils::GetOppositeIndex(Direction);
-				const TBitArray<>* OuterCellTileOptions = ModelData->GetCompatibleTiles(ModelData->GetTileInfo(0)->Faces[OppositeIndex]);
+
+				UE_LOG(LogTemp, Display, TEXT("NextCell is Null"));
+				
+				// TODO: OuterCellTileInfo를 ModelData에 지정하기
+				// 현재는 0번 TileIndex를 OuterCell로 가정
+				const FTileInfo* OuterCellTileInfo = ModelData->GetTileInfo(0);
+				if (OuterCellTileInfo == nullptr)
+				{
+					UE_LOG(LogTemp, Error, TEXT("ModelData has no TileInfo at index 0"));
+					return false;
+				}
+				
+				int32 FaceIndex = OuterCellTileInfo->Faces[OppositeIndex];
+				if (FaceIndex < 0 || FaceIndex >= ModelData->GetFaceInfosNum())
+				{
+					UE_LOG(LogTemp, Error, TEXT("Invalid FaceIndex: %d for Direction: %s"), FaceIndex,
+					       *FWFC3DFaceUtils::GetDirectionVector(Direction).ToString());
+					return false;
+				}
+
+				const TBitArray<>* OuterCellTileOptions = ModelData->GetCompatibleTiles(FaceIndex);
 				if (OuterCellTileOptions == nullptr)
 				{
 					UE_LOG(LogTemp, Error, TEXT("OuterCellTileOptions is null for Direction: %s"),
 					       *FWFC3DFaceUtils::GetDirectionVector(Direction).ToString());
 					return false;
 				}
-				// TODO: OuterCellTileInfo를 ModelData에 지정하기
-				// 현재는 0번 TileIndex를 OuterCell로 가정
+
 				MergedTileOptionsForDirection.CombineWithBitwiseOR(
 					*OuterCellTileOptions,
 					EBitwiseOperatorFlags::MaintainSize);
 			}
+			
+			UE_LOG(LogTemp, Error, TEXT("Direction: %s"), *UEnum::GetValueAsString(Direction));
+			UE_LOG(LogTemp, Warning, TEXT("BEFORE MERGING MergedTileOptionsForDirection: %s"), *FBitString::ToString(MergedTileOptionsForDirection));
+			UE_LOG(LogTemp, Error, TEXT("  BEFORE MERGING    RemainingTileOptionsBitset: %s"),
+			       *FBitString::ToString(PropagatedCell->RemainingTileOptionsBitset));
+
+			// TODO: 타일 옵션이 제대로 표기되지 않음
+			// 가장 바깥쪽에 계속 Inside 타일이 들어감
 
 			// 전파 받은 면의 타일 옵션을 RemainingTileOptionsBitset과 And 연산
 			PropagatedCell->RemainingTileOptionsBitset.CombineWithBitwiseAND(MergedTileOptionsForDirection, EBitwiseOperatorFlags::MaintainSize);
+
+			UE_LOG(LogTemp, Display, TEXT("AFTER  MERGING    RemainingTileOptionsBitset: %s"),
+			       *FBitString::ToString(PropagatedCell->RemainingTileOptionsBitset));
 		}
 
 		int RemainingTileOptionsCount = PropagatedCell->RemainingTileOptionsBitset.CountSetBits();
@@ -262,14 +300,19 @@ namespace WFC3DPropagateFunctions
 			return true;
 		}
 
-		PropagatedCell->Entropy = RemainingTileOptionsCount;
-
 		// 남은 타일 옵션이 없으면 전파 실패
-		if (PropagatedCell->Entropy == 0)
+		if (RemainingTileOptionsCount == 0)
 		{
 			UE_LOG(LogTemp, Error, TEXT("No valid tile options left at Location: %s"), *PropagatedCell->Location.ToString());
+			Grid->PrintGridInfo();
+			UE_LOG(LogTemp, Error, TEXT("  AFTER PROPAGATION RemainingTileOptionsBitset: %s"),
+			       *FBitString::ToString(PropagatedCell->RemainingTileOptionsBitset));
+			PropagatedCell->PrintCellInfo();
+			PropagatedCell->PrintTileInfo();
 			return false;
 		}
+
+		PropagatedCell->Entropy = RemainingTileOptionsCount;
 
 		// MergedFaceOptionBit 초기화
 		for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)

@@ -25,11 +25,13 @@ public:
 
 	void PrintCellInfo() const
 	{
-		UE_LOG(LogTemp, Log, TEXT("Cell Location: %s, IsCollapsed: %s, IsPropagated: %s, Entropy: %d"),
+		UE_LOG(LogTemp, Log, TEXT("Cell Location: %s, IsCollapsed: %s, IsPropagated: %s, Entropy: %d, RemainingTileOptions: %s"),
 			*Location.ToString(),
 			bIsCollapsed ? TEXT("True") : TEXT("False"),
 			bIsPropagated ? TEXT("True") : TEXT("False"),
-			Entropy);
+			Entropy,
+			*FBitString::ToString(RemainingTileOptionsBitset)
+			);
 	}
 
 	void PrintTileInfo() const

@@ -30,7 +30,7 @@ public:
 
 	/** TileInfo Index 선택 전략 Enum */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
-	ECollapseTileInfoIndexSelectStrategy TileSelectStrategy;
+	ECollapseTileInfoIndexSelectStrategy TileInfoIndexSelectStrategy;
 
 	/** 단일 셀 붕괴 전략 Enum */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D")
@@ -38,7 +38,7 @@ public:
 	
 	FCollapseStrategy()
 		: CellSelectStrategy(ECollapseCellSelectStrategy::ByEntropy),
-		  TileSelectStrategy(ECollapseTileInfoIndexSelectStrategy::ByWeight),
+		  TileInfoIndexSelectStrategy(ECollapseTileInfoIndexSelectStrategy::ByWeight),
 		  CellCollapseStrategy(ECollapseSingleCellStrategy::Default)
 	{
 	}
@@ -48,7 +48,7 @@ public:
 		ECollapseTileInfoIndexSelectStrategy InTileSelectStrategy,
 		ECollapseSingleCellStrategy InCellCollapseStrategy)
 		: CellSelectStrategy(InCellSelectStrategy),
-		  TileSelectStrategy(InTileSelectStrategy),
+		  TileInfoIndexSelectStrategy(InTileSelectStrategy),
 		  CellCollapseStrategy(InCellCollapseStrategy)
 	{
 	}
