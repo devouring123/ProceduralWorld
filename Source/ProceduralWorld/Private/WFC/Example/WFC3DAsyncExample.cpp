@@ -183,7 +183,7 @@ void AWFC3DAsyncExample::OnAlgorithmCompleted(const FWFC3DResult& Result)
 	UE_LOG(LogTemp, Log, TEXT("=== 알고리즘 완료! ==="));
 	UE_LOG(LogTemp, Log, TEXT("성공: %s"), Result.bSuccess ? TEXT("예") : TEXT("아니오"));
 	bIsSuccess = Result.bSuccess;
-	UE_LOG(LogTemp, Log, TEXT("Try 수 : %d"), TryCount);
+	UE_LOG(LogTemp, Log, TEXT("Try 수 : %d"), ++TryCount);
 	UE_LOG(LogTemp, Log, TEXT("Collapse 결과 수: %d"), Result.CollapseResults.Num());
 	UE_LOG(LogTemp, Log, TEXT("Propagation 결과 수: %d"), Result.PropagationResults.Num());
 	
@@ -196,8 +196,6 @@ void AWFC3DAsyncExample::OnAlgorithmCompleted(const FWFC3DResult& Result)
 			                Result.bSuccess ? TEXT("예") : TEXT("아니오"))
 		);
 	}
-
-	TryCount++;
 	
 	// 실패 시 재시도
 	if (!Result.bSuccess && TryCount < MaxTryCount)

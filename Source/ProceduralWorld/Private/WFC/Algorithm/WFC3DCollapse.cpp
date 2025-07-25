@@ -211,7 +211,7 @@ namespace WFC3DCollapseFunctions
 				return INDEX_NONE;
 			}
 
-			UE_LOG(LogTemp, Display, TEXT("RemainingTileOptionBitset : %s"), *FBitString::ToString((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset));
+			// UE_LOG(LogTemp, Display, TEXT("RemainingTileOptionBitset : %s"), *FBitString::ToString((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset));
 
 			/** Get Enalbe TileInfos */
 			TArray<int32> TileInfoIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset);
@@ -221,10 +221,10 @@ namespace WFC3DCollapseFunctions
 				return INDEX_NONE;
 			}
 			
-			for (int32 Index : TileInfoIndices)
-			{
-				UE_LOG(LogTemp, Display, TEXT("TileInfoIndex: %d"), Index);
-			}
+			// for (int32 Index : TileInfoIndices)
+			// {
+			// 	UE_LOG(LogTemp, Display, TEXT("TileInfoIndex: %d"), Index);
+			// }
 
 
 			/** Get Weights */
@@ -257,7 +257,7 @@ namespace WFC3DCollapseFunctions
 				return INDEX_NONE;
 			}
 
-			UE_LOG(LogTemp, Display, TEXT("RemainingTileOptionBitset : %s"), *FBitString::ToString((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset));
+			// UE_LOG(LogTemp, Display, TEXT("RemainingTileOptionBitset : %s"), *FBitString::ToString((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset));
 
 			/** Get Enalbe TileInfos */
 			TArray<int32> TileInfoIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset);
@@ -314,15 +314,12 @@ namespace WFC3DCollapseFunctions
 				SelectedCell->MergedFaceOptionsBitset[DirectionIndex][FacesIndices[DirectionIndex]] = true;
 			}
 
-			// TODO: 전파에서 뭐가 문제인지 중간에 있는 타일이 인사이드도 되고 아웃사이드는 안되어야 정상인데 반대임
-			// 또한 지금 제일 안쪽 타일 111 빼고는 전부 다 아웃사이드로 붕괴 가능해야하는데 어떻게 인사이드로 붕괴가 된건지 모르겠음
-
-			UE_LOG(LogTemp, Display, TEXT("Collapse Cell at Location: %s"), *SelectedCell->Location.ToString());
-			UE_LOG(LogTemp, Display, TEXT("SelectedTileInfoIndex %d"), SelectedTileInfoIndex);
-			UE_LOG(LogTemp, Display, TEXT("Cell Collapser: U: %d, B: %d, R: %d, L: %d, F: %d, D: %d"),
-			       SelectedTileInfo->Faces[0], SelectedTileInfo->Faces[1], SelectedTileInfo->Faces[2],
-			       SelectedTileInfo->Faces[3], SelectedTileInfo->Faces[4], SelectedTileInfo->Faces[5]
-			);
+			// UE_LOG(LogTemp, Display, TEXT("Collapse Cell at Location: %s"), *SelectedCell->Location.ToString());
+			// UE_LOG(LogTemp, Display, TEXT("SelectedTileInfoIndex %d"), SelectedTileInfoIndex);
+			// UE_LOG(LogTemp, Display, TEXT("Cell Collapser: U: %d, B: %d, R: %d, L: %d, F: %d, D: %d"),
+			       // SelectedTileInfo->Faces[0], SelectedTileInfo->Faces[1], SelectedTileInfo->Faces[2],
+			       // SelectedTileInfo->Faces[3], SelectedTileInfo->Faces[4], SelectedTileInfo->Faces[5]
+			// );
 
 			SelectedCell->bIsCollapsed = true;
 			SelectedCell->bIsPropagated = true;
