@@ -109,7 +109,13 @@ const TBitArray<>* UWFC3DModelDataAsset::GetCompatibleTiles(const int32 FaceInde
 		UE_LOG(LogTemp, Error, TEXT("FaceToTileBitArrays is Empty"));
 		return nullptr;
 	}
-
+	
+	if (!FaceToTileBitArrays.IsValidIndex(FaceIndex))
+	{
+		UE_LOG(LogTemp, Error, TEXT("FaceIndex is Out of Range"));
+		return nullptr;
+	}
+	
 	if (FaceToTileBitStrings.IsEmpty())
 	{
 		UE_LOG(LogTemp, Error, TEXT("FaceToTileBitStrings is Empty"));

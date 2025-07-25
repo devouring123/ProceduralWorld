@@ -5,7 +5,7 @@
 
 /** static 멤버 변수 정의 */
 TMap<ECollapseCellSelectStrategy, SelectCellFunc> FWFC3DFunctionMaps::CellSelectorMap;
-TMap<ECollapseTileInfoSelectStrategy, SelectTileInfoFunc> FWFC3DFunctionMaps::TileInfoSelectorMap;
+TMap<ECollapseTileInfoIndexSelectStrategy, SelectTileInfoIndexFunc> FWFC3DFunctionMaps::TileInfoIndexSelectorMap;
 TMap<ECollapseSingleCellStrategy, CollapseSingleCellFunc> FWFC3DFunctionMaps::CellCollapserMap;
 TMap<ERangeLimitStrategy, RangeLimitFunc> FWFC3DFunctionMaps::RangeLimitMap;
 
@@ -19,14 +19,14 @@ SelectCellFunc FWFC3DFunctionMaps::GetCellSelectorFunction(ECollapseCellSelectSt
     return CellSelectorMap[ECollapseCellSelectStrategy::ByEntropy];
 }
 
-SelectTileInfoFunc FWFC3DFunctionMaps::GetTileInfoSelectorFunction(ECollapseTileInfoSelectStrategy Strategy)
+SelectTileInfoIndexFunc FWFC3DFunctionMaps::GetTileInfoIndexSelectorFunction(ECollapseTileInfoIndexSelectStrategy Strategy)
 {
-    if (TileInfoSelectorMap.Contains(Strategy))
+    if (TileInfoIndexSelectorMap.Contains(Strategy))
     {
-        return TileInfoSelectorMap[Strategy];
+        return TileInfoIndexSelectorMap[Strategy];
     }
     UE_LOG(LogTemp, Warning, TEXT("Tile info selector strategy %d not found, using default"), (uint8)Strategy);
-    return TileInfoSelectorMap[ECollapseTileInfoSelectStrategy::ByWeight];
+    return TileInfoIndexSelectorMap[ECollapseTileInfoIndexSelectStrategy::ByWeight];
 }
 
 CollapseSingleCellFunc FWFC3DFunctionMaps::GetCellCollapserFunction(ECollapseSingleCellStrategy Strategy)
@@ -54,9 +54,9 @@ void FWFC3DFunctionMaps::RegisterCellSelectorEnum(ECollapseCellSelectStrategy En
     CellSelectorMap.Add(Enum, Function);
 }
 
-void FWFC3DFunctionMaps::RegisterTileInfoSelectorEnum(ECollapseTileInfoSelectStrategy Enum, SelectTileInfoFunc Function)
+void FWFC3DFunctionMaps::RegisterTileInfoIndexSelectorEnum(ECollapseTileInfoIndexSelectStrategy Enum, SelectTileInfoIndexFunc Function)
 {
-    TileInfoSelectorMap.Add(Enum, Function);
+    TileInfoIndexSelectorMap.Add(Enum, Function);
 }
 
 void FWFC3DFunctionMaps::RegisterCellCollapserEnum(ECollapseSingleCellStrategy Enum, CollapseSingleCellFunc Function)

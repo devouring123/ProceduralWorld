@@ -15,7 +15,7 @@ public:
 	static SelectCellFunc GetCellSelectorFunction(ECollapseCellSelectStrategy Strategy);
 
 	/** 타일 정보 선택 함수 포인터 획득 */
-	static SelectTileInfoFunc GetTileInfoSelectorFunction(ECollapseTileInfoSelectStrategy Strategy);
+	static SelectTileInfoIndexFunc GetTileInfoIndexSelectorFunction(ECollapseTileInfoIndexSelectStrategy Strategy);
 
 	/** 셀 붕괴 함수 포인터 획득 */
 	static CollapseSingleCellFunc GetCellCollapserFunction(ECollapseSingleCellStrategy Strategy);
@@ -25,7 +25,7 @@ public:
 	
 	/** 전략 등록 함수들 */
 	static void RegisterCellSelectorEnum(ECollapseCellSelectStrategy Enum, SelectCellFunc Function);
-	static void RegisterTileInfoSelectorEnum(ECollapseTileInfoSelectStrategy Enum, SelectTileInfoFunc Function);
+	static void RegisterTileInfoIndexSelectorEnum(ECollapseTileInfoIndexSelectStrategy Enum, SelectTileInfoIndexFunc Function);
 	static void RegisterCellCollapserEnum(ECollapseSingleCellStrategy Enum, CollapseSingleCellFunc Function);
 	static void RegisterRangeLimitEnum(ERangeLimitStrategy Enum, RangeLimitFunc Function);
 	
@@ -42,7 +42,7 @@ private:
 	static TMap<ECollapseCellSelectStrategy, SelectCellFunc> CellSelectorMap;
 
 	/** 타일 정보 선택 전략 맵 */
-	static TMap<ECollapseTileInfoSelectStrategy, SelectTileInfoFunc> TileInfoSelectorMap;
+	static TMap<ECollapseTileInfoIndexSelectStrategy, SelectTileInfoIndexFunc> TileInfoIndexSelectorMap;
 
 	/** 셀 붕괴 전략 맵 */
 	static TMap<ECollapseSingleCellStrategy, CollapseSingleCellFunc> CellCollapserMap;

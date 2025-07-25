@@ -14,12 +14,12 @@ void FWFC3DAsyncTask::DoWork()
 {
 	if (Algorithm != nullptr)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Async Task started for WFC3D Algorithm DO WORK"));
-		UE_LOG(LogTemp, Display, TEXT("Context : Grid: %s"), *Context.Grid->GetDimension().ToString());
-		UE_LOG(LogTemp, Display, TEXT("Context : ModelData: %s"), Context.ModelData ? TEXT("Valid") : TEXT("Invalid"));
+		// UE_LOG(LogTemp, Display, TEXT("Async Task started for WFC3D Algorithm DO WORK"));
+		// UE_LOG(LogTemp, Display, TEXT("Context : Grid: %s"), *Context.Grid->GetDimension().ToString());
+		// UE_LOG(LogTemp, Display, TEXT("Context : ModelData: %s"), Context.ModelData ? TEXT("Valid") : TEXT("Invalid"));
 		if (Context.ModelData)
 		{
-			UE_LOG(LogTemp, Display, TEXT("Context : ModelData Name: %s"), *Context.ModelData->GetName());
+			// UE_LOG(LogTemp, Display, TEXT("Context : ModelData Name: %s"), *Context.ModelData->GetName());
 		}
 		Result = Algorithm->ExecuteInternal(Context);
 	}
@@ -47,7 +47,7 @@ void UWFC3DAlgorithm::ExecuteAsync(const FWFC3DAlgorithmContext& Context)
 	// 이미 실행 중이면 무시
 	if (bIsRunning)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("WFC3D Algorithm is already running"));
+		// UE_LOG(LogTemp, Warning, TEXT("WFC3D Algorithm is already running"));
 		return;
 	}
 
@@ -60,7 +60,7 @@ void UWFC3DAlgorithm::ExecuteAsync(const FWFC3DAlgorithmContext& Context)
 
 	bIsRunning = true;
 
-	UE_LOG(LogTemp, Log, TEXT("WFC3D Algorithm started asynchronously"));
+	// UE_LOG(LogTemp, Log, TEXT("WFC3D Algorithm started asynchronously"));
 
 	// 주기적으로 완료 상태 확인을 위한 타이머 설정
 	if (GetWorld())
@@ -68,7 +68,7 @@ void UWFC3DAlgorithm::ExecuteAsync(const FWFC3DAlgorithmContext& Context)
 		GetWorld()->GetTimerManager().SetTimer(
 			AsyncCheckTimerHandle,
 			FTimerDelegate::CreateUObject(this, &UWFC3DAlgorithm::CheckAsyncTaskCompletion),
-			0.1f, // 0.1초마다 체크
+			0.05f, // 0.1초마다 체크
 			true
 		);
 	}
@@ -95,7 +95,7 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 
 	if (Grid == nullptr)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid Grid in Algorithm Context"));
+		// UE_LOG(LogTemp, Error, TEXT("Invalid Grid in Algorithm Context"));
 		bIsRunning = false;
 		bIsRunningAtomic = false;
 		return Result;
@@ -103,7 +103,7 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 
 	if (ModelData == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("ModelData is null - using test mode"));
+		// UE_LOG(LogTemp, Warning, TEXT("ModelData is null - using test mode"));
 		bIsRunning = false;
 		bIsRunningAtomic = false;
 		return Result;
@@ -115,27 +115,27 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 	TotalStepsAtomic = TotalSteps;
 	CurrentStepAtomic = 0;
 
-	UE_LOG(LogTemp, Warning, TEXT("=== WFC3D Algorithm Debug Info ==="));
-	UE_LOG(LogTemp, Warning, TEXT("Grid Dimension: %s"), *Grid->GetDimension().ToString());
-	UE_LOG(LogTemp, Warning, TEXT("Grid Total Cells: %d"), Grid->Num());
-	UE_LOG(LogTemp, Warning, TEXT("Grid Remaining Cells: %d"), Grid->GetRemainingCells());
-	UE_LOG(LogTemp, Warning, TEXT("Total Steps: %d"), TotalSteps);
-	UE_LOG(LogTemp, Warning, TEXT("bIsRunningAtomic: %s"), bIsRunningAtomic.load() ? TEXT("true") : TEXT("false"));
-	UE_LOG(LogTemp, Warning, TEXT("bIsCancelledAtomic: %s"), bIsCancelledAtomic.load() ? TEXT("true") : TEXT("false"));
-	UE_LOG(LogTemp, Warning, TEXT("While 조건: RemainingCells > 0 && bIsRunning && !bIsCancelled"));
-	UE_LOG(LogTemp, Warning, TEXT("While 조건 평가: %s && %s && %s = %s"),
-	       Grid->GetRemainingCells() > 0 ? TEXT("true") : TEXT("false"),
-	       bIsRunningAtomic.load() ? TEXT("true") : TEXT("false"),
-	       !bIsCancelledAtomic.load() ? TEXT("true") : TEXT("false"),
-	       (Grid->GetRemainingCells() > 0 && bIsRunningAtomic.load() && !bIsCancelledAtomic.load()) ? TEXT("true") : TEXT("false")
-	);
-	Grid->PrintGridInfo();
-	UE_LOG(LogTemp, Warning, TEXT("==================================="));
+	// UE_LOG(LogTemp, Warning, TEXT("=== WFC3D Algorithm Debug Info ==="));
+	// UE_LOG(LogTemp, Warning, TEXT("Grid Dimension: %s"), *Grid->GetDimension().ToString());
+	// UE_LOG(LogTemp, Warning, TEXT("Grid Total Cells: %d"), Grid->Num());
+	// UE_LOG(LogTemp, Warning, TEXT("Grid Remaining Cells: %d"), Grid->GetRemainingCells());
+	// UE_LOG(LogTemp, Warning, TEXT("Total Steps: %d"), TotalSteps);
+	// UE_LOG(LogTemp, Warning, TEXT("bIsRunningAtomic: %s"), bIsRunningAtomic.load() ? TEXT("true") : TEXT("false"));
+	// UE_LOG(LogTemp, Warning, TEXT("bIsCancelledAtomic: %s"), bIsCancelledAtomic.load() ? TEXT("true") : TEXT("false"));
+	// UE_LOG(LogTemp, Warning, TEXT("While 조건: RemainingCells > 0 && bIsRunning && !bIsCancelled"));
+	// UE_LOG(LogTemp, Warning, TEXT("While 조건 평가: %s && %s && %s = %s"),
+	//         Grid->GetRemainingCells() > 0 ? TEXT("true") : TEXT("false"),
+	//         bIsRunningAtomic.load() ? TEXT("true") : TEXT("false"),
+	//         !bIsCancelledAtomic.load() ? TEXT("true") : TEXT("false"),
+	//         (Grid->GetRemainingCells() > 0 && bIsRunningAtomic.load() && !bIsCancelledAtomic.load()) ? TEXT("true") : TEXT("false")
+	//  );
+	//  Grid->PrintGridInfo();
+	// UE_LOG(LogTemp, Warning, TEXT("==================================="));
 
 	// while 루프 진입 전 확인
 	if (Grid->GetRemainingCells() <= 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("❌ Grid has no remaining cells to collapse! RemainingCells = %d"), Grid->GetRemainingCells());
+		// UE_LOG(LogTemp, Error, TEXT("❌ Grid has no remaining cells to collapse! RemainingCells = %d"), Grid->GetRemainingCells());
 
 		// 전체 셀 상태 확인
 		if (TArray<FWFC3DCell>* AllCells = Grid->GetAllCells())
@@ -155,8 +155,8 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 				}
 			}
 
-			UE_LOG(LogTemp, Warning, TEXT("📊 Cell Status: Total=%d, Collapsed=%d, UnCollapsed=%d"),
-			       AllCells->Num(), CollapsedCount, UnCollapsedCount);
+			// UE_LOG(LogTemp, Warning, TEXT("📊 Cell Status: Total=%d, Collapsed=%d, UnCollapsed=%d"),
+			//         AllCells->Num(), CollapsedCount, UnCollapsedCount);
 		}
 
 		// 빈 결과 반환
@@ -166,49 +166,58 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 		return Result;
 	}
 
+	if (Seed == 0)
+	{
+		RandomStream.GenerateNewSeed();
+	}
+	else
+	{
+		RandomStream.Initialize(Seed);
+	}
+
+
 	// Collapse Context 생성
 	FWFC3DCollapseContext CollapseContext(Grid, ModelData, &RandomStream);
 
 	// Collapse 함수 포인터 획득
-	SelectCellFunc SelectCellFuncPtr = nullptr;
-	SelectTileInfoFunc SelectTileInfoFuncPtr = nullptr;
-	CollapseSingleCellFunc CollapseSingleCellFuncPtr = nullptr;
-
-	// ModelData가 있을 때만 실제 함수 포인터 획득
-	if (ModelData != nullptr)
-	{
-		SelectCellFuncPtr = FWFC3DFunctionMaps::GetCellSelectorFunction(CollapseStrategy.CellSelectStrategy);
-		SelectTileInfoFuncPtr = FWFC3DFunctionMaps::GetTileInfoSelectorFunction(CollapseStrategy.TileSelectStrategy);
-		CollapseSingleCellFuncPtr = FWFC3DFunctionMaps::GetCellCollapserFunction(CollapseStrategy.CellCollapseStrategy);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("⚠️ 테스트 모드: ModelData가 null이므로 함수 포인터를 건너뜁니다"));
-	}
+	SelectCellFunc SelectCellFuncPtr = FWFC3DFunctionMaps::GetCellSelectorFunction(CollapseStrategy.CellSelectStrategy);
+	SelectTileInfoIndexFunc SelectTileInfoFuncPtr = FWFC3DFunctionMaps::GetTileInfoIndexSelectorFunction(CollapseStrategy.TileInfoIndexSelectStrategy);
+	CollapseSingleCellFunc CollapseSingleCellFuncPtr = FWFC3DFunctionMaps::GetCellCollapserFunction(CollapseStrategy.CellCollapseStrategy);
 
 	if (ModelData != nullptr && (SelectCellFuncPtr == nullptr || SelectTileInfoFuncPtr == nullptr || CollapseSingleCellFuncPtr == nullptr))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to get Collapse function pointers"));
+		// UE_LOG(LogTemp, Error, TEXT("Failed to get Collapse function pointers"));
 
-		UE_LOG(LogTemp, Error, TEXT("ModelData is %s"), ModelData ? TEXT("valid") : TEXT("null"));
-		UE_LOG(LogTemp, Error, TEXT("SelectCellFuncPtr is %s"), SelectCellFuncPtr ? TEXT("valid") : TEXT("null"));
-		UE_LOG(LogTemp, Error, TEXT("SelectTileInfoFuncPtr is %s"), SelectTileInfoFuncPtr ? TEXT("valid") : TEXT("null"));
-		UE_LOG(LogTemp, Error, TEXT("CollapseSingleCellFuncPtr is %s"), CollapseSingleCellFuncPtr ? TEXT("valid") : TEXT("null"));
-		
-		
+		// UE_LOG(LogTemp, Error, TEXT("ModelData is %s"), ModelData ? TEXT("valid") : TEXT("null"));
+		// UE_LOG(LogTemp, Error, TEXT("SelectCellFuncPtr is %s"), SelectCellFuncPtr ? TEXT("valid") : TEXT("null"));
+		// UE_LOG(LogTemp, Error, TEXT("SelectTileInfoFuncPtr is %s"), SelectTileInfoFuncPtr ? TEXT("valid") : TEXT("null"));
+		// UE_LOG(LogTemp, Error, TEXT("CollapseSingleCellFuncPtr is %s"), CollapseSingleCellFuncPtr ? TEXT("valid") : TEXT("null"));
+
+
 		bIsRunning = false;
 		bIsRunningAtomic = false;
 		return Result;
 	}
 
+	// 초기화 Propagation 실행
+	// // UE_LOG(LogTemp, Display, TEXT("======================BEFORE INIT PROPAGATION=========================="));
+	// Grid->PrintGridInfo();
+	// // UE_LOG(LogTemp, Display, TEXT("======================BEFORE INIT PROPAGATION END=========================="));
+
+	WFC3DPropagateFunctions::ExecuteInitialPropagation(FWFC3DPropagationContext(Grid, ModelData, FIntVector::ZeroValue));
+
+	// // UE_LOG(LogTemp, Display, TEXT("======================AFTER INIT PROPAGATION=========================="));
+	// Grid->PrintGridInfo();
+	// // UE_LOG(LogTemp, Display, TEXT("======================AFTER INIT PROPAGATION END=========================="));
+
 	while (Grid->GetRemainingCells() > 0 && bIsRunningAtomic.load() && !bIsCancelledAtomic.load())
 	{
-		UE_LOG(LogTemp, Display, TEXT("🔄 Left Step: %d, Total Steps: %d"), Grid->GetRemainingCells(), TotalStepsAtomic.load());
+		// // UE_LOG(LogTemp, Display, TEXT("🔄 Left Step: %d, Total Steps: %d"), Grid->GetRemainingCells(), TotalStepsAtomic.load());
 
 		// 취소 요청이 있으면 루프 중단
 		if (bIsCancelledAtomic.load())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("WFC3D Algorithm execution was cancelled"));
+			// UE_LOG(LogTemp, Warning, TEXT("WFC3D Algorithm execution was cancelled"));
 			Result.bSuccess = false;
 			bIsRunning = false;
 			bIsRunningAtomic = false;
@@ -225,84 +234,58 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 			return Result;
 		}
 
-		// 테스트 모드: ModelData가 없으면 간단한 더미 동작 수행
-		if (ModelData == nullptr)
+		// // UE_LOG(LogTemp, Display, TEXT("======================BEFORE COLLAPSE=========================="));
+		
+		FCollapseResult CollapseResult = WFC3DCollapseFunctions::ExecuteCollapse(
+			CollapseContext,
+			SelectCellFuncPtr,
+			SelectTileInfoFuncPtr,
+			CollapseSingleCellFuncPtr
+		);
+		
+		// // UE_LOG(LogTemp, Display, TEXT("======================AFTER COLLAPSE=========================="));
+
+		Result.CollapseResults.Add(CollapseResult);
+
+		if (!CollapseResult.bSuccess)
 		{
-			UE_LOG(LogTemp, Log, TEXT("🧪 테스트 모드: 더미 Collapse 및 Propagation 수행"));
-
-			// 더미 Collapse 결과 생성
-			FCollapseResult CollapseResult;
-			CollapseResult.bSuccess = true;
-			CollapseResult.CollapsedIndex = CurrentStep;
-			CollapseResult.CollapsedLocation = FIntVector(
-				CurrentStep % Grid->GetDimension().X,
-				(CurrentStep / Grid->GetDimension().X) % Grid->GetDimension().Y,
-				CurrentStep / (Grid->GetDimension().X * Grid->GetDimension().Y)
-			);
-
-			Result.CollapseResults.Add(CollapseResult);
-
-			// 더미 Propagation 결과 생성
-			FPropagationResult PropagationResult;
-			PropagationResult.bSuccess = true;
-			PropagationResult.AffectedCellCount = FMath::RandRange(1, 5);
-
-			Result.PropagationResults.Add(PropagationResult);
-
-			// RemainingCells 감소 (테스트 목적)
-			Grid->DecreaseRemainingCells();
-
-			UE_LOG(LogTemp, Display, TEXT("🧪 테스트 Collapse at %s, Affected %d cells"),
-			       *CollapseResult.CollapsedLocation.ToString(),
-			       PropagationResult.AffectedCellCount);
+			// UE_LOG(LogTemp, Error, TEXT("Collapse failed"));
+			bIsRunning = false;
+			bIsRunningAtomic = false;
+			return Result;
 		}
-		else
+
+		if (CollapseResult.bSuccess && Grid->GetRemainingCells() == 0)
 		{
-			// 실제 WFC 알고리즘 실행
-			FCollapseResult CollapseResult = WFC3DCollapseFunctions::ExecuteCollapse(
-				CollapseContext,
-				SelectCellFuncPtr,
-				SelectTileInfoFuncPtr,
-				CollapseSingleCellFuncPtr
-			);
-
-			Result.CollapseResults.Add(CollapseResult);
-
-			if (!CollapseResult.bSuccess)
-			{
-				UE_LOG(LogTemp, Error, TEXT("Collapse failed"));
-				bIsRunning = false;
-				bIsRunningAtomic = false;
-				return Result;
-			}
-
-			if (CollapseResult.bSuccess && Grid->GetRemainingCells() == 0)
-			{
-				// 모든 셀 붕괴 완료
-				UE_LOG(LogTemp, Display, TEXT("Collapse Success!! In Algorithm"));
-				break;
-			}
-			
-			// Propagation Context 생성
-			FWFC3DPropagationContext PropagationContext(Grid, ModelData, CollapseResult.CollapsedLocation);
-
-			// Propagation 실행
-			FPropagationResult PropagationResult = WFC3DPropagateFunctions::ExecutePropagation(PropagationContext, PropagationStrategy);
-
-			Result.PropagationResults.Add(PropagationResult);
-
-			if (!PropagationResult.bSuccess)
-			{
-				UE_LOG(LogTemp, Error, TEXT("Propagation failed In Algorithm.cpp"));
-				bIsRunning = false;
-				bIsRunningAtomic = false;
-				return Result;
-			}
-
-			UE_LOG(LogTemp, Display, TEXT("WFC3D Algorithm executed successfully. Collapsed at %s, Affected %d cells"),
-			       *CollapseResult.CollapsedLocation.ToString(),
-			       PropagationResult.AffectedCellCount);
+			// 모든 셀 붕괴 완료
+			// UE_LOG(LogTemp, Display, TEXT("Collapse Success!! In Algorithm"));
+			break;
 		}
+
+		// Propagation Context 생성
+		FWFC3DPropagationContext PropagationContext(Grid, ModelData, CollapseResult.CollapsedLocation);
+
+		// Propagation 실행
+		// // UE_LOG(LogTemp, Display, TEXT("======================BEFORE PROPAGATION=========================="));
+
+		FPropagationResult PropagationResult = WFC3DPropagateFunctions::ExecutePropagation(PropagationContext, PropagationStrategy);
+
+		// // UE_LOG(LogTemp, Display, TEXT("======================AFTER PROPAGATION=========================="));
+
+		Result.PropagationResults.Add(PropagationResult);
+
+		if (!PropagationResult.bSuccess)
+		{
+			// UE_LOG(LogTemp, Error, TEXT("Propagation failed In Algorithm.cpp"));
+			bIsRunning = false;
+			bIsRunningAtomic = false;
+			return Result;
+		}
+
+		// // UE_LOG(LogTemp, Display, TEXT("WFC3D Algorithm executed successfully. Collapsed at %s, Affected %d cells"),
+		       // *CollapseResult.CollapsedLocation.ToString(),
+		       // PropagationResult.AffectedCellCount);
+
 
 		// 진행률 업데이트
 		CurrentStep++;
@@ -319,15 +302,15 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 			});
 		}
 
-		UE_LOG(LogTemp, Display, TEXT("📊 Progress: %d/%d (%.1f%%)"),
-		       CurrentStepAtomic.load(),
-		       TotalStepsAtomic.load(),
-		       GetProgress() * 100.0f);
+		// // UE_LOG(LogTemp, Display, TEXT("📊 Progress: %d/%d (%.1f%%)"),
+		       // CurrentStepAtomic.load(),
+		       // TotalStepsAtomic.load(),
+		       // GetProgress() * 100.0f);
 
 		// 취소 요청이 다시 확인 (긴 연산 후)
 		if (bIsCancelledAtomic.load())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("WFC3D Algorithm execution was cancelled during iteration"));
+			// UE_LOG(LogTemp, Warning, TEXT("WFC3D Algorithm execution was cancelled during iteration"));
 			Result.bSuccess = false;
 			bIsRunning = false;
 			bIsRunningAtomic = false;
@@ -343,12 +326,6 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 
 			return Result;
 		}
-
-		// 테스트 모드에서는 약간의 지연을 추가하여 진행률을 볼 수 있게 함
-		if (ModelData == nullptr)
-		{
-			FPlatformProcess::Sleep(0.1f); // 100ms 대기
-		}
 	}
 
 	// 정상 완료
@@ -358,17 +335,17 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 	bIsCompleteAtomic = true;
 	bIsRunningAtomic = false;
 
-	UE_LOG(LogTemp, Log, TEXT("WFC3D Algorithm completed successfully"));
+	// UE_LOG(LogTemp, Log, TEXT("WFC3D Algorithm completed successfully"));
 
-	for (const FWFC3DCell& Cell : *Grid->GetAllCells())
-	{
-		Cell.PrintTileInfo();
-		for (int32 i = 0; i < Cell.CollapsedTileInfo->Faces.Num(); ++i)
-		{
-			UE_LOG(LogTemp, Display, TEXT("Face %d: %s"), i, *ModelData->GetFaceInfo(Cell.CollapsedTileInfo->Faces[i])->Name);
-		}
-	}
-	
+	// for (const FWFC3DCell& Cell : *Grid->GetAllCells())
+	// {
+	// 	Cell.PrintTileInfo();
+	// 	for (int32 i = 0; i < Cell.CollapsedTileInfo->Faces.Num(); ++i)
+	// 	{
+	// 		// UE_LOG(LogTemp, Display, TEXT("Face %d: %s"), i, *ModelData->GetFaceInfo(Cell.CollapsedTileInfo->Faces[i])->Name);
+	// 	}
+	// }
+
 	return Result;
 }
 
@@ -378,7 +355,7 @@ void UWFC3DAlgorithm::CancelExecution()
 	{
 		bIsCancelled = true;
 		bIsCancelledAtomic = true;
-		UE_LOG(LogTemp, Warning, TEXT("WFC3D Algorithm cancellation requested"));
+		// UE_LOG(LogTemp, Warning, TEXT("WFC3D Algorithm cancellation requested"));
 	}
 }
 
@@ -405,7 +382,7 @@ void UWFC3DAlgorithm::ResetExecutionState()
 		GetWorld()->GetTimerManager().ClearTimer(AsyncCheckTimerHandle);
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("WFC3D Algorithm execution state reset"));
+	// UE_LOG(LogTemp, Log, TEXT("WFC3D Algorithm execution state reset"));
 }
 
 float UWFC3DAlgorithm::GetProgress() const
@@ -451,6 +428,6 @@ void UWFC3DAlgorithm::CheckAsyncTaskCompletion()
 		// 비동기 태스크 정리
 		AsyncTask.Reset();
 
-		UE_LOG(LogTemp, Log, TEXT("WFC3D Algorithm async task completed"));
+		// UE_LOG(LogTemp, Log, TEXT("WFC3D Algorithm async task completed"));
 	}
 }

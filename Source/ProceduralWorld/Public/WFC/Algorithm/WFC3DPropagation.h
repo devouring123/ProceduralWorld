@@ -51,6 +51,11 @@ namespace WFC3DPropagateFunctions
 	FPropagationResult ExecutePropagation(const FWFC3DPropagationContext& Context, const FPropagationStrategy& PropagationStrategy);
 
 	/**
+	 * 최초 Grid 초기화 전파 함수
+	 */
+	FPropagationResult ExecuteInitialPropagation(const FWFC3DPropagationContext& Context);
+	
+	/**
 	 * 단일 Cell 전파 함수
 	 * @param PropagatedCell - 전파할 Cell
 	 * @param Grid - WFC3D 그리드

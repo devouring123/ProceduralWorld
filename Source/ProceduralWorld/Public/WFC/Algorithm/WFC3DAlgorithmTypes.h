@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "WFC3DAlgorithmTypes.generated.h"
 
-struct FPropagationResult;
 struct FCollapseStrategy;
 struct FPropagationStrategy;
 struct FWFC3DCell;
@@ -175,7 +174,7 @@ using SelectCellFunc = TStaticFuncPtr<int32(const FWFC3DCollapseContext&)>;
  * @param int32 - 선택된 셀 인덱스
  * @return const FTileInfo* - 선택된 TileInfo
  */
-using SelectTileInfoFunc = TStaticFuncPtr<const FTileInfo*(const FWFC3DCollapseContext&, const int32)>;
+using SelectTileInfoIndexFunc = TStaticFuncPtr<int32(const FWFC3DCollapseContext&, const int32)>;
 
 /**
  * 단일 Cell Collapse 함수 포인터 타입
@@ -229,7 +228,7 @@ enum class ECollapseCellSelectStrategy : uint8
  * Collapse 타일 선택 전략 열거형
  */
 UENUM()
-enum class ECollapseTileInfoSelectStrategy : uint8
+enum class ECollapseTileInfoIndexSelectStrategy : uint8
 {
 	/** 가중치 기반 타일 선택 */
 	ByWeight UMETA(DisplayName = "By Weight"),

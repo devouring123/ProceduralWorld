@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 
 enum class ECollapseCellSelectStrategy : uint8;
-enum class ECollapseTileInfoSelectStrategy : uint8;
+enum class ECollapseTileInfoIndexSelectStrategy : uint8;
 enum class ECollapseSingleCellStrategy : uint8;
 enum class ERangeLimitStrategy : uint8;
 
@@ -25,8 +25,8 @@ class FWFC3DFunctionMaps;
     int32 StrategyName(const FWFC3DCollapseContext& Context)
 
 #define DECLARE_COLLAPSER_TILE_SELECTOR_STRATEGY(StrategyName) \
-    extern ECollapseTileInfoSelectStrategy StrategyName##_Enum; \
-    const FTileInfo* StrategyName(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex)
+    extern ECollapseTileInfoIndexSelectStrategy StrategyName##_Enum; \
+    int32 StrategyName(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex)
 
 #define DECLARE_COLLAPSER_CELL_COLLAPSER_STRATEGY(StrategyName) \
     extern ECollapseSingleCellStrategy StrategyName##_Enum; \
@@ -61,25 +61,25 @@ class FWFC3DFunctionMaps;
     } \
     int32 StrategyName##CellSelector(const FWFC3DCollapseContext& Context)
 
-#define IMPLEMENT_COLLAPSER_TILE_SELECTOR_STRATEGY(StrategyName) \
-    const FTileInfo* StrategyName##TileSelector(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex); \
+#define IMPLEMENT_COLLAPSER_TILE_INFO_INDEX_SELECTOR_STRATEGY(StrategyName) \
+    int32 StrategyName##TileInfoIndexSelector(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex); \
     namespace \
     { \
-        struct FRegister_##StrategyName##_TileSelector \
+        struct FRegister_##StrategyName##_TileInfoIndexSelector \
         { \
-            FRegister_##StrategyName##_TileSelector() \
+            FRegister_##StrategyName##_TileInfoIndexSelector() \
             { \
                 FCoreDelegates::OnPostEngineInit.AddLambda([](){ \
-                    FWFC3DFunctionMaps::RegisterTileInfoSelectorEnum(ECollapseTileInfoSelectStrategy::StrategyName, StrategyName##TileSelector); \
+                    FWFC3DFunctionMaps::RegisterTileInfoIndexSelectorEnum(ECollapseTileInfoIndexSelectStrategy::StrategyName, StrategyName##TileInfoIndexSelector); \
                 }); \
             } \
         }; \
-        static FRegister_##StrategyName##_TileSelector Register_##StrategyName##_Instance; \
+        static FRegister_##StrategyName##_TileInfoIndexSelector Register_##StrategyName##_Instance; \
     } \
-    const FTileInfo* StrategyName##TileSelector(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex)
+    int32 StrategyName##TileInfoIndexSelector(const FWFC3DCollapseContext& Context, const int32 SelectedCellIndex)
     
 #define IMPLEMENT_COLLAPSER_CELL_COLLAPSER_STRATEGY(StrategyName) \
-    bool StrategyName##CellCollapser(FWFC3DCell* SelectedCell, int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo); \
+    bool StrategyName##CellCollapser(FWFC3DCell* SelectedCell, int32 SelectedTileInfoIndex, const FTileInfo* SelectedTileInfo); \
     namespace \
     { \
         struct FRegister_##StrategyName##_CellCollapser \
@@ -93,7 +93,7 @@ class FWFC3DFunctionMaps;
         }; \
         static FRegister_##StrategyName##_CellCollapser Register_##StrategyName##_Instance; \
     } \
-    bool StrategyName##CellCollapser(FWFC3DCell* SelectedCell, int32 SelectedCellIndex, const FTileInfo* SelectedTileInfo)
+    bool StrategyName##CellCollapser(FWFC3DCell* SelectedCell, int32 SelectedTileInfoIndex, const FTileInfo* SelectedTileInfo)
 
         
 

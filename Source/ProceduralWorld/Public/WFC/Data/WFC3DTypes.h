@@ -358,10 +358,6 @@ struct PROCEDURALWORLD_API FTileInfoTable : public FTableRowBase
 public:
 	FTileInfoTable() = default;
 
-	/** 타일의 선택 가중치 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
-	float Weight = 1.0f;
-
 	/** 상단 면 타입 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	FString Up = "";
@@ -385,6 +381,10 @@ public:
 	/** 하단 면 타입 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
 	FString Down = "";
+
+	/** 타일의 선택 가중치 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Data")
+	float Weight = 1.0f;
 };
 
 /**

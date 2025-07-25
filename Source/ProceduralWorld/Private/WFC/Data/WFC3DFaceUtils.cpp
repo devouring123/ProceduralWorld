@@ -6,8 +6,8 @@
 const FIntVector FWFC3DFaceUtils::DirectionVectors[6] = {
 	FIntVector(0, 0, 1), // Up
 	FIntVector(0, -1, 0), // Back
-	FIntVector(-1, 0, 0), // Right
-	FIntVector(1, 0, 0), // Left
+	FIntVector(1, 0, 0), // Right
+	FIntVector(-1, 0, 0), // Left
 	FIntVector(0, 1, 0), // Front
 	FIntVector(0, 0, -1) // Down
 };

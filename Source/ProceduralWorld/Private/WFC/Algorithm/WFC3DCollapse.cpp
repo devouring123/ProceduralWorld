@@ -8,7 +8,7 @@ namespace WFC3DCollapseFunctions
 	FCollapseResult ExecuteCollapse(
 		const FWFC3DCollapseContext& Context,
 		const SelectCellFunc SelectCellFuncPtr,
-		const SelectTileInfoFunc SelectTileInfoFuncPtr,
+		const SelectTileInfoIndexFunc SelectTileInfoIndexFuncPtr,
 		const CollapseSingleCellFunc CollapseSingleCellFuncPtr
 	)
 	{
@@ -36,7 +36,7 @@ namespace WFC3DCollapseFunctions
 			UE_LOG(LogTemp, Error, TEXT("Failed to get Cell Selector"));
 			return Result;
 		}
-		if (SelectTileInfoFuncPtr == nullptr)
+		if (SelectTileInfoIndexFuncPtr == nullptr)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to get TileInfo Selector"));
 			return Result;
@@ -60,22 +60,29 @@ namespace WFC3DCollapseFunctions
 		FWFC3DCell* SelectedCell = &(*GridCells)[SelectedCellIndex];
 		Result.CollapsedIndex = SelectedCellIndex;
 		Result.CollapsedLocation = SelectedCell->Location;
-		
-		// 선택된 Cell의 TileInfo 선택
-		const FTileInfo* SelectedTileInfo = SelectTileInfoFuncPtr(Context, SelectedCellIndex);
+
+		// 선택된 Cell의 TileInfoIndex 선택
+		const int32 SelectedTileInfoIndex = SelectTileInfoIndexFuncPtr(Context, SelectedCellIndex);
+		if (SelectedTileInfoIndex == INDEX_NONE)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to select a TileInfo Index"));
+			return Result;
+		}
+
+		const FTileInfo* SelectedTileInfo = ModelData->GetTileInfo(SelectedTileInfoIndex);
 		if (SelectedTileInfo == nullptr)
 		{
-			UE_LOG(LogTemp, Error, TEXT("Failed to select a TileInfo"));
+			UE_LOG(LogTemp, Error, TEXT("Invalid TileInfo selected"));
 			return Result;
 		}
 
 		// 선택된 Cell Collapse
-		if (!CollapseSingleCellFuncPtr(SelectedCell, SelectedCellIndex, SelectedTileInfo))
+		if (!CollapseSingleCellFuncPtr(SelectedCell, SelectedTileInfoIndex, SelectedTileInfo))
 		{
 			UE_LOG(LogTemp, Error, TEXT("Failed to collapse cell"));
 			return Result;
 		}
-		
+
 		Grid->DecreaseRemainingCells();
 		Result.bSuccess = true;
 		return Result;
@@ -90,7 +97,7 @@ namespace WFC3DCollapseFunctions
 			if (Grid == nullptr)
 			{
 				UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
-				return -1;
+				return INDEX_NONE;
 			}
 
 			TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
@@ -117,7 +124,7 @@ namespace WFC3DCollapseFunctions
 			if (LowestEntropy == INT32_MAX)
 			{
 				UE_LOG(LogTemp, Error, TEXT("No Valid Cells In Cell Selector"));
-				return -1;
+				return INDEX_NONE;
 			}
 
 			if (LowestEntropy == 0)
@@ -129,13 +136,13 @@ namespace WFC3DCollapseFunctions
 						UE_LOG(LogTemp, Display, TEXT("Collapse Grid Failed With Lowest Entropy = 0, Index %d"), i);
 					}
 				}
-				return -1;
+				return INDEX_NONE;
 			}
 
 			if (CellIndicesWithLowestEntropy.Num() == 0)
 			{
 				UE_LOG(LogTemp, Error, TEXT("No Valid Cells With Lowest Entropy In Cell Selector"));
-				return -1;
+				return INDEX_NONE;
 			}
 
 			/** Select Cell From Lowest Entropies */
@@ -150,7 +157,7 @@ namespace WFC3DCollapseFunctions
 			if (Grid == nullptr)
 			{
 				UE_LOG(LogTemp, Error, TEXT("Invalid Grid"));
-				return -1;
+				return INDEX_NONE;
 			}
 
 			TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
@@ -169,7 +176,7 @@ namespace WFC3DCollapseFunctions
 			if (UnCollapsedCellIndices.Num() == 0)
 			{
 				UE_LOG(LogTemp, Error, TEXT("No Uncollapsed Cells"));
-				return -1;
+				return INDEX_NONE;
 			}
 
 			/** Select Random Cell */
@@ -180,13 +187,13 @@ namespace WFC3DCollapseFunctions
 		IMPLEMENT_COLLAPSER_CELL_SELECTOR_STRATEGY(Custom)
 		{
 			/** Make Your Custom CellSelector */
-			return -1;
+			return INDEX_NONE;
 		}
 	}
 
 	namespace TileInfoSelector
 	{
-		IMPLEMENT_COLLAPSER_TILE_SELECTOR_STRATEGY(ByWeight)
+		IMPLEMENT_COLLAPSER_TILE_INFO_INDEX_SELECTOR_STRATEGY(ByWeight)
 		{
 			UWFC3DGrid* Grid = Context.Grid;
 			const UWFC3DModelDataAsset* ModelData = Context.ModelData;
@@ -194,23 +201,31 @@ namespace WFC3DCollapseFunctions
 			if (Grid == nullptr || ModelData == nullptr || SelectedCellIndex < 0)
 			{
 				UE_LOG(LogTemp, Error, TEXT("Invalid Parameters for SelectTileInfoByWeight"));
-				return nullptr;
+				return INDEX_NONE;
 			}
 
 			TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
 			if (!GridCells->IsValidIndex(SelectedCellIndex))
 			{
 				UE_LOG(LogTemp, Error, TEXT("Invalid Cell Index"));
-				return nullptr;
+				return INDEX_NONE;
 			}
+
+			// UE_LOG(LogTemp, Display, TEXT("RemainingTileOptionBitset : %s"), *FBitString::ToString((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset));
 
 			/** Get Enalbe TileInfos */
 			TArray<int32> TileInfoIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset);
 			if (TileInfoIndices.Num() == 0)
 			{
 				UE_LOG(LogTemp, Error, TEXT("No Valid TileInfo Indices"));
-				return nullptr;
+				return INDEX_NONE;
 			}
+			
+			// for (int32 Index : TileInfoIndices)
+			// {
+			// 	UE_LOG(LogTemp, Display, TEXT("TileInfoIndex: %d"), Index);
+			// }
+
 
 			/** Get Weights */
 			TArray<float> Weights;
@@ -220,11 +235,11 @@ namespace WFC3DCollapseFunctions
 			}
 
 			/** Select By Weights */
-			int32 SelectedTileInfoIndex = FWFC3DHelperFunctions::GetWeightedRandomIndex(Weights, RandomStream);
-			return ModelData->GetTileInfo(TileInfoIndices[SelectedTileInfoIndex]);
+			int32 SelectedTileInfoIndex = TileInfoIndices[FWFC3DHelperFunctions::GetWeightedRandomIndex(Weights, RandomStream)];
+			return SelectedTileInfoIndex;
 		}
 
-		IMPLEMENT_COLLAPSER_TILE_SELECTOR_STRATEGY(Random)
+		IMPLEMENT_COLLAPSER_TILE_INFO_INDEX_SELECTOR_STRATEGY(Random)
 		{
 			UWFC3DGrid* Grid = Context.Grid;
 			const UWFC3DModelDataAsset* ModelData = Context.ModelData;
@@ -232,33 +247,35 @@ namespace WFC3DCollapseFunctions
 			if (Grid == nullptr || ModelData == nullptr || SelectedCellIndex < 0)
 			{
 				UE_LOG(LogTemp, Error, TEXT("Invalid Parameters for SelectTileInfoRandom"));
-				return nullptr;
+				return INDEX_NONE;
 			}
 
 			TArray<FWFC3DCell>* GridCells = Grid->GetAllCells();
 			if (!GridCells->IsValidIndex(SelectedCellIndex))
 			{
 				UE_LOG(LogTemp, Error, TEXT("Invalid Cell Index"));
-				return nullptr;
+				return INDEX_NONE;
 			}
+
+			// UE_LOG(LogTemp, Display, TEXT("RemainingTileOptionBitset : %s"), *FBitString::ToString((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset));
 
 			/** Get Enalbe TileInfos */
 			TArray<int32> TileInfoIndices = FWFC3DHelperFunctions::GetAllIndexFromBitset((*GridCells)[SelectedCellIndex].RemainingTileOptionsBitset);
 			if (TileInfoIndices.Num() == 0)
 			{
 				UE_LOG(LogTemp, Error, TEXT("No Valid TileInfo Indices"));
-				return nullptr;
+				return INDEX_NONE;
 			}
 
 			/** Select Randomly */
 			int32 RandomIndex = RandomStream->RandRange(0, TileInfoIndices.Num() - 1);
-			return ModelData->GetTileInfo(TileInfoIndices[RandomIndex]);
+			return TileInfoIndices[RandomIndex];
 		}
 
-		IMPLEMENT_COLLAPSER_TILE_SELECTOR_STRATEGY(Custom)
+		IMPLEMENT_COLLAPSER_TILE_INFO_INDEX_SELECTOR_STRATEGY(Custom)
 		{
 			/** Make Your Custom TileInfoSelector */
-			return nullptr;
+			return 0;
 		}
 	}
 
@@ -283,10 +300,11 @@ namespace WFC3DCollapseFunctions
 			}
 
 			SelectedCell->CollapsedTileInfo = SelectedTileInfo;
+			SelectedCell->CollapsedTileInfoIndex = SelectedTileInfoIndex;
 			SelectedCell->Entropy = 1;
 			SelectedCell->bIsCollapsed = true;
 			SelectedCell->RemainingTileOptionsBitset.Init(false, SelectedCell->RemainingTileOptionsBitset.Num());
-			SelectedCell->RemainingTileOptionsBitset[SelectedCellIndex] = true;
+			SelectedCell->RemainingTileOptionsBitset[SelectedTileInfoIndex] = true;
 
 			const TArray<int32>& FacesIndices = SelectedTileInfo->Faces;
 			for (const EFace& Direction : FWFC3DFaceUtils::AllDirections)
@@ -295,6 +313,13 @@ namespace WFC3DCollapseFunctions
 				SelectedCell->MergedFaceOptionsBitset[DirectionIndex].Init(false, SelectedCell->MergedFaceOptionsBitset[DirectionIndex].Num());
 				SelectedCell->MergedFaceOptionsBitset[DirectionIndex][FacesIndices[DirectionIndex]] = true;
 			}
+
+			// UE_LOG(LogTemp, Display, TEXT("Collapse Cell at Location: %s"), *SelectedCell->Location.ToString());
+			// UE_LOG(LogTemp, Display, TEXT("SelectedTileInfoIndex %d"), SelectedTileInfoIndex);
+			// UE_LOG(LogTemp, Display, TEXT("Cell Collapser: U: %d, B: %d, R: %d, L: %d, F: %d, D: %d"),
+			       // SelectedTileInfo->Faces[0], SelectedTileInfo->Faces[1], SelectedTileInfo->Faces[2],
+			       // SelectedTileInfo->Faces[3], SelectedTileInfo->Faces[4], SelectedTileInfo->Faces[5]
+			// );
 
 			SelectedCell->bIsCollapsed = true;
 			SelectedCell->bIsPropagated = true;
