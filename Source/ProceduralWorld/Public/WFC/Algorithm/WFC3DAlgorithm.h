@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WFC/Algorithm/WFC3DAlgorithmTypes.h"
+#include "WFC/Data/WFC3DTypes.h"
 #include "WFC/Algorithm/WFC3DCollapse.h"
 #include "WFC/Algorithm/WFC3DPropagation.h"
 #include "UObject/Object.h"
@@ -15,8 +15,10 @@
 #include <atomic>
 #include "WFC3DAlgorithm.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWFC3DAlgorithmCompleted, const FWFC3DResult&, Result);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWFC3DAlgorithmCompleted, const FWFC3DAlgorithmResult&, Result);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnWFC3DAlgorithmCancelled);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnWFC3DAlgorithmProgress, int32, CurrentStep, int32, TotalSteps);
 
 // 전방 선언
@@ -26,13 +28,13 @@ class UWFC3DAlgorithm;
  * WFC3D 알고리즘 비동기 작업 클래스
  * AsyncTask 시스템을 사용하여 백그라운드에서 알고리즘을 실행합니다.
  */
-class FWFC3DAsyncTask : public FNonAbandonableTask
+class FWFC3DAlgorithmAsyncTask : public FNonAbandonableTask
 {
 public:
-	FWFC3DAsyncTask(UWFC3DAlgorithm* InAlgorithm, const FWFC3DAlgorithmContext& InContext)
-		: Algorithm(InAlgorithm)
-		, Context(InContext)
-		, Result()
+	FWFC3DAlgorithmAsyncTask(UWFC3DAlgorithm* InAlgorithm, const FWFC3DAlgorithmContext& InContext)
+		: Algorithm(InAlgorithm),
+		  Context(InContext),
+		  Result()
 	{
 	}
 
@@ -46,12 +48,12 @@ public:
 	}
 
 	/** 결과 가져오기 */
-	FWFC3DResult GetResult() const { return Result; }
+	FWFC3DAlgorithmResult GetResult() const { return Result; }
 
 private:
 	UWFC3DAlgorithm* Algorithm;
 	FWFC3DAlgorithmContext Context;
-	FWFC3DResult Result;
+	FWFC3DAlgorithmResult Result;
 };
 
 /**
@@ -91,15 +93,15 @@ public:
 	}
 
 	UWFC3DAlgorithm(const FCollapseStrategy& InCollapseStrategy, const FPropagationStrategy& InPropagationStrategy, const FRandomStream& InRandomStream)
-	: CollapseStrategy(InCollapseStrategy)
-	  , PropagationStrategy(InPropagationStrategy)
-	  , RandomStream(InRandomStream)
-	  , bIsRunning(false)
-	  , bIsCancelled(false)
-	  , bIsComplete(false)
-	  , CurrentStep(0)
-	  , TotalSteps(0)
-	  , AsyncTask(nullptr)
+		: CollapseStrategy(InCollapseStrategy)
+		  , PropagationStrategy(InPropagationStrategy)
+		  , RandomStream(InRandomStream)
+		  , bIsRunning(false)
+		  , bIsCancelled(false)
+		  , bIsComplete(false)
+		  , CurrentStep(0)
+		  , TotalSteps(0)
+		  , AsyncTask(nullptr)
 	{
 	}
 
@@ -108,7 +110,7 @@ public:
 
 	/** WFC3D 알고리즘을 동기적으로 실행합니다 (메인 스레드) */
 	UFUNCTION(BlueprintCallable, Category = "WFCAlgorithm")
-	FWFC3DResult Execute(const FWFC3DAlgorithmContext& Context);
+	FWFC3DAlgorithmResult Execute(const FWFC3DAlgorithmContext& Context);
 
 	/** WFC3D 알고리즘을 비동기적으로 실행합니다 (백그라운드 스레드) */
 	UFUNCTION(BlueprintCallable, Category = "WFCAlgorithm")
@@ -139,7 +141,7 @@ public:
 	float GetProgress() const;
 
 	/** 내부 실행 함수 (스레드 안전) */
-	FWFC3DResult ExecuteInternal(const FWFC3DAlgorithmContext& Context);
+	FWFC3DAlgorithmResult ExecuteInternal(const FWFC3DAlgorithmContext& Context);
 
 	/** 비동기 작업 상태를 확인하고 결과를 처리합니다 */
 	UFUNCTION(BlueprintCallable, Category = "WFCAlgorithm")
@@ -148,7 +150,7 @@ public:
 	FCollapseStrategy CollapseStrategy;
 	FPropagationStrategy PropagationStrategy;
 	FRandomStream RandomStream;
-	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFCAlgorithm")
 	int32 Seed = 0;
 
@@ -193,7 +195,7 @@ protected:
 	std::atomic<int32> TotalStepsAtomic;
 
 	/** 비동기 태스크 인스턴스 */
-	TUniquePtr<FAsyncTask<FWFC3DAsyncTask>> AsyncTask;
+	TUniquePtr<FAsyncTask<FWFC3DAlgorithmAsyncTask>> AsyncTask;
 
 	/** 크리티컬 섹션 (스레드 동기화용) */
 	mutable FCriticalSection CriticalSection;

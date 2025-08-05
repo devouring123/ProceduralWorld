@@ -7,6 +7,7 @@
 #include "WFC/Data/WFC3DFaceUtils.h"
 #include "WFC/Data/WFC3DGrid.h"
 #include "WFC/Data/WFC3DModelDataAsset.h"
+#include "WFC/Utility/WFC3DHelperFunctions.h"
 
 namespace WFC3DPropagateFunctions
 {

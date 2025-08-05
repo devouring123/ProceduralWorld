@@ -49,6 +49,9 @@ public:
 	void CheckStatus();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC Example")
+	FIntVector TestGridSize = FIntVector(5, 5, 5);
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC Example")
 	UWFC3DModelDataAsset* TestModelData;
 	
 protected:
@@ -59,10 +62,7 @@ protected:
 	/** 알고리즘 컨텍스트 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC")
 	FWFC3DAlgorithmContext AlgorithmContext;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC")
-	FIntVector TestGridSize = FIntVector(5, 5, 5);
-
+	
 	bool bIsSuccess = false;
 
 	int32 TryCount = 0;
@@ -75,7 +75,7 @@ protected:
 
 	/** 알고리즘 완료 콜백 */
 	UFUNCTION()
-	void OnAlgorithmCompleted(const FWFC3DResult& Result);
+	void OnAlgorithmCompleted(const FWFC3DAlgorithmResult& Result);
 
 	/** 알고리즘 취소 콜백 */
 	UFUNCTION()
@@ -89,8 +89,8 @@ protected:
 	void ShowProgress();
 
 	/** Task Graph 완료 콜백 */
-	void OnTaskGraphCompleted(FWFC3DResult Result);
+	void OnTaskGraphCompleted(FWFC3DAlgorithmResult Result);
 
 	/** Thread Pool 완료 콜백 */
-	void OnThreadPoolCompleted(FWFC3DResult Result);
+	void OnThreadPoolCompleted(FWFC3DAlgorithmResult Result);
 };

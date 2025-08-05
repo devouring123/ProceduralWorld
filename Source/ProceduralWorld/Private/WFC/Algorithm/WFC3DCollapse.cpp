@@ -2,6 +2,7 @@
 #include "WFC/Algorithm/WFC3DFunctionMaps.h"
 #include "WFC/Data/WFC3DGrid.h"
 #include "WFC/Data/WFC3DModelDataAsset.h"
+#include "WFC/Utility/WFC3DHelperFunctions.h"
 
 namespace WFC3DCollapseFunctions
 {

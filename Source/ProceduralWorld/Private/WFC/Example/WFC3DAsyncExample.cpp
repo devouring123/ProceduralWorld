@@ -30,14 +30,10 @@ void AWFC3DAsyncExample::BeginPlay()
 		WFCAlgorithm->OnAlgorithmProgress.AddDynamic(this, &AWFC3DAsyncExample::OnAlgorithmProgress);
 	}
 
-	// 알고리즘 컨텍스트 설정 Grid 크기 (5,5,5)
-	AlgorithmContext.Grid = NewObject<UWFC3DGrid>();
-
 	TryCount = 0;
 	bIsSuccess = false;
 
 	TestModelData->InitializeData();
-	
 	ExecuteAsync();
 }
 
@@ -52,7 +48,7 @@ void AWFC3DAsyncExample::ExecuteSync()
 	UE_LOG(LogTemp, Log, TEXT("=== 동기 실행 시작 (메인 스레드) ==="));
 
 	// 메인 스레드에서 동기적으로 실행
-	FWFC3DResult Result = WFCAlgorithm->Execute(AlgorithmContext);
+	FWFC3DAlgorithmResult Result = WFCAlgorithm->Execute(AlgorithmContext);
 
 	if (Result.bSuccess)
 	{
@@ -76,7 +72,7 @@ void AWFC3DAsyncExample::ExecuteAsync()
 
 	// 테스트용 Grid 생성 및 초기화
 	UWFC3DGrid* TestGrid = NewObject<UWFC3DGrid>();
-	TestGrid->InitializeGrid({TestGridSize.X, TestGridSize.Y, TestGridSize.Z}, TestModelData); // 555 그리드로 테스트
+	TestGrid->InitializeGrid({TestGridSize.X, TestGridSize.Y, TestGridSize.Z}, TestModelData);
 
 	// 컨텍스트 생성
 	FWFC3DAlgorithmContext TestContext(TestGrid, TestModelData);
@@ -114,7 +110,7 @@ void AWFC3DAsyncExample::ExecuteWithTaskGraph()
 	AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask, [this]()
 	{
 		// 백그라운드 스레드에서 실행
-		FWFC3DResult Result = WFCAlgorithm->ExecuteInternal(AlgorithmContext);
+		FWFC3DAlgorithmResult Result = WFCAlgorithm->ExecuteInternal(AlgorithmContext);
 
 		// 메인 스레드에서 결과 처리
 		AsyncTask(ENamedThreads::GameThread, [this, Result]()
@@ -138,7 +134,7 @@ void AWFC3DAsyncExample::ExecuteWithThreadPool()
 	Async(EAsyncExecution::ThreadPool, [this]()
 	{
 		// Thread Pool에서 실행
-		FWFC3DResult Result = WFCAlgorithm->ExecuteInternal(AlgorithmContext);
+		FWFC3DAlgorithmResult Result = WFCAlgorithm->ExecuteInternal(AlgorithmContext);
 
 		// 메인 스레드에서 결과 처리
 		Async(EAsyncExecution::TaskGraphMainThread, [this, Result]()
@@ -175,7 +171,7 @@ void AWFC3DAsyncExample::CheckStatus()
 	UE_LOG(LogTemp, Log, TEXT("진행률: %.1f%%"), WFCAlgorithm->GetProgress() * 100.0f);
 }
 
-void AWFC3DAsyncExample::OnAlgorithmCompleted(const FWFC3DResult& Result)
+void AWFC3DAsyncExample::OnAlgorithmCompleted(const FWFC3DAlgorithmResult& Result)
 {
 	// 진행률 타이머 정리
 	GetWorldTimerManager().ClearTimer(ProgressTimerHandle);
@@ -266,7 +262,7 @@ void AWFC3DAsyncExample::ShowProgress()
 	}
 }
 
-void AWFC3DAsyncExample::OnTaskGraphCompleted(FWFC3DResult Result)
+void AWFC3DAsyncExample::OnTaskGraphCompleted(FWFC3DAlgorithmResult Result)
 {
 	UE_LOG(LogTemp, Log, TEXT("=== Task Graph 실행 완료! ==="));
 	UE_LOG(LogTemp, Log, TEXT("성공: %s"), Result.bSuccess ? TEXT("예") : TEXT("아니오"));
@@ -281,7 +277,7 @@ void AWFC3DAsyncExample::OnTaskGraphCompleted(FWFC3DResult Result)
 	}
 }
 
-void AWFC3DAsyncExample::OnThreadPoolCompleted(FWFC3DResult Result)
+void AWFC3DAsyncExample::OnThreadPoolCompleted(FWFC3DAlgorithmResult Result)
 {
 	UE_LOG(LogTemp, Log, TEXT("=== Thread Pool 실행 완료! ==="));
 	UE_LOG(LogTemp, Log, TEXT("성공: %s"), Result.bSuccess ? TEXT("예") : TEXT("아니오"));

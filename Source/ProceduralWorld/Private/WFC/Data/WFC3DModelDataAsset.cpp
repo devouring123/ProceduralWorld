@@ -208,7 +208,7 @@ const FTileVariantInfo* UWFC3DModelDataAsset::GetTileVariant(const int32 TileInd
 	return &TileVariants[TileIndex];
 }
 
-const FTileVisualInfo* UWFC3DModelDataAsset::GetRandomTileVisualInfo(const int32 BaseTileIndex, const FString& BiomeName) const
+const FTileVisualInfo* UWFC3DModelDataAsset::GetTileVisualInfo(const int32 BaseTileIndex, const FString& BiomeName, const int32 VariantIndex) const
 {
 	if (TileVariants.IsEmpty())
 	{
@@ -242,19 +242,14 @@ const FTileVisualInfo* UWFC3DModelDataAsset::GetRandomTileVisualInfo(const int32
 		UE_LOG(LogTemp, Error, TEXT("TileByBiome has no tiles"));
 		return nullptr;
 	}
-
-	// TODO: Random Stream으로 변경 해야 함
-	const float RandomWeight = FMath::FRandRange(0.0f, TileByBiome->TotalWeight);
-	float AccumulatedWeight = 0.0f;
-	for (const FTileVisualInfo& Tile : TileByBiome->Tiles)
+	if (!TileByBiome->Tiles.IsValidIndex(VariantIndex))
 	{
-		AccumulatedWeight += Tile.Weight;
-		if (AccumulatedWeight >= RandomWeight)
-		{
-			return &Tile;
-		}
+		UE_LOG(LogTemp, Error, TEXT("VariantIndex %d is Out of Range for TileByBiome with %d tiles"), VariantIndex, TileByBiome->Tiles.Num());
+		return nullptr;
 	}
-	return nullptr;
+
+	// 특정 인덱스의 타일 반환
+	return &TileByBiome->Tiles[VariantIndex];
 }
 
 bool UWFC3DModelDataAsset::InitializeCommonData()

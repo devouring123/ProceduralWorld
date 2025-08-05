@@ -47,7 +47,7 @@ void TestWFC3DAlgorithm()
 	
 	// 5. 동기 실행 테스트 (ModelData가 nullptr이므로 에러로 종료될 것)
 	UE_LOG(LogTemp, Log, TEXT("동기 실행 테스트 시작..."));
-	FWFC3DResult Result = Algorithm->Execute(TestContext);
+	FWFC3DAlgorithmResult Result = Algorithm->Execute(TestContext);
 	
 	UE_LOG(LogTemp, Log, TEXT("동기 실행 결과:"));
 	UE_LOG(LogTemp, Log, TEXT("  - 성공: %s"), Result.bSuccess ? TEXT("예") : TEXT("아니오"));

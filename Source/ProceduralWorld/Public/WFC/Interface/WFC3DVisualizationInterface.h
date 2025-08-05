@@ -37,7 +37,7 @@ public:
 	/** 타일 변형 정보 가져오기 */
 	virtual const FTileVariantInfo* GetTileVariant(int32 BaseTileIndex) const = 0;
 
-	/** 랜덤 타일 가져오기 */
-	virtual const FTileVisualInfo* GetRandomTileVisualInfo(int32 BaseTileIndex, const FString& BiomeName) const = 0;
+	/** 특정 인덱스의 타일 시각 정보 가져오기 */
+	virtual const FTileVisualInfo* GetTileVisualInfo(int32 BaseTileIndex, const FString& BiomeName, int32 VariantIndex) const = 0;
 	
 };

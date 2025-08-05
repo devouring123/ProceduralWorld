@@ -51,7 +51,7 @@ public:
 	virtual const TArray<FTileRotationInfo>* GetTileRotationInfos() const override;
 	virtual const FTileRotationInfo* GetTileRotationInfo(int32 TileIndex) const override;
 	virtual const FTileVariantInfo* GetTileVariant(int32 TileIndex) const override;
-	virtual const FTileVisualInfo* GetRandomTileVisualInfo(int32 BaseTileIndex, const FString& BiomeName) const override;
+	virtual const FTileVisualInfo* GetTileVisualInfo(int32 BaseTileIndex, const FString& BiomeName, int32 VariantIndex) const override;
 	/** End Visualization Interface */
 
 private:

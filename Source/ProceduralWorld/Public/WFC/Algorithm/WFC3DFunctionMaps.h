@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WFC/Algorithm/WFC3DAlgorithmTypes.h"
+#include "WFC/Data/WFC3DTypes.h"
 
 /**
  * WFC3D 알고리즘의 전략 함수 매핑 관리

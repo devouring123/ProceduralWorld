@@ -1,7 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "WFC/Algorithm/WFC3DAlgorithm.h"
-#include "WFC/Algorithm/WFC3DAlgorithmTypes.h"
+#include "WFC/Data/WFC3DTypes.h"
 #include "WFC/Algorithm/WFC3DCollapse.h"
 #include "WFC/Algorithm/WFC3DPropagation.h"
 #include "WFC/Algorithm/WFC3DFunctionMaps.h"
@@ -10,7 +10,7 @@
 #include "Engine/Engine.h"
 #include "WFC/Data/WFC3DModelDataAsset.h"
 
-void FWFC3DAsyncTask::DoWork()
+void FWFC3DAlgorithmAsyncTask::DoWork()
 {
 	if (Algorithm != nullptr)
 	{
@@ -37,9 +37,16 @@ void UWFC3DAlgorithm::BeginDestroy()
 	Super::BeginDestroy();
 }
 
-FWFC3DResult UWFC3DAlgorithm::Execute(const FWFC3DAlgorithmContext& Context)
+FWFC3DAlgorithmResult UWFC3DAlgorithm::Execute(const FWFC3DAlgorithmContext& Context)
 {
-	return ExecuteInternal(Context);
+	UE_LOG(LogTemp, Log, TEXT("WFC3DAlgorithm::Execute called"));
+	FWFC3DAlgorithmResult Result = ExecuteInternal(Context);
+	UE_LOG(LogTemp, Log, TEXT("WFC3DAlgorithm::Execute completed with result: %s"), Result.bSuccess ? TEXT("SUCCESS") : TEXT("FAILED"));
+	if (!Result.bSuccess)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Algorithm error: %s"), *Result.ErrorMessage);
+	}
+	return Result;
 }
 
 void UWFC3DAlgorithm::ExecuteAsync(const FWFC3DAlgorithmContext& Context)
@@ -55,7 +62,7 @@ void UWFC3DAlgorithm::ExecuteAsync(const FWFC3DAlgorithmContext& Context)
 	ResetExecutionState();
 
 	// 비동기 태스크 생성 및 시작
-	AsyncTask = MakeUnique<FAsyncTask<FWFC3DAsyncTask>>(this, Context);
+	AsyncTask = MakeUnique<FAsyncTask<FWFC3DAlgorithmAsyncTask>>(this, Context);
 	AsyncTask->StartBackgroundTask();
 
 	bIsRunning = true;
@@ -74,11 +81,11 @@ void UWFC3DAlgorithm::ExecuteAsync(const FWFC3DAlgorithmContext& Context)
 	}
 }
 
-FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Context)
+FWFC3DAlgorithmResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Context)
 {
 	FScopeLock Lock(&CriticalSection);
 
-	FWFC3DResult Result;
+	FWFC3DAlgorithmResult Result;
 
 	// 실행 상태 초기화
 	bIsRunning = true;
@@ -95,7 +102,9 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 
 	if (Grid == nullptr)
 	{
-		// UE_LOG(LogTemp, Error, TEXT("Invalid Grid in Algorithm Context"));
+		UE_LOG(LogTemp, Error, TEXT("Invalid Grid in Algorithm Context"));
+		Result.bSuccess = false;
+		Result.ErrorMessage = TEXT("Invalid Grid in Algorithm Context");
 		bIsRunning = false;
 		bIsRunningAtomic = false;
 		return Result;
@@ -103,7 +112,9 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 
 	if (ModelData == nullptr)
 	{
-		// UE_LOG(LogTemp, Warning, TEXT("ModelData is null - using test mode"));
+		UE_LOG(LogTemp, Error, TEXT("ModelData is null in Algorithm Context"));
+		Result.bSuccess = false;
+		Result.ErrorMessage = TEXT("ModelData is null in Algorithm Context");
 		bIsRunning = false;
 		bIsRunningAtomic = false;
 		return Result;
@@ -115,26 +126,27 @@ FWFC3DResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Cont
 	TotalStepsAtomic = TotalSteps;
 	CurrentStepAtomic = 0;
 
-	// UE_LOG(LogTemp, Warning, TEXT("=== WFC3D Algorithm Debug Info ==="));
-	// UE_LOG(LogTemp, Warning, TEXT("Grid Dimension: %s"), *Grid->GetDimension().ToString());
-	// UE_LOG(LogTemp, Warning, TEXT("Grid Total Cells: %d"), Grid->Num());
-	// UE_LOG(LogTemp, Warning, TEXT("Grid Remaining Cells: %d"), Grid->GetRemainingCells());
-	// UE_LOG(LogTemp, Warning, TEXT("Total Steps: %d"), TotalSteps);
-	// UE_LOG(LogTemp, Warning, TEXT("bIsRunningAtomic: %s"), bIsRunningAtomic.load() ? TEXT("true") : TEXT("false"));
-	// UE_LOG(LogTemp, Warning, TEXT("bIsCancelledAtomic: %s"), bIsCancelledAtomic.load() ? TEXT("true") : TEXT("false"));
-	// UE_LOG(LogTemp, Warning, TEXT("While 조건: RemainingCells > 0 && bIsRunning && !bIsCancelled"));
-	// UE_LOG(LogTemp, Warning, TEXT("While 조건 평가: %s && %s && %s = %s"),
-	//         Grid->GetRemainingCells() > 0 ? TEXT("true") : TEXT("false"),
-	//         bIsRunningAtomic.load() ? TEXT("true") : TEXT("false"),
-	//         !bIsCancelledAtomic.load() ? TEXT("true") : TEXT("false"),
-	//         (Grid->GetRemainingCells() > 0 && bIsRunningAtomic.load() && !bIsCancelledAtomic.load()) ? TEXT("true") : TEXT("false")
-	//  );
-	//  Grid->PrintGridInfo();
-	// UE_LOG(LogTemp, Warning, TEXT("==================================="));
+	UE_LOG(LogTemp, Log, TEXT("=== WFC3D Algorithm Debug Info ==="));
+	UE_LOG(LogTemp, Log, TEXT("Grid Dimension: %s"), *Grid->GetDimension().ToString());
+	UE_LOG(LogTemp, Log, TEXT("Grid Total Cells: %d"), Grid->Num());
+	UE_LOG(LogTemp, Log, TEXT("Grid Remaining Cells: %d"), Grid->GetRemainingCells());
+	UE_LOG(LogTemp, Log, TEXT("Total Steps: %d"), TotalSteps);
+	UE_LOG(LogTemp, Log, TEXT("bIsRunningAtomic: %s"), bIsRunningAtomic.load() ? TEXT("true") : TEXT("false"));
+	UE_LOG(LogTemp, Log, TEXT("bIsCancelledAtomic: %s"), bIsCancelledAtomic.load() ? TEXT("true") : TEXT("false"));
+	UE_LOG(LogTemp, Log, TEXT("While 조건: RemainingCells > 0 && bIsRunning && !bIsCancelled"));
+	UE_LOG(LogTemp, Log, TEXT("While 조건 평가: %s && %s && %s = %s"),
+	        Grid->GetRemainingCells() > 0 ? TEXT("true") : TEXT("false"),
+	        bIsRunningAtomic.load() ? TEXT("true") : TEXT("false"),
+	        !bIsCancelledAtomic.load() ? TEXT("true") : TEXT("false"),
+	        (Grid->GetRemainingCells() > 0 && bIsRunningAtomic.load() && !bIsCancelledAtomic.load()) ? TEXT("true") : TEXT("false")
+	 );
+	UE_LOG(LogTemp, Log, TEXT("==================================="));
 
 	// while 루프 진입 전 확인
+	UE_LOG(LogTemp, Log, TEXT("Checking while loop entry condition..."));
 	if (Grid->GetRemainingCells() <= 0)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Grid has no remaining cells, skipping while loop"));
 		// UE_LOG(LogTemp, Error, TEXT("❌ Grid has no remaining cells to collapse! RemainingCells = %d"), Grid->GetRemainingCells());
 
 		// 전체 셀 상태 확인
@@ -407,7 +419,7 @@ void UWFC3DAlgorithm::CheckAsyncTaskCompletion()
 	if (AsyncTask->IsDone())
 	{
 		// 비동기 작업 완료
-		FWFC3DResult Result = AsyncTask->GetTask().GetResult();
+		FWFC3DAlgorithmResult Result = AsyncTask->GetTask().GetResult();
 
 		// 상태 업데이트
 		bIsRunning = false;

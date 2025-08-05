@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "WFC3DAlgorithmTypes.h"
+#include "WFC/Data/WFC3DTypes.h"
 #include "WFC3DAlgorithmMacros.h"
 #include "WFC3DPropagation.generated.h"
 
