@@ -226,7 +226,7 @@ protected:
 private:
 
 	/** 단일 셀의 시각화 데이터를 준비하는 함수 */
-	bool SetTileVisualInfo(FWFC3DCell& Cell, const UWFC3DModelDataAsset* ModelData);
+	bool SetTileVisualInfo(FWFC3DCell& Cell, const UWFC3DModelDataAsset* ModelData, const FRandomStream* RandomStream);
 
 	/** 준비된 데이터로 실제 메시를 생성하는 함수 (메인 스레드 전용) */
 	void CreateMeshesFromData(UWorld* World, UWFC3DGrid* Grid, const UWFC3DModelDataAsset* ModelData);

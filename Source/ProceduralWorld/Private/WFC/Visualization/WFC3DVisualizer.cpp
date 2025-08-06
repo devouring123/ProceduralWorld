@@ -146,7 +146,7 @@ FWFC3DVisualizeResult UWFC3DVisualizer::ExecuteInternal(const FWFC3DVisualizeCon
 			// 붕괴된 셀만 시각화 데이터 준비
 			if (Cell.bIsCollapsed && Cell.CollapsedTileInfo)
 			{
-				if (!SetTileVisualInfo(Cell, ModelData))
+				if (!SetTileVisualInfo(Cell, ModelData, Context.RandomStream))
 				{
 					// 데이터 준비 실패 시 경고 로그만 출력하고 계속 진행
 					UE_LOG(LogTemp, Warning, TEXT("Failed to prepare visualization data for cell at location: %s"), *Cell.Location.ToString());
@@ -285,7 +285,7 @@ void UWFC3DVisualizer::CheckAsyncTaskCompletion(const FWFC3DVisualizeContext& Co
 	}
 }
 
-bool UWFC3DVisualizer::SetTileVisualInfo(FWFC3DCell& Cell, const UWFC3DModelDataAsset* ModelData)
+bool UWFC3DVisualizer::SetTileVisualInfo(FWFC3DCell& Cell, const UWFC3DModelDataAsset* ModelData, const FRandomStream* RandomStream)
 {
 	if (!Cell.bIsCollapsed || !Cell.CollapsedTileInfo || !ModelData)
 	{
@@ -311,9 +311,8 @@ bool UWFC3DVisualizer::SetTileVisualInfo(FWFC3DCell& Cell, const UWFC3DModelData
 	{
 		TileWeights.Add(Tile.Weight);
 	}
-
-	// TODO: RandomStream 넣기
-	int32 VariantIndex = FWFC3DHelperFunctions::GetWeightedRandomIndex(TileWeights, new FRandomStream);
+	
+	int32 VariantIndex = FWFC3DHelperFunctions::GetWeightedRandomIndex(TileWeights, RandomStream);
 
 	// 시각 정보 가져오기 (기본 바이옴과 설정된 변형 인덱스 사용)
 	const FTileVisualInfo* VisualInfo = ModelData->GetTileVisualInfo(BaseTileID, DefaultBiomeName, VariantIndex);
