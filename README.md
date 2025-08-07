@@ -1,33 +1,33 @@
-# 🏗️ ProceduralWorld - Advanced 3D WFC System
+# 🏗️ ProceduralWorld - 고급 3D WFC 시스템
 
 [![Unreal Engine](https://img.shields.io/badge/Unreal%20Engine-5.4-0E1128?style=for-the-badge&logo=unrealengine&logoColor=white)](https://unrealengine.com/)
 [![C++](https://img.shields.io/badge/C++-17-00599C?style=for-the-badge&logo=cplusplus&logoColor=white)](https://isocpp.org/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
-[![Portfolio](https://img.shields.io/badge/Portfolio-Project-FF6B6B?style=for-the-badge)](https://github.com/devouring123)
+[![라이선스](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+[![포트폴리오](https://img.shields.io/badge/Portfolio-Project-FF6B6B?style=for-the-badge)](https://github.com/devouring123)
 
-> **Enterprise-Grade Procedural Content Generation System**  
-> Implementing Wave Function Collapse Algorithm for Real-time 3D Level Generation
+> **기업급 절차적 콘텐츠 생성 시스템**  
+> 실시간 3D 레벨 생성을 위한 Wave Function Collapse 알고리즘 구현
 
 ---
 
-## 🎯 Project Overview
+## 🎯 프로젝트 개요
 
-**ProceduralWorld** is a cutting-edge implementation of the Wave Function Collapse (WFC) algorithm in 3D space, designed for real-time procedural generation of complex architectural structures and dungeon environments in Unreal Engine 5.4.
+**ProceduralWorld**는 Unreal Engine 5.4에서 실시간으로 복잡한 건축 구조물과 던전 환경을 절차적으로 생성하기 위해 설계된 3D 공간의 최첨단 Wave Function Collapse (WFC) 알고리즘 구현체입니다.
 
-### 🚀 Key Achievements
-- **Real-time Performance**: Generate complex 3D structures in seconds
-- **Scalable Architecture**: SOLID principles with modular component design  
-- **Advanced Algorithm**: Entropy-based constraint satisfaction with probabilistic selection
-- **Production-Ready**: Complete async processing with thread-safe operations
-- **Visual Excellence**: Multi-biome support with 100+ architectural assets
+### 🚀 주요 성과
+- **실시간 성능**: 몇 초 내에 복잡한 3D 구조 생성
+- **확장 가능한 아키텍처**: 모듈형 컴포넌트 설계의 SOLID 원칙  
+- **고급 알고리즘**: 확률적 선택을 통한 엔트로피 기반 제약 만족
+- **프로덕션 준비**: 스레드 안전 작업을 통한 완전한 비동기 처리
+- **시각적 우수성**: 100개 이상의 건축 에셋을 통한 다중 바이옴 지원
 
-### 💡 Technical Innovation
+### 💡 기술적 혁신
 ```cpp
-// Type-safe function pointer system preventing runtime errors
+// 런타임 오류를 방지하는 타입 안전 함수 포인터 시스템
 template<typename T>
 using TStaticFuncPtr = typename TBaseStaticDelegateInstance<T, FDefaultDelegateUserPolicy>::FFuncPtr;
 
-// Strategy pattern for runtime algorithm configuration
+// 런타임 알고리즘 구성을 위한 전략 패턴
 FCollapseStrategy strategy(
     ECollapseCellSelectStrategy::ByEntropy,
     ECollapseTileInfoSelectStrategy::ByWeight
@@ -36,46 +36,46 @@ FCollapseStrategy strategy(
 
 ---
 
-## 🧮 Wave Function Collapse Algorithm
+## 🧮 Wave Function Collapse 알고리즘
 
-### Core Concept
-The WFC algorithm applies quantum mechanics principles to procedural generation, maintaining cells in probabilistic superposition states until observation forces collapse to deterministic values.
+### 핵심 개념
+WFC 알고리즘은 양자역학의 원리를 절차적 생성에 적용하여, 셀들을 확률적 중첩 상태로 유지하다가 관찰 시 결정적 값으로 붕괴시키는 방식입니다.
 
-### Implementation Highlights
+### 구현 하이라이트
 
 ```mermaid
 graph TD
-    A[🎯 Constraint Analysis] --> B[🌊 Superposition Init]
-    B --> C[🔍 Entropy Selection]
-    C --> D[📡 Constraint Propagation]
-    D --> E{Complete?}
-    E -->|No| C
-    E -->|Yes| F[🎨 Visual Generation]
+    A[🎯 제약 조건 분석] --> B[🌊 중첩 상태 초기화]
+    B --> C[🔍 엔트로피 선택]
+    C --> D[📡 제약 전파]
+    D --> E{완료?}
+    E -->|아니오| C
+    E -->|예| F[🎨 시각적 생성]
 ```
 
-1. **Constraint Definition**: 6-face cubic tile compatibility rules
-2. **Probabilistic Initialization**: All cells start in quantum superposition
-3. **Entropy-Based Selection**: Choose lowest entropy cells for collapse
-4. **BFS Propagation**: Update neighboring possibilities efficiently
-5. **Visual Materialization**: Generate 3D meshes with biome variants
+1. **제약 정의**: 6면 정육면체 타일 호환성 규칙
+2. **확률적 초기화**: 모든 셀이 양자 중첩 상태로 시작
+3. **엔트로피 기반 선택**: 가장 낮은 엔트로피 셀을 붕괴용으로 선택
+4. **BFS 전파**: 주변 가능성을 효율적으로 업데이트
+5. **시각적 구현**: 바이옴 변형으로 3D 메시 생성
 
 ---
 
-## 🏛️ System Architecture
+## 🏛️ 시스템 아키텍처
 
-### Component Hierarchy
+### 컴포넌트 계층 구조
 ```
-AWFC3DActor (Game World Interface)
-├── UWFC3DController (System Orchestrator)
-│   ├── UWFC3DAlgorithm (Core WFC Engine)
-│   ├── UWFC3DVisualizer (Mesh Generation)
-│   └── UWFC3DGrid (3D Data Structure)
-└── UWFC3DModelDataAsset (Configuration)
+AWFC3DActor (게임 월드 인터페이스)
+├── UWFC3DController (시스템 오케스트레이터)
+│   ├── UWFC3DAlgorithm (핵심 WFC 엔진)
+│   ├── UWFC3DVisualizer (메시 생성)
+│   └── UWFC3DGrid (3D 데이터 구조)
+└── UWFC3DModelDataAsset (구성)
 ```
 
-### Key Components
+### 주요 컴포넌트
 
-#### 🎮 **WFC3DController** - System Orchestrator
+#### 🎮 **WFC3DController** - 시스템 오케스트레이터
 ```cpp
 UFUNCTION(BlueprintCallable)
 void ExecuteAsync(const FWFC3DExecutionContext& Context);
@@ -84,208 +84,208 @@ UPROPERTY(BlueprintAssignable)
 FOnWFC3DExecutionCompleted OnExecutionCompleted;
 ```
 
-#### 🧠 **WFC3DAlgorithm** - Core Engine
+#### 🧠 **WFC3DAlgorithm** - 핵심 엔진
 ```cpp
-// Thread-safe async execution
+// 스레드 안전 비동기 실행
 std::atomic<bool> bIsRunningAtomic;
 TUniquePtr<FAsyncTask<FWFC3DAlgorithmAsyncTask>> AsyncTask;
 
-// Strategy pattern implementation
+// 전략 패턴 구현
 FCollapseStrategy CollapseStrategy;
 FPropagationStrategy PropagationStrategy;
 ```
 
 ---
 
-## ⚡ Performance & Optimization
+## ⚡ 성능 및 최적화
 
-### Multi-threading Architecture
-- **Async Task System**: Background WFC execution with `FAsyncTask`
-- **Thread Safety**: `std::atomic` and `FCriticalSection` usage
-- **Non-blocking UI**: Real-time progress updates without main thread blocking
+### 멀티스레딩 아키텍처
+- **비동기 태스크 시스템**: `FAsyncTask`를 통한 백그라운드 WFC 실행
+- **스레드 안전성**: `std::atomic` 및 `FCriticalSection` 사용
+- **논블로킹 UI**: 메인 스레드 차단 없는 실시간 진행률 업데이트
 
-### Memory Optimization
-- **RAII Pattern**: Smart pointers (`TUniquePtr`, `TSharedPtr`)
-- **Object Pooling**: Mesh component reuse for GC optimization
-- **Bit Arrays**: Memory-efficient state representation
+### 메모리 최적화
+- **RAII 패턴**: 스마트 포인터 (`TUniquePtr`, `TSharedPtr`)
+- **객체 풀링**: GC 최적화를 위한 메시 컴포넌트 재사용
+- **비트 배열**: 메모리 효율적인 상태 표현
 
-### Algorithmic Efficiency
+### 알고리즘 효율성
 ```cpp
-// O(n³) space with O(log n) access time
+// O(log n) 접근 시간의 O(n³) 공간
 TMap<FIntVector, UStaticMeshComponent*> GridToMeshMap;
 
-// Range-limited propagation
+// 범위 제한 전파
 ERangeLimitStrategy: Sphere/Cube RangeLimited
 ```
 
 ---
 
-## 🎨 Visual System
+## 🎨 시각화 시스템
 
-### Multi-Biome Rendering
-- **Theme Variants**: Red, Green, Blue biome materials
-- **Weighted Selection**: Probabilistic tile variant selection
-- **Real-time Application**: Simultaneous algorithm execution and visualization
+### 다중 바이옴 렌더링
+- **테마 변형**: 빨강, 초록, 파랑 바이옴 머티리얼
+- **가중치 기반 선택**: 확률적 타일 변형 선택
+- **실시간 적용**: 알고리즘 실행과 동시 시각화
 
-### Asset Library (100+ Components)
+### 에셋 라이브러리 (100개 이상 컴포넌트)
 ```
-🏗️ Architectural Elements:
-├── Basic Structures: Walls, Floors, Ceilings (6 orientations)
-├── Complex Joints: Corners, Intersections (12+ variations)
-├── Advanced Components: InBackRight, InDownBack, InUpBack
-└── Material Variants: 4+ PBR variations per component
-```
-
----
-
-## 📊 Project Metrics
-
-### Development Statistics
-```
-📁 Source Files:        25+ C++ Implementation Files
-📊 Code Complexity:     5,000+ Lines (excluding comments)
-🏗️ Core Classes:        15+ Architectural Components
-📋 Data Structures:     20+ Optimized Structs
-⚡ Public Functions:     100+ Member Methods
-🎯 Test Coverage:       5x5x5 Grid Validation
-```
-
-### Performance Benchmarks
-```
-🎯 Generation Speed:    Sub-second for 5³ grids
-💾 Memory Footprint:    O(n³) optimized allocation
-🔄 Success Rate:        99%+ constraint satisfaction
-📊 Thread Efficiency:   100% async operation success
+🏗️ 건축 요소:
+├── 기본 구조: 벽, 바닥, 천장 (6방향)
+├── 복잡한 조인트: 모서리, 교차점 (12개 이상 변형)
+├── 고급 컴포넌트: InBackRight, InDownBack, InUpBack
+└── 머티리얼 변형: 컴포넌트당 4개 이상 PBR 변형
 ```
 
 ---
 
-## 🚀 Technical Excellence
+## 📊 프로젝트 메트릭
 
-### Advanced C++ Features
-- **Template Metaprogramming**: Compile-time type safety
-- **Modern C++17**: Smart pointers, range-based loops, structured bindings
-- **Unreal Integration**: Blueprint interop, delegate system, reflection
+### 개발 통계
+```
+📁 소스 파일:        25개 이상의 C++ 구현 파일
+📊 코드 복잡도:      5,000줄 이상 (주석 제외)
+🏗️ 핵심 클래스:      15개 이상의 아키텍처 컴포넌트
+📋 데이터 구조:      20개 이상의 최적화된 구조체
+⚡ 공개 함수:        100개 이상의 멤버 메소드
+🎯 테스트 커버리지:   5x5x5 그리드 검증
+```
 
-### Software Engineering
-- **SOLID Principles**: Single responsibility, dependency inversion
-- **Strategy Pattern**: Runtime algorithm configuration
-- **Observer Pattern**: Event-driven architecture with delegates
-- **Async Programming**: Thread-safe concurrent execution
-
-### Quality Assurance
-- **Memory Safety**: RAII, smart pointers, bounds checking
-- **Thread Safety**: Atomic operations, critical sections
-- **Error Handling**: Comprehensive validation and recovery
+### 성능 벤치마크
+```
+🎯 생성 속도:        5³ 그리드 1초 미만
+💾 메모리 사용량:     O(n³) 최적화된 할당
+🔄 성공률:          99% 이상 제약 만족
+📊 스레드 효율성:     100% 비동기 작업 성공
+```
 
 ---
 
-## 🛠️ Getting Started
+## 🚀 기술적 우수성
 
-### Prerequisites
+### 고급 C++ 기능
+- **템플릿 메타프로그래밍**: 컴파일 타임 타입 안전성
+- **모던 C++17**: 스마트 포인터, 범위 기반 루프, 구조적 바인딩
+- **언리얼 통합**: 블루프린트 상호 운용, 델리게이트 시스템, 리플렉션
+
+### 소프트웨어 엔지니어링
+- **SOLID 원칙**: 단일 책임, 의존성 역전
+- **전략 패턴**: 런타임 알고리즘 구성
+- **관찰자 패턴**: 델리게이트 기반 이벤트 아키텍처
+- **비동기 프로그래밍**: 스레드 안전 동시 실행
+
+### 품질 보증
+- **메모리 안전성**: RAII, 스마트 포인터, 경계 검사
+- **스레드 안전성**: 원자적 연산, 임계 섹션
+- **오류 처리**: 포괄적인 검증 및 복구
+
+---
+
+## 🛠️ 시작하기
+
+### 필수 요구사항
 ```bash
-Unreal Engine 5.4+
-Visual Studio 2022 (C++17 support)
-Windows 10/11 (64-bit)
-Minimum 16GB RAM (recommended for large grids)
+Unreal Engine 5.4 이상
+Visual Studio 2022 (C++17 지원)
+Windows 10/11 (64비트)
+최소 16GB RAM (대형 그리드용 권장)
 ```
 
-### Quick Setup
+### 빠른 설정
 ```bash
-# 1. Clone repository
+# 1. 리포지토리 클론
 git clone https://github.com/devouring123/ProceduralWorld.git
 
-# 2. Generate project files
-Right-click ProceduralWorld.uproject → Generate Visual Studio Files
+# 2. 프로젝트 파일 생성
+ProceduralWorld.uproject 우클릭 → Generate Visual Studio Files
 
-# 3. Build solution
-Open ProceduralWorld.sln → Build → Build Solution
+# 3. 솔루션 빌드
+ProceduralWorld.sln 열기 → 빌드 → 솔루션 빌드
 
-# 4. Launch and test
-Open in UE5 Editor → Load WFCDataGeneratingLevel → Play
+# 4. 실행 및 테스트
+UE5 에디터에서 열기 → WFCDataGeneratingLevel 로드 → 플레이
 ```
 
-### Basic Usage
+### 기본 사용법
 ```cpp
-// Blueprint Configuration
-BP_WFC3DActor settings:
+// 블루프린트 구성
+BP_WFC3DActor 설정:
 - Grid Dimension: (10, 10, 5)
 - Model Data: DA_WFC3DModel  
-- Random Seed: [Custom Value]
+- Random Seed: [사용자 정의 값]
 - Auto Execute On Begin Play: ✓
 ```
 
 ---
 
-## 🎓 Learning & Research
+## 🎓 학습 및 연구
 
-### Academic References
-- **Original WFC Research**: [mxgmn/WaveFunctionCollapse](https://github.com/mxgmn/WaveFunctionCollapse)
-- **2D Implementation**: [devouring123/WFC2D](https://github.com/devouring123/WFC2D)
-- **Constraint Satisfaction**: CSP Theory and Probabilistic Algorithms
+### 학술 참고자료
+- **원본 WFC 연구**: [mxgmn/WaveFunctionCollapse](https://github.com/mxgmn/WaveFunctionCollapse)
+- **2D 구현**: [devouring123/WFC2D](https://github.com/devouring123/WFC2D)
+- **제약 만족**: CSP 이론 및 확률적 알고리즘
 
-### Technical Documentation
-- **UE5 PCG Framework**: Procedural Content Generation integration
-- **Multithreading**: Unreal's async task system
-- **Blueprint Integration**: C++ to Blueprint communication patterns
-
----
-
-## 🏆 Professional Impact
-
-### Algorithm Engineering
-✅ **Complex CSP Solutions**: 3D constraint satisfaction optimization  
-✅ **Probabilistic Systems**: Weighted randomization with consistency guarantees  
-✅ **Real-time Performance**: Interactive application response times  
-
-### Software Architecture
-✅ **Enterprise Patterns**: SOLID principles with scalable design  
-✅ **Concurrent Programming**: Thread-safe multi-core utilization  
-✅ **Performance Engineering**: Memory and CPU optimization  
-
-### Game Engine Expertise
-✅ **Advanced UE5 Features**: PCG, Delegates, Reflection systems  
-✅ **Cross-platform Compatibility**: Windows/Mac/Linux support  
-✅ **Designer-Friendly Tools**: Blueprint integration and visual scripting  
+### 기술 문서
+- **UE5 PCG 프레임워크**: 절차적 콘텐츠 생성 통합
+- **멀티스레딩**: 언리얼의 비동기 태스크 시스템
+- **블루프린트 통합**: C++에서 블루프린트 통신 패턴
 
 ---
 
-## 🛣️ Future Development
+## 🏆 전문적 영향
 
-### Planned Enhancements
-- [ ] **Hierarchical WFC**: Multi-scale generation system
-- [ ] **Physics Integration**: Structural integrity validation
-- [ ] **Networking Support**: Multiplayer synchronization
-- [ ] **Editor Tools**: Custom Unreal Editor panels
+### 알고리즘 엔지니어링
+✅ **복잡한 CSP 솔루션**: 3D 제약 만족 최적화  
+✅ **확률적 시스템**: 일관성 보장을 통한 가중치 무작위화  
+✅ **실시간 성능**: 상호작용 애플리케이션 응답 시간  
 
-### Scalability Roadmap
-- **Game Applications**: Roguelike, sandbox, simulation genres
-- **Architectural Visualization**: Real building design tools
-- **Content Pipeline**: Automated asset generation
-- **AI Integration**: Machine learning pattern optimization
+### 소프트웨어 아키텍처
+✅ **기업 패턴**: 확장 가능한 설계의 SOLID 원칙  
+✅ **동시 프로그래밍**: 스레드 안전 멀티코어 활용  
+✅ **성능 엔지니어링**: 메모리 및 CPU 최적화  
+
+### 게임 엔진 전문성
+✅ **고급 UE5 기능**: PCG, 델리게이트, 리플렉션 시스템  
+✅ **크로스 플랫폼 호환성**: Windows/Mac/Linux 지원  
+✅ **디자이너 친화적 도구**: 블루프린트 통합 및 비주얼 스크립팅  
 
 ---
 
-## 📈 Portfolio Highlights
+## 🛣️ 향후 개발
 
-This project demonstrates:
-- **Advanced Algorithm Implementation**: Complex CS concepts in production code
-- **Performance Engineering**: Multi-threaded, memory-optimized solutions
-- **Software Architecture**: Maintainable, extensible system design
-- **Game Engine Mastery**: Professional-grade Unreal Engine development
-- **Problem Solving**: Novel solutions to procedural generation challenges
+### 계획된 개선사항
+- [ ] **계층적 WFC**: 다중 스케일 생성 시스템
+- [ ] **물리 통합**: 구조적 무결성 검증
+- [ ] **네트워킹 지원**: 멀티플레이어 동기화
+- [ ] **에디터 도구**: 커스텀 언리얼 에디터 패널
+
+### 확장성 로드맵
+- **게임 응용**: 로그라이크, 샌드박스, 시뮬레이션 장르
+- **건축 시각화**: 실제 건물 설계 도구
+- **콘텐츠 파이프라인**: 자동화된 에셋 생성
+- **AI 통합**: 머신러닝 기반 패턴 학습
+
+---
+
+## 📈 포트폴리오 하이라이트
+
+이 프로젝트는 다음을 입증합니다:
+- **고급 알고리즘 구현**: 프로덕션 코드에서의 복잡한 CS 개념
+- **성능 엔지니어링**: 멀티스레드, 메모리 최적화 솔루션
+- **소프트웨어 아키텍처**: 유지보수 가능하고 확장 가능한 시스템 설계
+- **게임 엔진 마스터리**: 전문가급 언리얼 엔진 개발
+- **문제 해결**: 절차적 생성 문제에 대한 혁신적 솔루션
 
 ---
 
 <div align="center">
 
-**🌟 Star this repository if you found it valuable! 🌟**
+**🌟 이 리포지토리가 도움이 되었다면 스타를 눌러주세요! 🌟**
 
 [![GitHub stars](https://img.shields.io/github/stars/devouring123/ProceduralWorld?style=social)](https://github.com/devouring123/ProceduralWorld/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/devouring123/ProceduralWorld?style=social)](https://github.com/devouring123/ProceduralWorld/network)
 
 ---
 
-**Built with 💻 and ☕ by [devouring123](https://github.com/devouring123)**
+**💻와 ☕로 제작한 [devouring123](https://github.com/devouring123)**
 
 </div>
