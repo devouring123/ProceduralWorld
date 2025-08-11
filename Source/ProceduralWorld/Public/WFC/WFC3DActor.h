@@ -81,9 +81,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D Settings")
 	bool bAutoExecuteOnBeginPlay = true;
 
-	/** 그려질 타일의 Size */
+	/** 원본 메시의 기본 타일 크기 (X, Y, Z) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D Settings")
-	float TileSize = 400.0f;
+	FVector BaseTileSize = FVector(400.0f, 400.0f, 400.0f);
+
+	/** 목표 타일 크기 (X, Y, Z) - 실제 생성될 크기 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WFC3D Settings")
+	FVector TileSize = FVector(400.0f, 400.0f, 400.0f);
 
 	/** 생성된 그리드와 메시 컴포넌트 매핑 */
 	UPROPERTY()
@@ -116,4 +120,10 @@ private:
 
 	/** 회전 스텝을 FRotator로 변환 */
 	FRotator GetRotationFromRotationStep(int32 RotationStep) const;
+
+	/** BaseTileSize와 TileSize 비교로 스케일 계산 */
+	FVector CalculateTileScale() const;
+
+	/** Actor를 그리드의 바닥 중심으로 이동 */
+	void PositionActorAtGridCenter();
 };

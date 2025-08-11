@@ -69,6 +69,8 @@ void AWFC3DActor::BeginPlay()
 		return;
 	}
 	
+	// Actor 위치는 그대로 유지 (사용자가 설정한 위치 기준으로 그리드 생성)
+	
 	// 자동 실행 옵션이 활성화되어 있으면 WFC3D 실행
 	if (bAutoExecuteOnBeginPlay)
 	{
@@ -407,8 +409,13 @@ UStaticMeshComponent* AWFC3DActor::CreateMeshComponentAtPosition(const FIntVecto
 	MeshComponent->RegisterComponent();
 	UE_LOG(LogTemp, Log, TEXT("Registered mesh component"));
 
-	// 위치 계산
-	FVector Location = FVector(GridPosition.X * TileSize, GridPosition.Y * TileSize, GridPosition.Z * TileSize);
+	// 위치 계산 (Actor 기준 상대 좌표)
+	// Actor를 그리드 바닥 중심으로 하여 상대적 위치 계산
+	FVector RelativeLocation = FVector(
+		(GridPosition.X - (ExecutionContext.GridDimension.X - 1) * 0.5f) * TileSize.X,
+		(GridPosition.Y - (ExecutionContext.GridDimension.Y - 1) * 0.5f) * TileSize.Y,
+		GridPosition.Z * TileSize.Z
+	);
 	
 	// 회전 계산
 	FRotator Rotation = FRotator::ZeroRotator;
@@ -420,10 +427,13 @@ UStaticMeshComponent* AWFC3DActor::CreateMeshComponentAtPosition(const FIntVecto
 		UE_LOG(LogTemp, Log, TEXT("Applied rotation: RotationStep=%d, Rotation=%s"), RotationStep, *Rotation.ToString());
 	}
 
-	// 트랜스폼 설정 (위치, 회전, 스케일)
-	FTransform Transform(Rotation, Location, FVector::OneVector);
-	MeshComponent->SetWorldTransform(Transform);
-	UE_LOG(LogTemp, Log, TEXT("Set world transform - Location: %s, Rotation: %s"), *Location.ToString(), *Rotation.ToString());
+	// 스케일 계산 (BaseTileSize 대비 TileSize 비율)
+	FVector Scale = CalculateTileScale();
+
+	// 트랜스폼 설정 (Actor 기준 상대 위치, 회전, 스케일)
+	FTransform RelativeTransform(Rotation, RelativeLocation, Scale);
+	MeshComponent->SetRelativeTransform(RelativeTransform);
+	UE_LOG(LogTemp, Log, TEXT("Set relative transform - Location: %s, Rotation: %s, Scale: %s"), *RelativeLocation.ToString(), *Rotation.ToString(), *Scale.ToString());
 
 	// 매테리얼 설정
 	for (int32 i = 0; i < VisualInfo.Materials.Num(); i++)
@@ -441,8 +451,8 @@ UStaticMeshComponent* AWFC3DActor::CreateMeshComponentAtPosition(const FIntVecto
 	MeshComponent->SetCastShadow(true);
 	UE_LOG(LogTemp, Log, TEXT("Set visibility and rendering settings"));
 
-	UE_LOG(LogTemp, Log, TEXT("Created mesh component at position (%d, %d, %d) with mesh: %s"), 
-		GridPosition.X, GridPosition.Y, GridPosition.Z, 
+	UE_LOG(LogTemp, Log, TEXT("Created mesh component at grid position (%d, %d, %d) with relative location %s, mesh: %s"), 
+		GridPosition.X, GridPosition.Y, GridPosition.Z, *RelativeLocation.ToString(),
 		VisualInfo.StaticMesh ? *VisualInfo.StaticMesh->GetName() : TEXT("NULL"));
 
 	return MeshComponent;
@@ -484,5 +494,30 @@ FRotator AWFC3DActor::GetRotationFromRotationStep(int32 RotationStep) const
 	// 회전 스텝을 FRotator로 변환 (Y축 기준 90도씩 회전)
 	float YawRotation = RotationStep * 90.0f;
 	return FRotator(0.0f, YawRotation, 0.0f);
+}
+
+FVector AWFC3DActor::CalculateTileScale() const
+{
+	// BaseTileSize 대비 TileSize의 비율을 계산
+	FVector Scale = FVector::OneVector;
+	
+	if (BaseTileSize.X > 0.0f) Scale.X = TileSize.X / BaseTileSize.X;
+	if (BaseTileSize.Y > 0.0f) Scale.Y = TileSize.Y / BaseTileSize.Y;
+	if (BaseTileSize.Z > 0.0f) Scale.Z = TileSize.Z / BaseTileSize.Z;
+	
+	return Scale;
+}
+
+void AWFC3DActor::PositionActorAtGridCenter()
+{
+	// Actor는 (0,0,0)에 고정, 메시 컴포넌트 위치 계산에서 중심화 처리
+	// 그리드 크기 정보는 로깅용으로만 사용
+	FVector GridSize = FVector(
+		ExecutionContext.GridDimension.X * TileSize.X,
+		ExecutionContext.GridDimension.Y * TileSize.Y,
+		ExecutionContext.GridDimension.Z * TileSize.Z
+	);
+	
+	UE_LOG(LogTemp, Log, TEXT("Actor remains at (0,0,0), GridSize: %s"), *GridSize.ToString());
 }
 
