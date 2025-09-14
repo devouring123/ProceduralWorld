@@ -13,8 +13,7 @@
 // Sets default values
 AWFC3DActor::AWFC3DActor()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	// 루트 씬 컴포넌트 설정
 	RootSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootSceneComponent"));
@@ -48,51 +47,45 @@ void AWFC3DActor::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	// 컨트롤러 델리게이트 바인딩
-	BindControllerDelegates();
+	InitializeAndExecuteWFC3D();
+}
 
-	// ModelData 체크 및 초기화
-	if (ExecutionContext.ModelData)
+void AWFC3DActor::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+	
+	// 무한 루프 방지
+	if (bIsExecutingConstruction)
 	{
-		if (ExecutionContext.ModelData->InitializeData())
-		{
-			UE_LOG(LogTemp, Display, TEXT("ModelData initialized successfully in WFC3DActor"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("ModelData initialization failed, but continuing with WFC3D execution"));
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("ModelData is null! Cannot execute WFC3D."));
+		UE_LOG(LogTemp, Warning, TEXT("OnConstruction already executing, skipping to prevent infinite loop"));
 		return;
 	}
 	
-	// Actor 위치는 그대로 유지 (사용자가 설정한 위치 기준으로 그리드 생성)
-	
-	// 자동 실행 옵션이 활성화되어 있으면 WFC3D 실행
-	if (bAutoExecuteOnBeginPlay)
+	if(bCreateMeshComponents)
 	{
-		UE_LOG(LogTemp, Log, TEXT("Auto-executing WFC3D on BeginPlay"));
+		UE_LOG(LogTemp, Log, TEXT("OnConstruction: bCreateMeshComponents is true, executing WFC3D"));
+		bIsExecutingConstruction = true;
 		
-		// 비동기로 실행하여 게임 시작을 방해하지 않도록 함
-		ExecuteWFC3DAsync();
+		InitializeAndExecuteWFC3D();
+		
+		bCreateMeshComponents = false;
+		bIsExecutingConstruction = false;
+		
+		UE_LOG(LogTemp, Log, TEXT("OnConstruction: WFC3D execution completed"));
 	}
-	else
-	{
-		UE_LOG(LogTemp, Log, TEXT("Auto-execution is disabled. Call ExecuteWFC3D() manually to start generation."));
-	}
-}
-
-// Called every frame
-void AWFC3DActor::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void AWFC3DActor::BeginDestroy()
 {
+	// 델리게이트 언바인딩
+	if (WFC3DController && IsValid(WFC3DController) && bDelegatesBound)
+	{
+		WFC3DController->OnExecutionCompleted.RemoveDynamic(this, &AWFC3DActor::OnWFC3DExecutionCompleted);
+		WFC3DController->OnExecutionCancelled.RemoveDynamic(this, &AWFC3DActor::OnWFC3DExecutionCancelled);
+		WFC3DController->OnExecutionProgress.RemoveDynamic(this, &AWFC3DActor::OnWFC3DExecutionProgress);
+		bDelegatesBound = false;
+	}
+	
 	// 생성된 메시 컴포넌트들 정리
 	for (UStaticMeshComponent* MeshComponent : GeneratedMeshComponents)
 	{
@@ -230,18 +223,126 @@ void AWFC3DActor::BindControllerDelegates()
 		return;
 	}
 
+	// 이미 바인딩되어 있다면 스킵
+	if (bDelegatesBound)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Delegates already bound, skipping"));
+		return;
+	}
+
+	// 기존 바인딩이 있다면 제거 (안전장치)
+	WFC3DController->OnExecutionCompleted.RemoveDynamic(this, &AWFC3DActor::OnWFC3DExecutionCompleted);
+	WFC3DController->OnExecutionCancelled.RemoveDynamic(this, &AWFC3DActor::OnWFC3DExecutionCancelled);
+	WFC3DController->OnExecutionProgress.RemoveDynamic(this, &AWFC3DActor::OnWFC3DExecutionProgress);
+
 	// 델리게이트 바인딩
 	WFC3DController->OnExecutionCompleted.AddDynamic(this, &AWFC3DActor::OnWFC3DExecutionCompleted);
 	WFC3DController->OnExecutionCancelled.AddDynamic(this, &AWFC3DActor::OnWFC3DExecutionCancelled);
 	WFC3DController->OnExecutionProgress.AddDynamic(this, &AWFC3DActor::OnWFC3DExecutionProgress);
+	
+	bDelegatesBound = true;
+	UE_LOG(LogTemp, Log, TEXT("Controller delegates bound successfully"));
+}
+
+void AWFC3DActor::InitializeAndExecuteWFC3D()
+{
+	// 에디터 모드 확인
+	bool bIsInEditor = false;
+#if WITH_EDITOR
+	bIsInEditor = (GetWorld() && !GetWorld()->IsGameWorld());
+#endif
+
+	UE_LOG(LogTemp, Log, TEXT("InitializeAndExecuteWFC3D called - IsInEditor: %s"), bIsInEditor ? TEXT("TRUE") : TEXT("FALSE"));
+
+	// 컨트롤러 델리게이트 바인딩 (런타임에서만)
+	if (!bIsInEditor)
+	{
+		BindControllerDelegates();
+	}
+
+	// ModelData 체크 및 초기화
+	if (ExecutionContext.ModelData)
+	{
+		if (ExecutionContext.ModelData->InitializeData())
+		{
+			UE_LOG(LogTemp, Display, TEXT("ModelData initialized successfully in WFC3DActor"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("ModelData initialization failed, but continuing with WFC3D execution"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("ModelData is null! Cannot execute WFC3D."));
+		return;
+	}
+	
+	// 자동 실행 옵션이 활성화되어 있으면 WFC3D 실행
+	if (bAutoExecuteOnBeginPlay)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Auto-executing WFC3D"));
+		
+		if (bIsInEditor)
+		{
+			// 에디터에서는 전용 함수 사용 (델리게이트 없음)
+			UE_LOG(LogTemp, Log, TEXT("Editor mode: executing with editor-specific function"));
+			ExecuteWFC3DForEditor();
+		}
+		else
+		{
+			// 런타임에서는 비동기로 실행하여 게임 시작을 방해하지 않도록 함
+			UE_LOG(LogTemp, Log, TEXT("Runtime mode: executing asynchronously"));
+			ExecuteWFC3DAsync();
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Auto-execution is disabled. Call ExecuteWFC3D() manually to start generation."));
+	}
+}
+
+void AWFC3DActor::ExecuteWFC3DForEditor()
+{
+	UE_LOG(LogTemp, Log, TEXT("ExecuteWFC3DForEditor() called"));
+	
+	if (!WFC3DController)
+	{
+		UE_LOG(LogTemp, Error, TEXT("WFC3DController is null!"));
+		return;
+	}
+
+	if (!ExecutionContext.ModelData)
+	{
+		UE_LOG(LogTemp, Error, TEXT("ModelData is not set in ExecutionContext!"));
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("Starting editor WFC3D execution with grid size: %s"), *ExecutionContext.GridDimension.ToString());
+	
+	// 동기적 실행 (에디터에서는 델리게이트 콜백을 기대하지 않음)
+	FWFC3DExecutionResult Result = WFC3DController->Execute(ExecutionContext);
+	
+	if (Result.bSuccess)
+	{
+		UE_LOG(LogTemp, Log, TEXT("WFC3D generation completed successfully in editor!"));
+		// 에디터에서는 직접 메시 컴포넌트 생성
+		CreateMeshComponentsFromGrid();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("WFC3D generation failed in editor: %s"), *Result.ErrorMessage);
+	}
 }
 
 void AWFC3DActor::OnWFC3DExecutionCompleted(const FWFC3DAlgorithmResult& Result)
 {
-	UE_LOG(LogTemp, Log, TEXT("WFC3D execution completed in Actor!"));
+	UE_LOG(LogTemp, Warning, TEXT("=== OnWFC3DExecutionCompleted CALLED ==="));
+	UE_LOG(LogTemp, Log, TEXT("WFC3D execution completed in Actor! Success: %s"), Result.bSuccess ? TEXT("TRUE") : TEXT("FALSE"));
 	
 	if (Result.bSuccess)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Result success - calling CreateMeshComponentsFromGrid()"));
 		// 비동기 실행의 경우 여기서 메시 컴포넌트 생성
 		CreateMeshComponentsFromGrid();
 	}
@@ -266,6 +367,14 @@ void AWFC3DActor::CreateMeshComponentsFromGrid()
 {
 	UE_LOG(LogTemp, Warning, TEXT("=== CreateMeshComponentsFromGrid() CALLED ==="));
 	
+	// 에디터 모드 확인
+	bool bIsInEditor = false;
+#if WITH_EDITOR
+	bIsInEditor = (GetWorld() && !GetWorld()->IsGameWorld());
+#endif
+
+	UE_LOG(LogTemp, Log, TEXT("CreateMeshComponentsFromGrid - IsInEditor: %s"), bIsInEditor ? TEXT("TRUE") : TEXT("FALSE"));
+	
 	if (!WFC3DController)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WFC3DController is null!"));
@@ -281,12 +390,22 @@ void AWFC3DActor::CreateMeshComponentsFromGrid()
 
 	UE_LOG(LogTemp, Warning, TEXT("GeneratedGrid found, dimensions: %s"), *GeneratedGrid->GetDimension().ToString());
 
-	// 기존 메시 컴포넌트 정리
+	// 기존 메시 컴포넌트 정리 (에디터에서는 더 안전하게)
 	for (UStaticMeshComponent* MeshComp : GeneratedMeshComponents)
 	{
-		if (MeshComp)
+		if (MeshComp && IsValid(MeshComp))
 		{
-			MeshComp->DestroyComponent();
+#if WITH_EDITOR
+			if (bIsInEditor)
+			{
+				// 에디터에서는 DestroyComponent 대신 다른 방법 사용
+				MeshComp->DestroyComponent();
+			}
+			else
+#endif
+			{
+				MeshComp->DestroyComponent();
+			}
 		}
 	}
 	GeneratedMeshComponents.Empty();
@@ -384,11 +503,26 @@ UStaticMeshComponent* AWFC3DActor::CreateMeshComponentAtPosition(const FIntVecto
 		return nullptr;
 	}
 
-	// 메시 컴포넌트 생성 (런타임에서는 NewObject 사용)
+	// 메시 컴포넌트 생성 (에디터와 런타임 모두 지원)
 	FString ComponentName = FString::Printf(TEXT("MeshComponent_%d_%d_%d"), 
 		GridPosition.X, GridPosition.Y, GridPosition.Z);
 	
-	UStaticMeshComponent* MeshComponent = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), *ComponentName);
+	UStaticMeshComponent* MeshComponent = nullptr;
+	
+	// 에디터에서는 CreateDefaultSubobject 스타일로, 런타임에서는 NewObject 사용
+#if WITH_EDITOR
+	if (GetWorld() && !GetWorld()->IsGameWorld())
+	{
+		// 에디터 모드: Construction Script에서 호출
+		MeshComponent = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), *ComponentName, RF_Transactional);
+	}
+	else
+#endif
+	{
+		// 게임 런타임 모드
+		MeshComponent = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), *ComponentName);
+	}
+	
 	if (!MeshComponent)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to create mesh component!"));
@@ -400,14 +534,6 @@ UStaticMeshComponent* AWFC3DActor::CreateMeshComponentAtPosition(const FIntVecto
 	// 메시 설정
 	MeshComponent->SetStaticMesh(VisualInfo.StaticMesh);
 	UE_LOG(LogTemp, Log, TEXT("Set StaticMesh: %s"), VisualInfo.StaticMesh ? *VisualInfo.StaticMesh->GetName() : TEXT("NULL"));
-
-	// 루트 컴포넌트에 연결
-	MeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
-	UE_LOG(LogTemp, Log, TEXT("Attached to RootComponent"));
-
-	// 컴포넌트 등록 (매우 중요!)
-	MeshComponent->RegisterComponent();
-	UE_LOG(LogTemp, Log, TEXT("Registered mesh component"));
 
 	// 위치 계산 (Actor 기준 상대 좌표)
 	// Actor를 그리드 바닥 중심으로 하여 상대적 위치 계산
@@ -432,8 +558,28 @@ UStaticMeshComponent* AWFC3DActor::CreateMeshComponentAtPosition(const FIntVecto
 
 	// 트랜스폼 설정 (Actor 기준 상대 위치, 회전, 스케일)
 	FTransform RelativeTransform(Rotation, RelativeLocation, Scale);
+
+	// 루트 컴포넌트에 연결 및 트랜스폼 설정
+	MeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
 	MeshComponent->SetRelativeTransform(RelativeTransform);
-	UE_LOG(LogTemp, Log, TEXT("Set relative transform - Location: %s, Rotation: %s, Scale: %s"), *RelativeLocation.ToString(), *Rotation.ToString(), *Scale.ToString());
+	UE_LOG(LogTemp, Log, TEXT("Attached to RootComponent and set transform - Location: %s, Rotation: %s, Scale: %s"), *RelativeLocation.ToString(), *Rotation.ToString(), *Scale.ToString());
+
+	// 컴포넌트 등록 (에디터에서는 조건부)
+#if WITH_EDITOR
+	if (GetWorld() && GetWorld()->IsGameWorld())
+	{
+		MeshComponent->RegisterComponent();
+		UE_LOG(LogTemp, Log, TEXT("Registered mesh component (Runtime)"));
+	}
+	else
+	{
+		// 에디터에서는 RegisterComponent를 호출하지 않음
+		UE_LOG(LogTemp, Log, TEXT("Mesh component created in editor mode"));
+	}
+#else
+	MeshComponent->RegisterComponent();
+	UE_LOG(LogTemp, Log, TEXT("Registered mesh component (Runtime)"));
+#endif
 
 	// 매테리얼 설정
 	for (int32 i = 0; i < VisualInfo.Materials.Num(); i++)

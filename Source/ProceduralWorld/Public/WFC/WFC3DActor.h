@@ -18,18 +18,19 @@ class PROCEDURALWORLD_API AWFC3DActor : public AActor
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this actor's properties
 	AWFC3DActor();
 
 protected:
-	// Called when the game starts or when spawned
+	
 	virtual void BeginPlay() override;
-
+	
 public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	
+	virtual void OnConstruction(const FTransform& Transform) override;
 
-	// Called when actor is being destroyed
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "WFC3D|Create")
+	bool bCreateMeshComponents = false;
+	
 	virtual void BeginDestroy() override;
 
 	/** WFC3D 생성 실행 */
@@ -97,6 +98,12 @@ private:
 	/** WFC3D 컨트롤러 델리게이트 바인딩 */
 	void BindControllerDelegates();
 
+	/** 공통 초기화 및 실행 로직 */
+	void InitializeAndExecuteWFC3D();
+
+	/** 에디터 전용 WFC3D 실행 (동기식, 델리게이트 없음) */
+	void ExecuteWFC3DForEditor();
+
 	/** WFC3D 실행 완료 콜백 */
 	UFUNCTION()
 	void OnWFC3DExecutionCompleted(const FWFC3DAlgorithmResult& Result);
@@ -126,4 +133,10 @@ private:
 
 	/** Actor를 그리드의 바닥 중심으로 이동 */
 	void PositionActorAtGridCenter();
+
+	/** 델리게이트 바인딩 상태 추적 */
+	bool bDelegatesBound = false;
+
+	/** OnConstruction 실행 중 플래그 (무한 루프 방지) */
+	bool bIsExecutingConstruction = false;
 };
