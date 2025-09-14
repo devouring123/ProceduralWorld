@@ -10,6 +10,7 @@
 
 ## 📋 목차
 - [🎯 프로젝트 개요](#-프로젝트-개요)
+- [📱 사용 예시](#-사용-예시)
 - [🧮 Wave Function Collapse 알고리즘](#-wave-function-collapse-알고리즘)
 - [🏛️ 시스템 아키텍처](#️-시스템-아키텍처)
 - [⚡ 성능 및 최적화](#-성능-및-최적화)
@@ -25,6 +26,8 @@
 ---
 
 ## 🎯 프로젝트 개요
+
+![ProceduralWorld 썸네일](Image/Thumbnail.png)
 
 **ProceduralWorld**는 Unreal Engine 5.4에서 실시간으로 복잡한 건축 구조물과 던전 환경을 절차적으로 생성하기 위해 설계된 3D 공간의 최첨단 Wave Function Collapse (WFC) 알고리즘 구현체입니다.
 
@@ -49,6 +52,32 @@ FCollapseStrategy strategy(
 ```
 
 ---
+
+## 📱 사용 예시
+
+### 🔧 기본 메시 변경 기능
+![메시 변경](Image/ChangeMesh.webp)
+**WFC3DActor**의 Property 창에서 **Generate Mesh** 버튼을 클릭하면 새로운 3D 구조가 즉시 생성됩니다. 매번 다른 패턴의 건축물이 절차적으로 만들어지며, 동일한 제약 조건 하에서도 고유한 결과를 보장합니다.
+
+### 📐 그리드 크기 동적 조정
+![그리드 크기 변경](Image/ChangeGridSize.webp)
+**Grid Dimension** 속성을 통해 생성할 구조물의 크기를 실시간으로 조정할 수 있습니다. 5x5x5부터 더 큰 그리드까지 지원하며, 크기에 따라 복잡성과 생성 시간이 조정됩니다.
+
+### 🏗️ 연결된 구조물 생성
+![완성된 구조물](Image/FullfiledMesh.webp)
+생성된 메시는 외부에서 보았을 때 모든 면이 완벽하게 연결된 **일체형 구조물**을 형성합니다. WFC 알고리즘의 제약 조건 덕분에 어색한 연결부나 불완전한 구조가 발생하지 않습니다.
+
+### 🎯 자동 WFC 데이터 생성
+![WFC 데이터 생성](Image/CreateWFC3DData.webp)
+**DataAsset Generator**를 통해 기본 메시 데이터를 입력하면 자동으로 WFC에 필요한 **호환성 규칙**과 **제약 조건**이 생성됩니다. 수동 설정 없이도 시스템이 지능적으로 각 면의 연결 가능성을 분석하여 데이터를 구성합니다.
+
+### ⚙️ 개별 메시 컴포넌트 관리
+![스태틱 메시 컴포넌트](Image/BuildMeshWithStaticMeshComponents.webp)
+생성된 구조물의 각 블록은 **독립적인 StaticMeshComponent**로 구성됩니다. 이를 통해 개별 블록의 **머티리얼**, **콜리전**, **물리 속성** 등을 세밀하게 조정할 수 있으며, 런타임에서도 동적으로 수정 가능합니다.
+
+### 🔍 정밀한 연결성 검증
+![메시 간 틈 없음](Image/NoGapInMeshes.webp)
+모든 메시 컴포넌트 간에는 **0.0001 단위의 정밀도**로 틈이나 중첩 없이 완벽하게 정렬됩니다. 고품질 렌더링과 정확한 콜리전 처리를 위해 엄격한 좌표 시스템과 스냅핑 로직을 적용합니다.
 
 ## 🧮 Wave Function Collapse 알고리즘
 

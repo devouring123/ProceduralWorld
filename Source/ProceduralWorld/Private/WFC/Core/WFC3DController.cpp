@@ -528,9 +528,18 @@ void UWFC3DController::CheckAsyncCompletion(const FWFC3DExecutionContext& Contex
 		// 완료 델리게이트 호출
 		if (!bIsCancelledAtomic.load() && bIsCompleteAtomic.load())
 		{
+			UE_LOG(LogTemp, Warning, TEXT("=== Broadcasting OnExecutionCompleted ==="));
 			FWFC3DAlgorithmResult Result;
 			Result.bSuccess = true;
+			UE_LOG(LogTemp, Warning, TEXT("About to broadcast OnExecutionCompleted with Success: %s"), Result.bSuccess ? TEXT("TRUE") : TEXT("FALSE"));
 			OnExecutionCompleted.Broadcast(Result);
+			UE_LOG(LogTemp, Warning, TEXT("OnExecutionCompleted broadcast completed"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Conditions not met for broadcasting: Cancelled=%s, Complete=%s"), 
+				bIsCancelledAtomic.load() ? TEXT("TRUE") : TEXT("FALSE"),
+				bIsCompleteAtomic.load() ? TEXT("TRUE") : TEXT("FALSE"));
 		}
 	}
 }
