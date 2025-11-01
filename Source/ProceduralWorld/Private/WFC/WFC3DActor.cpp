@@ -9,6 +9,7 @@
 #include "Materials/MaterialInterface.h"
 #include "Engine/World.h"
 #include "UObject/ConstructorHelpers.h"
+#include "ProfilingDebugging/CpuProfilerTrace.h"
 
 // Sets default values
 AWFC3DActor::AWFC3DActor()
@@ -104,8 +105,10 @@ void AWFC3DActor::BeginDestroy()
 
 void AWFC3DActor::ExecuteWFC3D()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(AWFC3DActor::ExecuteWFC3D);
+
 	UE_LOG(LogTemp, Log, TEXT("ExecuteWFC3D() called"));
-	
+
 	if (!WFC3DController)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WFC3DController is null!"));
@@ -119,7 +122,7 @@ void AWFC3DActor::ExecuteWFC3D()
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("Starting synchronous WFC3D execution with grid size: %s"), *ExecutionContext.GridDimension.ToString());
-	
+
 	// 동기적 실행
 	FWFC3DExecutionResult Result = WFC3DController->Execute(ExecutionContext);
 	
@@ -136,8 +139,10 @@ void AWFC3DActor::ExecuteWFC3D()
 
 void AWFC3DActor::ExecuteWFC3DAsync()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(AWFC3DActor::ExecuteWFC3DAsync);
+
 	UE_LOG(LogTemp, Log, TEXT("ExecuteWFC3DAsync() called"));
-	
+
 	if (!WFC3DController)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WFC3DController is null!"));
@@ -246,6 +251,8 @@ void AWFC3DActor::BindControllerDelegates()
 
 void AWFC3DActor::InitializeAndExecuteWFC3D()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(AWFC3DActor::InitializeAndExecuteWFC3D);
+
 	// 에디터 모드 확인
 	bool bIsInEditor = false;
 #if WITH_EDITOR
@@ -304,8 +311,10 @@ void AWFC3DActor::InitializeAndExecuteWFC3D()
 
 void AWFC3DActor::ExecuteWFC3DForEditor()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(AWFC3DActor::ExecuteWFC3DForEditor);
+
 	UE_LOG(LogTemp, Log, TEXT("ExecuteWFC3DForEditor() called"));
-	
+
 	if (!WFC3DController)
 	{
 		UE_LOG(LogTemp, Error, TEXT("WFC3DController is null!"));
@@ -365,8 +374,10 @@ void AWFC3DActor::OnWFC3DExecutionProgress(int32 CurrentStep, int32 TotalSteps)
 
 void AWFC3DActor::CreateMeshComponentsFromGrid()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(AWFC3DActor::CreateMeshComponentsFromGrid);
+
 	UE_LOG(LogTemp, Warning, TEXT("=== CreateMeshComponentsFromGrid() CALLED ==="));
-	
+
 	// 에디터 모드 확인
 	bool bIsInEditor = false;
 #if WITH_EDITOR
@@ -391,60 +402,68 @@ void AWFC3DActor::CreateMeshComponentsFromGrid()
 	UE_LOG(LogTemp, Warning, TEXT("GeneratedGrid found, dimensions: %s"), *GeneratedGrid->GetDimension().ToString());
 
 	// 기존 메시 컴포넌트 정리 (에디터에서는 더 안전하게)
-	for (UStaticMeshComponent* MeshComp : GeneratedMeshComponents)
 	{
-		if (MeshComp && IsValid(MeshComp))
+		TRACE_CPUPROFILER_EVENT_SCOPE(CleanupOldMeshes);
+		for (UStaticMeshComponent* MeshComp : GeneratedMeshComponents)
 		{
+			if (MeshComp && IsValid(MeshComp))
+			{
 #if WITH_EDITOR
-			if (bIsInEditor)
-			{
-				// 에디터에서는 DestroyComponent 대신 다른 방법 사용
-				MeshComp->DestroyComponent();
-			}
-			else
+				if (bIsInEditor)
+				{
+					// 에디터에서는 DestroyComponent 대신 다른 방법 사용
+					MeshComp->DestroyComponent();
+				}
+				else
 #endif
-			{
-				MeshComp->DestroyComponent();
+				{
+					MeshComp->DestroyComponent();
+				}
 			}
 		}
+		GeneratedMeshComponents.Empty();
+		GridToMeshMap.Empty();
 	}
-	GeneratedMeshComponents.Empty();
-	GridToMeshMap.Empty();
 
 	// 새로운 메시 컴포넌트 생성
-	FIntVector GridDimensions = GeneratedGrid->GetDimension();
-	int32 CreatedMeshCount = 0;
-
-	for (int32 X = 0; X < GridDimensions.X; X++)
 	{
-		for (int32 Y = 0; Y < GridDimensions.Y; Y++)
+		TRACE_CPUPROFILER_EVENT_SCOPE(CreateNewMeshes);
+		FIntVector GridDimensions = GeneratedGrid->GetDimension();
+		int32 CreatedMeshCount = 0;
+
+		for (int32 X = 0; X < GridDimensions.X; X++)
 		{
-			for (int32 Z = 0; Z < GridDimensions.Z; Z++)
+			for (int32 Y = 0; Y < GridDimensions.Y; Y++)
 			{
-				FIntVector GridPosition(X, Y, Z);
-				FWFC3DCell* Cell = GeneratedGrid->GetCell(GridPosition);
-				
-				if (Cell && Cell->bIsCollapsed && Cell->CollapsedTileInfo)
+				for (int32 Z = 0; Z < GridDimensions.Z; Z++)
 				{
-					// 셀 정보와 회전 정보를 함께 전달
-					UStaticMeshComponent* MeshComponent = CreateMeshComponentAtPosition(GridPosition, *Cell);
-					
-					if (MeshComponent)
+					FIntVector GridPosition(X, Y, Z);
+					FWFC3DCell* Cell = GeneratedGrid->GetCell(GridPosition);
+
+					if (Cell && Cell->bIsCollapsed && Cell->CollapsedTileInfo)
 					{
-						GeneratedMeshComponents.Add(MeshComponent);
-						GridToMeshMap.Add(GridPosition, MeshComponent);
-						CreatedMeshCount++;
+						// 셀 정보와 회전 정보를 함께 전달
+						UStaticMeshComponent* MeshComponent = CreateMeshComponentAtPosition(GridPosition, *Cell);
+
+						if (MeshComponent)
+						{
+							GeneratedMeshComponents.Add(MeshComponent);
+							GridToMeshMap.Add(GridPosition, MeshComponent);
+							CreatedMeshCount++;
+						}
 					}
 				}
 			}
 		}
-	}
 
-	UE_LOG(LogTemp, Log, TEXT("Created %d mesh components from grid"), CreatedMeshCount);
+		UE_LOG(LogTemp, Log, TEXT("Created %d mesh components from grid"), CreatedMeshCount);
+	}
 }
 
 UStaticMeshComponent* AWFC3DActor::CreateMeshComponentAtPosition(const FIntVector& GridPosition, const FWFC3DCell& Cell)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(AWFC3DActor::CreateMeshComponentAtPosition);
+
 	if (!ExecutionContext.ModelData)
 	{
 		UE_LOG(LogTemp, Error, TEXT("ModelData is null!"));
@@ -504,36 +523,41 @@ UStaticMeshComponent* AWFC3DActor::CreateMeshComponentAtPosition(const FIntVecto
 	}
 
 	// 메시 컴포넌트 생성 (에디터와 런타임 모두 지원)
-	FString ComponentName = FString::Printf(TEXT("MeshComponent_%d_%d_%d"), 
-		GridPosition.X, GridPosition.Y, GridPosition.Z);
-	
 	UStaticMeshComponent* MeshComponent = nullptr;
-	
-	// 에디터에서는 CreateDefaultSubobject 스타일로, 런타임에서는 NewObject 사용
-#if WITH_EDITOR
-	if (GetWorld() && !GetWorld()->IsGameWorld())
 	{
-		// 에디터 모드: Construction Script에서 호출
-		MeshComponent = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), *ComponentName, RF_Transactional);
-	}
-	else
-#endif
-	{
-		// 게임 런타임 모드
-		MeshComponent = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), *ComponentName);
-	}
-	
-	if (!MeshComponent)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create mesh component!"));
-		return nullptr;
-	}
+		TRACE_CPUPROFILER_EVENT_SCOPE(CreateMeshComponent);
+		FString ComponentName = FString::Printf(TEXT("MeshComponent_%d_%d_%d"),
+			GridPosition.X, GridPosition.Y, GridPosition.Z);
 
-	UE_LOG(LogTemp, Log, TEXT("Created mesh component successfully: %s"), *ComponentName);
+		// 에디터에서는 CreateDefaultSubobject 스타일로, 런타임에서는 NewObject 사용
+#if WITH_EDITOR
+		if (GetWorld() && !GetWorld()->IsGameWorld())
+		{
+			// 에디터 모드: Construction Script에서 호출
+			MeshComponent = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), *ComponentName, RF_Transactional);
+		}
+		else
+#endif
+		{
+			// 게임 런타임 모드
+			MeshComponent = NewObject<UStaticMeshComponent>(this, UStaticMeshComponent::StaticClass(), *ComponentName);
+		}
+
+		if (!MeshComponent)
+		{
+			UE_LOG(LogTemp, Error, TEXT("Failed to create mesh component!"));
+			return nullptr;
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Created mesh component successfully: %s"), *ComponentName);
+	}
 
 	// 메시 설정
-	MeshComponent->SetStaticMesh(VisualInfo.StaticMesh);
-	UE_LOG(LogTemp, Log, TEXT("Set StaticMesh: %s"), VisualInfo.StaticMesh ? *VisualInfo.StaticMesh->GetName() : TEXT("NULL"));
+	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(SetStaticMesh);
+		MeshComponent->SetStaticMesh(VisualInfo.StaticMesh);
+		UE_LOG(LogTemp, Log, TEXT("Set StaticMesh: %s"), VisualInfo.StaticMesh ? *VisualInfo.StaticMesh->GetName() : TEXT("NULL"));
+	}
 
 	// 위치 계산 (Actor 기준 상대 좌표)
 	// Actor를 그리드 바닥 중심으로 하여 상대적 위치 계산
@@ -560,42 +584,54 @@ UStaticMeshComponent* AWFC3DActor::CreateMeshComponentAtPosition(const FIntVecto
 	FTransform RelativeTransform(Rotation, RelativeLocation, Scale);
 
 	// 루트 컴포넌트에 연결 및 트랜스폼 설정
-	MeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
-	MeshComponent->SetRelativeTransform(RelativeTransform);
-	UE_LOG(LogTemp, Log, TEXT("Attached to RootComponent and set transform - Location: %s, Rotation: %s, Scale: %s"), *RelativeLocation.ToString(), *Rotation.ToString(), *Scale.ToString());
+	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(AttachAndTransform);
+		MeshComponent->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepWorldTransform);
+		MeshComponent->SetRelativeTransform(RelativeTransform);
+		UE_LOG(LogTemp, Log, TEXT("Attached to RootComponent and set transform - Location: %s, Rotation: %s, Scale: %s"), *RelativeLocation.ToString(), *Rotation.ToString(), *Scale.ToString());
+	}
 
 	// 컴포넌트 등록 (에디터에서는 조건부)
-#if WITH_EDITOR
-	if (GetWorld() && GetWorld()->IsGameWorld())
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(RegisterComponent);
+#if WITH_EDITOR
+		if (GetWorld() && GetWorld()->IsGameWorld())
+		{
+			MeshComponent->RegisterComponent();
+			UE_LOG(LogTemp, Log, TEXT("Registered mesh component (Runtime)"));
+		}
+		else
+		{
+			// 에디터에서는 RegisterComponent를 호출하지 않음
+			UE_LOG(LogTemp, Log, TEXT("Mesh component created in editor mode"));
+		}
+#else
 		MeshComponent->RegisterComponent();
 		UE_LOG(LogTemp, Log, TEXT("Registered mesh component (Runtime)"));
-	}
-	else
-	{
-		// 에디터에서는 RegisterComponent를 호출하지 않음
-		UE_LOG(LogTemp, Log, TEXT("Mesh component created in editor mode"));
-	}
-#else
-	MeshComponent->RegisterComponent();
-	UE_LOG(LogTemp, Log, TEXT("Registered mesh component (Runtime)"));
 #endif
+	}
 
 	// 매테리얼 설정
-	for (int32 i = 0; i < VisualInfo.Materials.Num(); i++)
 	{
-		if (VisualInfo.Materials[i])
+		TRACE_CPUPROFILER_EVENT_SCOPE(SetMaterials);
+		for (int32 i = 0; i < VisualInfo.Materials.Num(); i++)
 		{
-			MeshComponent->SetMaterial(i, VisualInfo.Materials[i]);
-			UE_LOG(LogTemp, Log, TEXT("Set material %d: %s"), i, *VisualInfo.Materials[i]->GetName());
+			if (VisualInfo.Materials[i])
+			{
+				MeshComponent->SetMaterial(i, VisualInfo.Materials[i]);
+				UE_LOG(LogTemp, Log, TEXT("Set material %d: %s"), i, *VisualInfo.Materials[i]->GetName());
+			}
 		}
 	}
 
 	// 가시성 및 렌더링 설정
-	MeshComponent->SetVisibility(true);
-	MeshComponent->SetHiddenInGame(false);
-	MeshComponent->SetCastShadow(true);
-	UE_LOG(LogTemp, Log, TEXT("Set visibility and rendering settings"));
+	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(SetVisibilityAndRendering);
+		MeshComponent->SetVisibility(true);
+		MeshComponent->SetHiddenInGame(false);
+		MeshComponent->SetCastShadow(true);
+		UE_LOG(LogTemp, Log, TEXT("Set visibility and rendering settings"));
+	}
 
 	UE_LOG(LogTemp, Log, TEXT("Created mesh component at grid position (%d, %d, %d) with relative location %s, mesh: %s"), 
 		GridPosition.X, GridPosition.Y, GridPosition.Z, *RelativeLocation.ToString(),

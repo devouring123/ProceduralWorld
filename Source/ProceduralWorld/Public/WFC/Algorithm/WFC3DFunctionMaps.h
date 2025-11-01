@@ -22,12 +22,47 @@ public:
 
 	/** 전파 반경 제한 함수 포인터 획득 */
 	static RangeLimitFunc GetRangeLimitFunction(ERangeLimitStrategy Strategy);
-	
-	/** 전략 등록 함수들 */
-	static void RegisterCellSelectorEnum(ECollapseCellSelectStrategy Enum, SelectCellFunc Function);
-	static void RegisterTileInfoIndexSelectorEnum(ECollapseTileInfoIndexSelectStrategy Enum, SelectTileInfoIndexFunc Function);
-	static void RegisterCellCollapserEnum(ECollapseSingleCellStrategy Enum, CollapseSingleCellFunc Function);
-	static void RegisterRangeLimitEnum(ERangeLimitStrategy Enum, RangeLimitFunc Function);
+
+	/**
+	 * 전략 등록 함수들
+	 * C++20 Concepts를 사용하여 컴파일 타임에 함수 시그니처 검증
+	 *
+	 * 언리얼 엔진 코딩 표준:
+	 * - 템플릿 매개변수는 T 접두사 사용
+	 * - 함수 매개변수는 In/Out 접두사 사용
+	 */
+
+	// Cell 선택 전략 등록 (Concept 제약 적용)
+	template<TSelectCellFuncConcept TFunc>
+	static void RegisterCellSelectorEnum(ECollapseCellSelectStrategy InStrategy, TFunc InFunction)
+	{
+		// Concept을 만족하는지 컴파일 타임에 검증됨
+		CellSelectorMap.Add(InStrategy, FWFC3DFunctionValidator::MakeSelectCellFunction(InFunction));
+	}
+
+	// TileInfo 인덱스 선택 전략 등록 (Concept 제약 적용)
+	template<TSelectTileInfoIndexFuncConcept TFunc>
+	static void RegisterTileInfoIndexSelectorEnum(ECollapseTileInfoIndexSelectStrategy InStrategy, TFunc InFunction)
+	{
+		// Concept을 만족하는지 컴파일 타임에 검증됨
+		TileInfoIndexSelectorMap.Add(InStrategy, FWFC3DFunctionValidator::MakeSelectTileInfoIndexFunction(InFunction));
+	}
+
+	// Cell 붕괴 전략 등록 (Concept 제약 적용)
+	template<TCollapseSingleCellFuncConcept TFunc>
+	static void RegisterCellCollapserEnum(ECollapseSingleCellStrategy InStrategy, TFunc InFunction)
+	{
+		// Concept을 만족하는지 컴파일 타임에 검증됨
+		CellCollapserMap.Add(InStrategy, FWFC3DFunctionValidator::MakeCollapseSingleCellFunction(InFunction));
+	}
+
+	// Range Limit 전략 등록 (Concept 제약 적용)
+	template<TRangeLimitFuncConcept TFunc>
+	static void RegisterRangeLimitEnum(ERangeLimitStrategy InStrategy, TFunc InFunction)
+	{
+		// Concept을 만족하는지 컴파일 타임에 검증됨
+		RangeLimitMap.Add(InStrategy, FWFC3DFunctionValidator::MakeRangeLimitFunction(InFunction));
+	}
 	
 private:
 	/** 유틸리티 클래스 생성자 및 소멸자 제거 */

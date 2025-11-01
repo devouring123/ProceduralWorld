@@ -614,6 +614,57 @@ struct PROCEDURALWORLD_API FWFC3DExecutionResult : public FResult
 };
 
 /**
+ * C++20 Concepts를 사용한 함수 시그니처 검증
+ * 컴파일 타임에 함수가 올바른 시그니처를 가지는지 확인합니다.
+ *
+ * 언리얼 엔진 코딩 표준:
+ * - Concept 이름은 명확성을 위해 Concept 접미사 사용
+ * - 템플릿 매개변수는 T 접두사 사용
+ */
+
+// Cell 선택 함수 Concept
+template<typename TFunc>
+concept TSelectCellFuncConcept = requires(TFunc Func, const FWFC3DCollapseContext& Context)
+{
+	{ Func(Context) } -> std::same_as<int32>;
+};
+
+// TileInfo 인덱스 선택 함수 Concept
+template<typename TFunc>
+concept TSelectTileInfoIndexFuncConcept = requires(TFunc Func, const FWFC3DCollapseContext& Context, const int32 Index)
+{
+	{ Func(Context, Index) } -> std::same_as<int32>;
+};
+
+// 단일 Cell Collapse 함수 Concept
+template<typename TFunc>
+concept TCollapseSingleCellFuncConcept = requires(TFunc Func, FWFC3DCell* Cell, const int32 Index, const FTileInfo* TileInfo)
+{
+	{ Func(Cell, Index, TileInfo) } -> std::same_as<bool>;
+};
+
+// Collapse 알고리즘 함수 Concept
+template<typename TFunc>
+concept TCollapseFuncConcept = requires(TFunc Func, const FWFC3DCollapseContext& Context, const FCollapseStrategy& Strategy)
+{
+	{ Func(Context, Strategy) } -> std::same_as<FCollapseResult>;
+};
+
+// Range Limit 함수 Concept
+template<typename TFunc>
+concept TRangeLimitFuncConcept = requires(TFunc Func, const FIntVector& Location1, const FIntVector& Location2, const int32 Limit)
+{
+	{ Func(Location1, Location2, Limit) } -> std::same_as<bool>;
+};
+
+// Propagation 알고리즘 함수 Concept
+template<typename TFunc>
+concept TPropagateFuncConcept = requires(TFunc Func, const FWFC3DPropagationContext& Context, const FPropagationStrategy& Strategy)
+{
+	{ Func(Context, Strategy) } -> std::same_as<FPropagationResult>;
+};
+
+/**
  * 언리얼 엔진 델리게이트 시스템을 활용한 정적 함수 포인터 타입 정의
  */
 template <typename T>
@@ -663,6 +714,111 @@ using RangeLimitFunc = TStaticFuncPtr<bool(const FIntVector&, const FIntVector&,
  * FPropagationResult를 반환하는 정적 함수 포인터
  */
 using PropagateFunc = TStaticFuncPtr<FPropagationResult(const FWFC3DPropagationContext&, const FPropagationStrategy&)>;
+
+/**
+ * Concept 기반 함수 검증 헬퍼 유틸리티
+ * 컴파일 타임에 함수 시그니처를 검증하고 안전하게 래핑합니다.
+ *
+ * 언리얼 엔진 코딩 표준:
+ * - 유틸리티 클래스는 F 접두사 사용
+ * - 정적 클래스로 구현 (생성자 삭제)
+ */
+struct FWFC3DFunctionValidator
+{
+	// Cell 선택 함수 검증 및 래핑
+	template<TSelectCellFuncConcept TFunc>
+	static constexpr SelectCellFunc MakeSelectCellFunction(TFunc InFunction)
+	{
+		return InFunction;
+	}
+
+	// TileInfo 인덱스 선택 함수 검증 및 래핑
+	template<TSelectTileInfoIndexFuncConcept TFunc>
+	static constexpr SelectTileInfoIndexFunc MakeSelectTileInfoIndexFunction(TFunc InFunction)
+	{
+		return InFunction;
+	}
+
+	// 단일 Cell Collapse 함수 검증 및 래핑
+	template<TCollapseSingleCellFuncConcept TFunc>
+	static constexpr CollapseSingleCellFunc MakeCollapseSingleCellFunction(TFunc InFunction)
+	{
+		return InFunction;
+	}
+
+	// Collapse 알고리즘 함수 검증 및 래핑
+	template<TCollapseFuncConcept TFunc>
+	static constexpr CollapseFunc MakeCollapseFunction(TFunc InFunction)
+	{
+		return InFunction;
+	}
+
+	// Range Limit 함수 검증 및 래핑
+	template<TRangeLimitFuncConcept TFunc>
+	static constexpr RangeLimitFunc MakeRangeLimitFunction(TFunc InFunction)
+	{
+		return InFunction;
+	}
+
+	// Propagation 알고리즘 함수 검증 및 래핑
+	template<TPropagateFuncConcept TFunc>
+	static constexpr PropagateFunc MakePropagateFunction(TFunc InFunction)
+	{
+		return InFunction;
+	}
+
+	// 컴파일 타임 검증 - 함수가 올바른 시그니처인지 static_assert로 확인
+	template<typename TFunc>
+	static constexpr void ValidateSelectCellFunction()
+	{
+		static_assert(TSelectCellFuncConcept<TFunc>,
+			"Function must match signature: int32(const FWFC3DCollapseContext&)");
+	}
+
+	template<typename TFunc>
+	static constexpr void ValidateSelectTileInfoIndexFunction()
+	{
+		static_assert(TSelectTileInfoIndexFuncConcept<TFunc>,
+			"Function must match signature: int32(const FWFC3DCollapseContext&, const int32)");
+	}
+
+	template<typename TFunc>
+	static constexpr void ValidateCollapseSingleCellFunction()
+	{
+		static_assert(TCollapseSingleCellFuncConcept<TFunc>,
+			"Function must match signature: bool(FWFC3DCell*, const int32, const FTileInfo*)");
+	}
+
+	template<typename TFunc>
+	static constexpr void ValidateCollapseFunction()
+	{
+		static_assert(TCollapseFuncConcept<TFunc>,
+			"Function must match signature: FCollapseResult(const FWFC3DCollapseContext&, const FCollapseStrategy&)");
+	}
+
+	template<typename TFunc>
+	static constexpr void ValidateRangeLimitFunction()
+	{
+		static_assert(TRangeLimitFuncConcept<TFunc>,
+			"Function must match signature: bool(const FIntVector&, const FIntVector&, const int32)");
+	}
+
+	template<typename TFunc>
+	static constexpr void ValidatePropagateFunction()
+	{
+		static_assert(TPropagateFuncConcept<TFunc>,
+			"Function must match signature: FPropagationResult(const FWFC3DPropagationContext&, const FPropagationStrategy&)");
+	}
+
+private:
+	// 유틸리티 클래스 - 인스턴스 생성 금지
+	FWFC3DFunctionValidator() = delete;
+	~FWFC3DFunctionValidator() = delete;
+	FWFC3DFunctionValidator(const FWFC3DFunctionValidator&) = delete;
+	FWFC3DFunctionValidator& operator=(const FWFC3DFunctionValidator&) = delete;
+	FWFC3DFunctionValidator(FWFC3DFunctionValidator&&) = delete;
+	FWFC3DFunctionValidator& operator=(FWFC3DFunctionValidator&&) = delete;
+};
 
 /**
  * Collapse 셀 선택 전략 결과 열거형

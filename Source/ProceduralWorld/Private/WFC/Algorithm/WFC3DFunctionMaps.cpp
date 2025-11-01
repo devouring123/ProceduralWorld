@@ -43,28 +43,10 @@ RangeLimitFunc FWFC3DFunctionMaps::GetRangeLimitFunction(ERangeLimitStrategy Str
 {
     if (RangeLimitMap.Contains(Strategy))
     {
-        return RangeLimitMap[Strategy];       
+        return RangeLimitMap[Strategy];
     }
     UE_LOG(LogTemp, Warning, TEXT("Range limit strategy %d not found, using default"), (uint8)Strategy);
     return RangeLimitMap[ERangeLimitStrategy::Disable];
 }
 
-void FWFC3DFunctionMaps::RegisterCellSelectorEnum(ECollapseCellSelectStrategy Enum, SelectCellFunc Function)
-{
-    CellSelectorMap.Add(Enum, Function);
-}
-
-void FWFC3DFunctionMaps::RegisterTileInfoIndexSelectorEnum(ECollapseTileInfoIndexSelectStrategy Enum, SelectTileInfoIndexFunc Function)
-{
-    TileInfoIndexSelectorMap.Add(Enum, Function);
-}
-
-void FWFC3DFunctionMaps::RegisterCellCollapserEnum(ECollapseSingleCellStrategy Enum, CollapseSingleCellFunc Function)
-{
-    CellCollapserMap.Add(Enum, Function);
-}
-
-void FWFC3DFunctionMaps::RegisterRangeLimitEnum(ERangeLimitStrategy Enum, RangeLimitFunc Function)
-{
-    RangeLimitMap.Add(Enum, Function);
-}
+// Register 함수들은 템플릿으로 헤더에 구현되어 있음 (C++20 Concepts 사용)
