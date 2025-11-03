@@ -88,11 +88,13 @@ void UWFC3DController::BeginDestroy()
 
 FWFC3DExecutionResult UWFC3DController::Execute(const FWFC3DExecutionContext& Context)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::Execute);
 	return ExecuteInternal(Context);
 }
 
 void UWFC3DController::ExecuteAsync(const FWFC3DExecutionContext& Context)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::ExecuteAsync);
 	// 이미 실행 중이면 무시
 	if (bIsRunning)
 	{
@@ -155,11 +157,12 @@ void UWFC3DController::ExecuteAsync(const FWFC3DExecutionContext& Context)
 
 void UWFC3DController::CancelExecution()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::CancelExecution);
 	if (!bIsRunning)
 	{
 		return;
 	}
-	
+
 	FScopeLock Lock(&CriticalSection);
 	
 	bIsCancelled = true;
@@ -185,6 +188,7 @@ void UWFC3DController::CancelExecution()
 
 void UWFC3DController::ResetExecutionState()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::ResetExecutionState);
 	FScopeLock Lock(&CriticalSection);
 	
 	bIsRunning = false;
@@ -221,6 +225,7 @@ void UWFC3DController::ResetExecutionState()
 
 float UWFC3DController::GetProgress() const
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::GetProgress);
 	int32 Total = TotalStepsAtomic.load();
 	if (Total <= 0)
 	{
@@ -242,6 +247,7 @@ USceneComponent* UWFC3DController::GetVisualizationComponent() const
 
 FWFC3DExecutionResult UWFC3DController::ExecuteInternal(const FWFC3DExecutionContext& Context)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::ExecuteInternal);
 	UE_LOG(LogTemp, Log, TEXT("ExecuteInternal started"));
 	
 	// 시작하기 전에 이미 취소되었는지 확인
@@ -333,6 +339,7 @@ FWFC3DExecutionResult UWFC3DController::ExecuteInternal(const FWFC3DExecutionCon
 
 FWFC3DAlgorithmResult UWFC3DController::ExecuteAlgorithm(const FWFC3DExecutionContext& Context)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::ExecuteAlgorithm);
 	UE_LOG(LogTemp, Log, TEXT("ExecuteAlgorithm started with MaxRetryCount: %d"), Context.MaxRetryCount);
 	SetCurrentPhase(TEXT("Algorithm"), 0.0f);
 	
@@ -460,6 +467,7 @@ FWFC3DAlgorithmResult UWFC3DController::ExecuteAlgorithm(const FWFC3DExecutionCo
 
 FWFC3DVisualizeResult UWFC3DController::ExecuteVisualization(const FWFC3DExecutionContext& Context)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::ExecuteVisualization);
 	UE_LOG(LogTemp, Log, TEXT("ExecuteVisualization started"));
 	SetCurrentPhase(TEXT("Visualization"), 0.0f);
 	
@@ -516,6 +524,7 @@ FWFC3DVisualizeResult UWFC3DController::ExecuteVisualization(const FWFC3DExecuti
 
 void UWFC3DController::CheckAsyncCompletion(const FWFC3DExecutionContext& Context)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::CheckAsyncCompletion);
 	if (!bIsRunningAtomic.load())
 	{
 		// 타이머 정리
@@ -546,12 +555,14 @@ void UWFC3DController::CheckAsyncCompletion(const FWFC3DExecutionContext& Contex
 
 void UWFC3DController::SetCurrentPhase(const FString& PhaseName, float PhaseProgress)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::SetCurrentPhase);
 	CurrentPhaseName = PhaseName;
 	OnPhaseChanged.Broadcast(PhaseName, PhaseProgress);
 }
 
 void UWFC3DController::UpdateProgress(int32 CurrentStep, int32 TotalSteps)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DController::UpdateProgress);
 	CurrentStepAtomic = CurrentStep;
 	TotalStepsAtomic = TotalSteps;
 	OnExecutionProgress.Broadcast(CurrentStep, TotalSteps);

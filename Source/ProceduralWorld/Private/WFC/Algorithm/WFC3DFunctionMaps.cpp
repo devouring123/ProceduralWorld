@@ -11,6 +11,7 @@ TMap<ERangeLimitStrategy, RangeLimitFunc> FWFC3DFunctionMaps::RangeLimitMap;
 
 SelectCellFunc FWFC3DFunctionMaps::GetCellSelectorFunction(ECollapseCellSelectStrategy Strategy)
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FWFC3DFunctionMaps::GetCellSelectorFunction);
     if (CellSelectorMap.Contains(Strategy))
     {
         return CellSelectorMap[Strategy];
@@ -21,6 +22,7 @@ SelectCellFunc FWFC3DFunctionMaps::GetCellSelectorFunction(ECollapseCellSelectSt
 
 SelectTileInfoIndexFunc FWFC3DFunctionMaps::GetTileInfoIndexSelectorFunction(ECollapseTileInfoIndexSelectStrategy Strategy)
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FWFC3DFunctionMaps::GetTileInfoIndexSelectorFunction);
     if (TileInfoIndexSelectorMap.Contains(Strategy))
     {
         return TileInfoIndexSelectorMap[Strategy];
@@ -31,6 +33,7 @@ SelectTileInfoIndexFunc FWFC3DFunctionMaps::GetTileInfoIndexSelectorFunction(ECo
 
 CollapseSingleCellFunc FWFC3DFunctionMaps::GetCellCollapserFunction(ECollapseSingleCellStrategy Strategy)
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FWFC3DFunctionMaps::GetCellCollapserFunction);
     if (CellCollapserMap.Contains(Strategy))
     {
         return CellCollapserMap[Strategy];
@@ -41,6 +44,7 @@ CollapseSingleCellFunc FWFC3DFunctionMaps::GetCellCollapserFunction(ECollapseSin
 
 RangeLimitFunc FWFC3DFunctionMaps::GetRangeLimitFunction(ERangeLimitStrategy Strategy)
 {
+    TRACE_CPUPROFILER_EVENT_SCOPE(FWFC3DFunctionMaps::GetRangeLimitFunction);
     if (RangeLimitMap.Contains(Strategy))
     {
         return RangeLimitMap[Strategy];

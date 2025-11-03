@@ -13,6 +13,7 @@ namespace WFC3DPropagateFunctions
 {
 	FPropagationResult ExecutePropagation(const FWFC3DPropagationContext& Context, const FPropagationStrategy& PropagationStrategy)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DPropagateFunctions::ExecutePropagation);
 		FPropagationResult Result;
 		UWFC3DGrid* Grid = Context.Grid;
 		const UWFC3DModelDataAsset* ModelData = Context.ModelData;
@@ -103,6 +104,7 @@ namespace WFC3DPropagateFunctions
 
 	FPropagationResult ExecuteInitialPropagation(const FWFC3DPropagationContext& Context)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DPropagateFunctions::ExecuteInitialPropagation);
 		FPropagationResult Result;
 		UWFC3DGrid* Grid = Context.Grid;
 		const UWFC3DModelDataAsset* ModelData = Context.ModelData;
@@ -192,6 +194,7 @@ namespace WFC3DPropagateFunctions
 	bool PropagateCell(FWFC3DCell* PropagatedCell, UWFC3DGrid* Grid, TQueue<FIntVector>& PropagationQueue,
 	                   const UWFC3DModelDataAsset* ModelData)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DPropagateFunctions::PropagateCell);
 		if (PropagatedCell == nullptr || Grid == nullptr || ModelData == nullptr)
 		{
 			UE_LOG(LogTemp, Error, TEXT("Invalid PropagatedCell or Grid or ModelData"));
@@ -365,6 +368,7 @@ namespace WFC3DPropagateFunctions
 	{
 		IMPLEMENT_PROPAGATOR_RANGE_LIMIT_STRATEGY(SphereRangeLimited)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DPropagateFunctions::RangeLimit::SphereRangeLimited);
 			// CollapseLocation과 PropagationLocation 사이의 거리가 RangeLimit보다 크면 false 반환
 			if ((CollapseLocation - PropagationLocation).Size() > RangeLimit)
 			{
@@ -375,6 +379,7 @@ namespace WFC3DPropagateFunctions
 
 		IMPLEMENT_PROPAGATOR_RANGE_LIMIT_STRATEGY(CubeRangeLimited)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DPropagateFunctions::RangeLimit::CubeRangeLimited);
 			// CollapseLocation과 PropagationLocation의 각 축의 차이가 RangeLimit보다 크면 false 반환
 			if (FMath::Abs(CollapseLocation.X - PropagationLocation.X) > RangeLimit ||
 				FMath::Abs(CollapseLocation.Y - PropagationLocation.Y) > RangeLimit ||

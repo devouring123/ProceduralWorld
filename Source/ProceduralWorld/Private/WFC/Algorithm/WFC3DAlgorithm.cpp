@@ -12,6 +12,7 @@
 
 void FWFC3DAlgorithmAsyncTask::DoWork()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(FWFC3DAlgorithmAsyncTask::DoWork);
 	if (Algorithm != nullptr)
 	{
 		// UE_LOG(LogTemp, Display, TEXT("Async Task started for WFC3D Algorithm DO WORK"));
@@ -39,6 +40,7 @@ void UWFC3DAlgorithm::BeginDestroy()
 
 FWFC3DAlgorithmResult UWFC3DAlgorithm::Execute(const FWFC3DAlgorithmContext& Context)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DAlgorithm::Execute);
 	UE_LOG(LogTemp, Log, TEXT("WFC3DAlgorithm::Execute called"));
 	FWFC3DAlgorithmResult Result = ExecuteInternal(Context);
 	UE_LOG(LogTemp, Log, TEXT("WFC3DAlgorithm::Execute completed with result: %s"), Result.bSuccess ? TEXT("SUCCESS") : TEXT("FAILED"));
@@ -51,6 +53,7 @@ FWFC3DAlgorithmResult UWFC3DAlgorithm::Execute(const FWFC3DAlgorithmContext& Con
 
 void UWFC3DAlgorithm::ExecuteAsync(const FWFC3DAlgorithmContext& Context)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DAlgorithm::ExecuteAsync);
 	// 이미 실행 중이면 무시
 	if (bIsRunning)
 	{
@@ -83,6 +86,7 @@ void UWFC3DAlgorithm::ExecuteAsync(const FWFC3DAlgorithmContext& Context)
 
 FWFC3DAlgorithmResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmContext& Context)
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DAlgorithm::ExecuteInternal);
 	FScopeLock Lock(&CriticalSection);
 
 	FWFC3DAlgorithmResult Result;
@@ -363,6 +367,7 @@ FWFC3DAlgorithmResult UWFC3DAlgorithm::ExecuteInternal(const FWFC3DAlgorithmCont
 
 void UWFC3DAlgorithm::CancelExecution()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DAlgorithm::CancelExecution);
 	if (bIsRunningAtomic.load())
 	{
 		bIsCancelled = true;
@@ -373,6 +378,7 @@ void UWFC3DAlgorithm::CancelExecution()
 
 void UWFC3DAlgorithm::ResetExecutionState()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DAlgorithm::ResetExecutionState);
 	FScopeLock Lock(&CriticalSection);
 
 	bIsRunning = false;
@@ -399,6 +405,7 @@ void UWFC3DAlgorithm::ResetExecutionState()
 
 float UWFC3DAlgorithm::GetProgress() const
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DAlgorithm::GetProgress);
 	int32 Total = TotalStepsAtomic.load();
 	if (Total <= 0)
 	{
@@ -411,6 +418,7 @@ float UWFC3DAlgorithm::GetProgress() const
 
 void UWFC3DAlgorithm::CheckAsyncTaskCompletion()
 {
+	TRACE_CPUPROFILER_EVENT_SCOPE(UWFC3DAlgorithm::CheckAsyncTaskCompletion);
 	if (!AsyncTask.IsValid())
 	{
 		return;

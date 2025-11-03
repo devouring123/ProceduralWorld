@@ -13,6 +13,7 @@ namespace WFC3DCollapseFunctions
 		const CollapseSingleCellFunc CollapseSingleCellFuncPtr
 	)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DCollapseFunctions::ExecuteCollapse);
 		FCollapseResult Result;
 		UWFC3DGrid* Grid = Context.Grid;
 		const UWFC3DModelDataAsset* ModelData = Context.ModelData;
@@ -93,6 +94,7 @@ namespace WFC3DCollapseFunctions
 	{
 		IMPLEMENT_COLLAPSER_CELL_SELECTOR_STRATEGY(ByEntropy)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DCollapseFunctions::CellSelector::ByEntropy);
 			UWFC3DGrid* Grid = Context.Grid;
 			const FRandomStream* RandomStream = Context.RandomStream;
 			if (Grid == nullptr)
@@ -153,6 +155,7 @@ namespace WFC3DCollapseFunctions
 
 		IMPLEMENT_COLLAPSER_CELL_SELECTOR_STRATEGY(Random)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DCollapseFunctions::CellSelector::Random);
 			UWFC3DGrid* Grid = Context.Grid;
 			const FRandomStream* RandomStream = Context.RandomStream;
 			if (Grid == nullptr)
@@ -187,6 +190,7 @@ namespace WFC3DCollapseFunctions
 
 		IMPLEMENT_COLLAPSER_CELL_SELECTOR_STRATEGY(Custom)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DCollapseFunctions::CellSelector::Custom);
 			/** Make Your Custom CellSelector */
 			return INDEX_NONE;
 		}
@@ -196,6 +200,7 @@ namespace WFC3DCollapseFunctions
 	{
 		IMPLEMENT_COLLAPSER_TILE_INFO_INDEX_SELECTOR_STRATEGY(ByWeight)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DCollapseFunctions::TileInfoSelector::ByWeight);
 			UWFC3DGrid* Grid = Context.Grid;
 			const UWFC3DModelDataAsset* ModelData = Context.ModelData;
 			const FRandomStream* RandomStream = Context.RandomStream;
@@ -242,6 +247,7 @@ namespace WFC3DCollapseFunctions
 
 		IMPLEMENT_COLLAPSER_TILE_INFO_INDEX_SELECTOR_STRATEGY(Random)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DCollapseFunctions::TileInfoSelector::Random);
 			UWFC3DGrid* Grid = Context.Grid;
 			const UWFC3DModelDataAsset* ModelData = Context.ModelData;
 			const FRandomStream* RandomStream = Context.RandomStream;
@@ -275,6 +281,7 @@ namespace WFC3DCollapseFunctions
 
 		IMPLEMENT_COLLAPSER_TILE_INFO_INDEX_SELECTOR_STRATEGY(Custom)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DCollapseFunctions::TileInfoSelector::Custom);
 			/** Make Your Custom TileInfoSelector */
 			return 0;
 		}
@@ -284,6 +291,7 @@ namespace WFC3DCollapseFunctions
 	{
 		IMPLEMENT_COLLAPSER_CELL_COLLAPSER_STRATEGY(Default)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DCollapseFunctions::CellCollapser::Default);
 			if (SelectedCell == nullptr)
 			{
 				UE_LOG(LogTemp, Error, TEXT("Invalid Cell"));
@@ -330,6 +338,7 @@ namespace WFC3DCollapseFunctions
 
 		IMPLEMENT_COLLAPSER_CELL_COLLAPSER_STRATEGY(Custom)
 		{
+			TRACE_CPUPROFILER_EVENT_SCOPE(WFC3DCollapseFunctions::CellCollapser::Custom);
 			/** Make Your Custom CellCollapser */
 			return true;
 		}
